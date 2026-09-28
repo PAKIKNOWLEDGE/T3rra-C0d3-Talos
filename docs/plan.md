@@ -34,6 +34,14 @@
 
 Talos 仓库已更新 README 操作说明、adapter 实测和 status。引擎仍遵守自身 AGENTS 和 source inventory；本轮只修改既有调色板和测试文件，没有新增依赖或测试框架。当前实现已完成，停在主人可见验收点；通过后由 Astra 决定下一小轮。
 
+## 当前小轮：TUI 欢迎 ASCII 标题
+
+任务 `tui-welcome-banner/r1`。这是主人在 Talos 主题验收通过后提出的窄范围修订：缩小机械臂，在上方加入 `TALOS` 的 ASCII 标题。复用现有欢迎 hero，不改主题、交互、布局框架或默认主题。
+
+执行范围：`Talos-CLI` 只改 `packages/tui/src/tui/shell/welcome/design.ts`、`hero.ts`、欢迎维护说明及对应既有欢迎渲染断言。宽屏使用内置 5×5 ASCII 字形，中窄屏使用单行 `TALOS`，极窄屏保留 fallback；机械臂同时缩小。不得新增字体依赖，不得改 GUI、ACP、provider、思考块或命令名。
+
+验收：显式 Node 24 构建后启动 fork，观察宽屏和窄屏欢迎页；ASCII 标题应在机械臂上方、无厂商字标、无换行溢出。相关欢迎渲染测试、standalone TypeScript、source inventory、构建和 diff 检查由 Luna 自验；主人只需看实际终端画面。完成后停。
+
 ## 历史设计的使用方式
 
 [整理前完整计划](archive/2026-09-29/plan-before-reset.md)保留原浏览器五轮的详细契约、Tauri 等未来分析及旧小轮，**不是当前执行清单**。恢复 GUI 或桌面工作时，Astra 按实际源码从中提取仍有效的要求，更新本页对应方案后再实施；不得从历史“第 1 轮开始”重跑或把旧任务重新派给 Luna。

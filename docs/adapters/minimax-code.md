@@ -40,6 +40,14 @@
 
 【主人待验】实际终端中通过 `/theme` 选择 `Talos`，观察欢迎区之外的正文、输入区、菜单、工具/审批提示的黄灰配色，再切换 dark/light、缩窄终端并取消返回原主题。未发送消息、未测试 provider、未改思考块、未改默认主题；本次机读结果不等于完整 TUI 视觉通过。
 
+## TUI 欢迎 ASCII 标题依据与实测（2026-09-28）
+
+【源码】欢迎视觉资产集中在 `packages/tui/src/tui/shell/welcome/design.ts`，`hero.ts` 按宽度选择 full/medium/micro/fallback；本轮复用这条管线，不改组件布局或主题系统。
+
+【实测】工作树基线为 fork HEAD `370c7646fdfd51ef8a812a4966538884b73db556`。本轮将 full hero 调整为内置 5×5 ASCII `TALOS` 标题 + 更小机械臂，中窄屏降为单行 `TALOS` + compact arm，极窄屏保留 fallback。相关欢迎渲染测试的新增断言、standalone TypeScript、source inventory 和 diff 检查已通过；整套 `tui-app.test.ts` 仍有 17 项既有文案/本地化断言失败，未把它们归因于本轮或宣称整套通过。构建和主人目视尚未完成。
+
+【主人待验】显式 Node 24 构建 fork 后观察宽屏、20–31 列中屏和极窄终端；标题应在机械臂上方、无厂商大字 logo、无横向溢出。只验画面，不发送消息。
+
 | 等级 | 来源 | 只支持什么结论 |
 | --- | --- | --- |
 | 【文档】 | 上游 `README_ZH.md:126`、`README.md:126` | CLI 提供 `mcode acp` 入口；未证明具体方法、字段和恢复语义 |
