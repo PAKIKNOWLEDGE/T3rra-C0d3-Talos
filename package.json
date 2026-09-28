@@ -10,7 +10,6 @@
   "scripts": {
     "check:env": "tsx spike/check-environment.ts",
     "spike:initialize": "tsx spike/initialize.ts",
-    "spike:custom-provider": "tsx spike/custom-provider-probe.ts",
     "dev:product": "tsx src/dev.ts",
     "test:core": "vitest run test/round3.test.ts",
     "check:all": "npm run typecheck && npm run test:core && npm run check:demo && npm run check:handoff",

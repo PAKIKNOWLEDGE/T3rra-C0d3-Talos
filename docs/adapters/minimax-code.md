@@ -1,6 +1,6 @@
 # MiniMax Code 接驳证据入口
 
-此页只记录证据与待验证问题，不记录实施进度。读取日期：2026-09-28。源码只读目录 `C:\DEV\develop\minimax-code`，本轮 HEAD：`2aed5ca703c3359dd028af51e6c4cbc6a5e15c46`。该仓自己的 AGENTS 管它的代码；不要把上游发布同步规矩误当 Talos 的工程流程。
+此页只记录证据与待验证问题，不记录实施进度。读取日期：2026-09-28。源码根目录 `C:\DEV\develop\minimax-code`，上游基线 `2aed5ca703c3359dd028af51e6c4cbc6a5e15c46`；纠偏复核时 fork HEAD 为 `cf8bd414b331b54f32d2bde2a3d66e56fdd7e565`。各历史证据以所在小节的提交为准。该仓自己的 AGENTS 管它的代码；不要把上游发布同步规矩误当 Talos 的工程流程。
 
 ## 当前已有证据
 
@@ -124,9 +124,9 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 | 【实测】`packages/local-runtime-v2/src/service/model-system/catalog/provider-presets/provider-presets.service.test.ts`，使用 `vitest.oss.config.mjs` | 37/37 通过；第三方预设保留、区域默认排序、远程 pinned 覆盖、失败回落和超时处理均符合源码定义 | 预设排序机制可保留；是否去除 MiniMax 相关网络 origin 属于后续中立网络审计，不在本轮改动 |
 | 【文档】`docs/examples.md:27-59` | CLI 已支持 `/model`、`/provider`、第三方预设和 `custom_provider`，成功测试后才保存并可设为当前模型 | 可复用现有第三方配置路径；后续探针优先验证 custom provider 的保存、默认选择和 ACP 使用，不要求用户先配置 MiniMax 登录 |
 | 【源码】`packages/config/src/config.ts:1711-1721`、`:1869-1884`；`packages/config/src/byok-config.ts:260-300` | 只有 managed/prod runtime 新建配置时才写入 `minimax/MiniMax-M3`；非 managed 的 `pnpm dev`/npm 路径不预置模型，由 onboarding/provider 配置接管。managed runtime 会补齐 `provider.minimax`，但不会覆盖用户自己的 `custom_provider` | “平级 provider”不能靠改一处排序完成；Talos 独立发行应继续走非 managed 配置语义，若未来做生产桌面壳，再单独定义无默认模型或首个已验证 custom provider 的选择规则 |
-| 【源码】`packages/tui/src/application/login-gate.ts:24-38`；【实测】`test/byok.test.mjs`（2026-09-28） | 登录门禁按当前模型来源区分：BYOK 不要求 MiniMax 登录；managed MiniMax 模型仍要求自己的登录。隔离 BYOK 套件完成保存 provider、设为默认、继续会话、真实读文件工具回传，并确认 managed 模型登录失败 | 第三方 provider 的认证边界已经可复用；下一步只需做真实外部 provider 探针，不应删除通用登录/权限安全逻辑 |
+| 【源码】`packages/tui/src/application/login-gate.ts:24-38`；【实测】`test/byok.test.mjs`（2026-09-28） | 登录门禁按当前模型来源区分：BYOK 不要求 MiniMax 登录；managed MiniMax 模型仍要求自己的登录。隔离 BYOK 套件完成保存 provider、设为默认、继续会话、真实读文件工具回传，并确认 managed 模型登录失败 | 第三方 provider 的认证边界已经可复用；该套件使用假 provider，不证明外部模型或完整隔离，不应删除通用登录/权限安全逻辑 |
 
-因此，本轮的“平级”定义为：MiniMax、第三方预设和用户自建 provider 都是可见的 provider 来源；没有按类型固定置顶，也不因为缺少 MiniMax 登录就阻止使用已测试的 custom provider。已落地的第一刀是 `packages/tui/src/provider/application.ts`：provider 视图按名称和 ID 统一排序，不再固定把 MiniMax 放在 custom provider 前面；MiniMax 的 active、readOnly、状态和凭据语义保持不变。对应回归断言已补入 `packages/tui/test/unit/provider-application.test.ts`，显式 Node 24 下 targeted Vitest 19/19 通过。BYOK 假 provider 套件也已实测通过；真实第三方模型请求仍未运行。
+因此，该轮的“平级”定义为：MiniMax、第三方预设和用户自建 provider 都是可见的 provider 来源；没有按类型固定置顶，也不因为缺少 MiniMax 登录就阻止使用已测试的 custom provider。已落地的第一刀是 `packages/tui/src/provider/application.ts`：provider 视图按名称和 ID 统一排序，不再固定把 MiniMax 放在 custom provider 前面；MiniMax 的 active、readOnly、状态和凭据语义保持不变。对应回归断言已补入 `packages/tui/test/unit/provider-application.test.ts`，显式 Node 24 下 targeted Vitest 19/19 通过。BYOK 假 provider 套件也已实测通过；后续第三方请求的有限证据见本页“真实 custom provider 文本实测”。
 
 ### 中立默认模型审计与隔离开关（2026-09-28）
 
@@ -137,24 +137,35 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 | 【源码】`packages/config/src/config.ts:168-181`、`:1869-1884` | `isManagedRuntime()` 在 prod/staging 或显式 managed 时开启；非 managed npm/dev 路径不预置配置。managed 新建 `config.yaml` 时写入 MiniMax provider 和 `defaultModel: minimax/MiniMax-M3` | 保留上游 managed 语义；不把默认模型改空，也不影响当前开发路径 |
 | 【源码】`packages/config/src/byok-config.ts:297-342`；`packages/config/src/config.ts:1987-2010` | managed 读配置时会补齐或保护 `provider.minimax`；用户自己的 `custom_provider` 不被这段覆盖 | 增加显式中立运行开关后，跳过自动补齐/保护，但保留用户已写入的 provider 与 defaultModel，避免隐式删除或迁移 |
 | 【源码】`packages/config/src/config.ts:1643-1647` | managed 配置中的 MiniMax baseURL 会按当前区域同步 | 中立开关同时跳过该同步，防止把中立运行重新指向厂商 origin |
-| 【未验】 | 中立开关下的真实第三方模型、工具、取消、load、审批和网络出口仍未验证 | 只做配置层安全闸；真实 provider 探针仍是下一步，不能把开关存在当作中立发行完成 |
+| 【未验】 | 中立开关下的真实第三方模型、工具、取消、load、审批和网络出口仍未验证 | 只做配置层安全闸，不能把开关存在当作中立发行完成；先补构建身份与配置继承的离线证据 |
 
 本轮实现的开关名为 `TALOS_NEUTRAL_RUNTIME=1`。它是显式 opt-in，默认关闭；作用是让 managed/prod 运行时不自动创建或回填 MiniMax 默认 provider。已有用户配置保持原样，未配置 provider 时由上层 onboarding/provider 配置负责提供入口。该开关不删除通用凭据、权限、审批、沙箱或 provider 代码，也不承诺厂商云能力已被裁剪。
 
-### 真实 custom provider 探针入口（待运行）
+### 原生 provider 与重复探针复核（2026-09-28）
 
-【源码】`packages/tui/src/cli/program.ts:170-257`、`packages/tui/src/cli/provider-command.ts:45-111`：CLI 支持 `provider add --base-url --api-format --model --api-key-env --use`；`--use` 先测试首个模型，成功后才保存并选为默认，失败不保存。`packages/tui/src/cli/environment.ts:48-72` 与 `packages/tui/src/runtime/data-dir.ts:20-36` 表明 `MINIMAX_DATA_DIR` 是进程级数据目录覆盖入口，探针可用独立临时目录隔离已有账号。
+【源码】以下引擎路径均相对于 `C:\DEV\develop\minimax-code\`，提交 `cf8bd414b331b54f32d2bde2a3d66e56fdd7e565`，版本字段仍为 `0.5.7`；本次只读复核，不调用引擎或模型。
 
-Talos 新增 `spike/custom-provider-probe.ts`，先用上述 CLI 在临时数据目录保存并选择 provider，再用同一目录启动 ACP，执行 `initialize`、`session/new` 和纯文本 `session/prompt`。脚本只接受 API key 环境变量名，不接受命令行明文密钥；输出只保留 provider origin、模型名、stopReason、更新计数和回复前缀。环境变量不完整时只做 preflight，不发请求。当前仍是【未验】真实外部 provider；工具、取消、load、审批与网络出口审计不因脚本存在而通过。
+| 源码位置 | 事实与可用结论 |
+| --- | --- |
+| `packages/tui/src/tui/commands/catalog.ts:402`；`packages/tui/src/tui/controller/product/command-flow.ts:1330` | `/provider` 注册后打开已有 provider 管理器；不能把 CLI 的 add/test/list 子命令直接当成 TUI 斜杠命令 |
+| `packages/tui/src/tui/features/provider/onboarding.ts:361`、`:420`、`:649`、`:681` | 已有 Custom provider、模型发现/手填、测试保存并使用；预设和自定义配置无需在 GUI 重造 |
+| `packages/local-runtime-v2/src/service/model-system/connectivity/provider-request.ts:65` | 模型发现使用 HTTP `/models`（按 API 类型组合路径），不是已证明存在的 TUI `/models` 命令 |
+| `packages/tui/src/cli/program.ts:168`；`packages/tui/src/cli/provider-command.ts:82`；`packages/local-runtime-v2/src/service/model-system/management/service-candidate-operations.ts:153` | CLI provider 入口可打开原生 TUI；`provider add --use` 通过 saveCandidate 先跑连接测试，并非纯本地写配置 |
+| `packages/config/src/config.ts:1880` | 非 managed 环境新配置可从默认 home 数据目录读取并复制 config，还会调用原文件权限处理；`MINIMAX_DATA_DIR` 不单独保证无旧凭据读取/无旧文件操作。此分支先于中立开关判断，不能宣称该开关覆盖它 |
+| `packages/config/test/builtin-model-fallback.test.ts:113`；`packages/config/src/config.ts:2054` | 保留配置测试写了 `provider.custom_provider`，真实解析入口为根级 `custom_provider`；原测试通过不证明正确 provider 被保留 |
+
+【源码：Talos】提交 `cf0b97a` 的 `C:\DEV\develop\T3rra-C0d3-Talos\spike\custom-provider-probe.ts:36` 使用 inspectEnvironment；`src/host/environment.ts:35`、`:47` 默认从 PATH 解析已安装的 `@minimax-ai/code/cli.js`，只允许显式环境覆盖，不保证使用 fork。探针先执行 `provider add --use`，再发 `session/prompt`，存在连接测试和对话两段可能消耗模型额度的路径；不能将一次点击描述为仅一次生成请求。实际网络请求数、重试及计费 token 无账单或完整 trace 佐证，不推算数字。
+
+【未验】上述源码风险不证明那次运行一定读取了旧凭据，也不证明 fork 代码一定未被显式选择；它们说明此前“隔离可靠”“已验 fork”的结论缺乏证据。后续测试应锁定构建身份并离线验证配置继承，而非重复真实连接。
 
 ### 真实 custom provider 文本实测（2026-09-28）
 
-【主人验收】【实测】主人在 `/provider-setup.html` 中使用 provider origin `https://api.xiaomimimo.com`、模型 `mimo-v2.6-flash` 和 `openai-completions` 完成一次真实连接；页面显示“连接成功，模型已返回 talos-custom-ok”。向导只有在临时 CLI `provider add --use` 成功、ACP 会话完成且收到 `end_turn` 与 `talos-custom-ok` 时才显示成功，因此这次记录证明真实 custom provider 的文本链路已经打通。API key 未写入文档或 trace。
+【主人反馈】主人在 `/provider-setup.html` 中使用 provider origin `https://api.xiaomimimo.com`、模型 `mimo-v2.6-flash` 和 `openai-completions`，页面显示“连接成功，模型已返回 talos-custom-ok”。这是当时所运行路径的成功反馈。提交 `74df78b` 的 `src/service/ws-server.ts:132` 起使用进程退出码和整段 trace 子串判定成功，未对结构化 ACP 结果逐项验真；本次未重读原始 trace，不能升级为 fork 构建、隔离或完整独立运行证明。API key 不写入此文档。
 
-这项实测只覆盖 provider 保存/选中、ACP 握手、session/new 和纯文本 prompt；工具执行、取消、load/继续、审批和网络出口隔离仍未验收。
+保留该成功反馈，不要求主人重测。它不覆盖 fork 工具执行、取消、load/继续、审批及网络出口隔离；已安装 CLI 的第 2 轮 ACP 证据仍按前文范围有效。
 
 ## 记录格式与纪律
 
 每项包含：源码 commit + path:line → 请求/响应或通知形状 → 内部事件/字段映射 → 缺失与有损处理 → 可重跑脚本和脱敏 trace → 仍未覆盖的边界。先写源码依据，再测行为；只见报文不足以推导所有语义。
 
-未来 `spike/` 和 `traces/` 尚未创建。真实测试前确认临时 cwd、模型/凭据前置与数据落点；不复制用户 token 或真实会话进项目。无消费需求的字段先不扩内部契约。未知方法不能靠“ACP 应该支持”硬接，opencode 专属 HTTP fallback 不迁入。
+已有探针位于 `spike/`；原始 trace 默认忽略。真实测试前确认临时 cwd、模型/凭据前置与数据落点；不复制用户 token 或真实会话进项目。无消费需求的字段先不扩内部契约。未知方法不能靠“ACP 应该支持”硬接，opencode 专属 HTTP fallback 不迁入。

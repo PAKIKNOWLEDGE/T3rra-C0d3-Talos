@@ -40,7 +40,7 @@ New-Item -ItemType Directory -Force .talos\product-cwd | Out-Null
 & 'C:\Program Files\nodejs\node.exe' 'node_modules\tsx\dist\cli.mjs' src\dev.ts --cwd 'C:\DEV\develop\T3rra-C0d3-Talos\.talos\product-cwd'
 ```
 
-打开 <http://127.0.0.1:5193/>。页面沿用 demo 的主阅读面和右侧概况，但只显示真实 MiniMax 单会话事实；计划、usage 和文件改动清单仍会明确标出未接入或仅为工具涉及路径。
+打开 <http://127.0.0.1:5193/>。这是尚未通过验收的产品骨架，已知有回复不可见与样张字段残留，当前暂停复验；准确状态见 [status](docs/status.md)。
 
 ### 第 4 轮怎么验收
 
@@ -80,28 +80,13 @@ cd C:\DEV\develop\T3rra-C0d3-Talos
 3. 运行握手探针，预期出现 `phase: environment` 和 `phase: initialize`，并看到 ACP v1、`loadSession: true`、MCP `http/sse`、会话 `list/fork/resume/close`、空 `authMethods`、空 `stderr`。
 4. 确认没有 sessionId、模型回复或测试目录写入；第 1 轮只证明真实 initialize。
 
-通过后回复 **“第 1 轮通过，推进”**；若失败，贴出失败命令和完整 JSON。每个后续轮次都会在交付时给出前置条件、准确命令或 URL、3–5 个顺序动作、每步预期和机读结果。
+第 1 轮已完成，以上命令保留给执行者内部复验，不要求主人重跑或查看 JSON。
 
-### 最方便的验收方式：本地连接模型页
+### Provider 配置：复用原生 TUI
 
-不想设置 PowerShell 环境变量时，启动产品服务后直接打开 `http://127.0.0.1:5193/provider-setup.html`。页面会显示一个独立的连接表单：填写 Provider 名称、Base URL、API 格式、模型名和 API key，点击“测试连接”。它只运行一次隔离探针，不会写入现有账号目录，也不会把 key 显示到诊断文本中。
+在已安装的 mcode TUI 中输入 `/provider`，或在外部终端执行 `mcode provider` 打开同一管理菜单。已有配置可直接查看和使用，无需为本项目重新输入密钥。确需新增时，选择 “Add 3rd-party provider…” → 现有预设或 “Custom provider”，沿原生流程输入地址/密钥、导入或手填模型、测试保存并使用。测试保存可能调用模型。
 
-成功时页面显示“连接成功”，并说明模型已返回 `talos-custom-ok`；失败时页面显示“连接失败”，可展开诊断查看原因。这个页面是本轮新增的开发期验收助手，不代表最终产品配置入口。最终 TUI 仍沿用引擎的 `/provider`、`/provider add`、`/provider test` 和 `/provider list`。
-
-### 独立 custom provider 探针（命令行备用入口）
-
-这条探针使用临时 `MINIMAX_DATA_DIR` 和临时工作目录，默认开启 `TALOS_NEUTRAL_RUNTIME=1`；不会读取或改写现有账号目录。它只有在你明确提供 provider 地址、模型名和 API key 环境变量后才会发出真实请求；缺少任一项会在 preflight 停止。
-
-```powershell
-$env:TALOS_PROVIDER_BASE_URL = 'https://你的-provider/v1'
-$env:TALOS_PROVIDER_MODEL = '你的模型名'
-$env:TALOS_PROVIDER_API_KEY_ENV = '你的API_KEY环境变量名'
-# 可选：anthropic-messages / openai-completions / openai-responses
-$env:TALOS_PROVIDER_API_FORMAT = 'openai-completions'
-& 'C:\Program Files\nodejs\node.exe' 'node_modules/tsx/dist/cli.mjs' spike/custom-provider-probe.ts
-```
-
-预期依次看到 `phase: preflight`、`phase: provider`、`phase: conversation`；最后应有 `stopReason: end_turn`、`agent_message_chunk` 计数和 `textHead` 包含 `talos-custom-ok`。探针结束会清理临时目录；需要保留排查现场时才设置 `$env:TALOS_KEEP_PROBE_DATA = '1'`。这条命令不是当前 `check:all` 的必跑项，也不代表审批、工具、取消或 load 已验收。
+这里是系统已安装 mcode 的操作入口，不证明本地 fork 的改动生效。`provider add/test/list` 是 CLI 子命令；模型发现的 `/models` 是 HTTP 接口。重复的浏览器配置页和 custom-provider 探针停止使用，代码清理状态见 [status](docs/status.md)。本轮不要求主人进行任何连接测试。
 
 ### 第 2 轮怎么验收
 
@@ -119,7 +104,7 @@ cd C:\DEV\develop\T3rra-C0d3-Talos
 3. `phase: approval-deny` 和 `phase: approval-allow-once`：当前预期 `permissionRequests: []`、文件存在且内容为 `acceptance-ok`，表示现有权限规则没有触发审批；这项不能算审批通过。
 4. `phase: complete`：脚本已清理临时文件；确认 `demo/` 和产品目录没有被写入。
 
-第 2 轮验收通过后回复 **“第 2 轮通过，推进”**。如果只有审批未出现，请报告“权限未触发”；不要把它当作审批通过。
+第 2 轮已有证据，以上是执行者内部复现说明，会产生真实模型请求；不属于例行检查或当前纠偏任务，不要求主人重跑。权限未触发仍不算审批通过。
 
 当前工程已包含 `package.json`、锁文件、TypeScript 探针、ACP 适配器、事实模型、WebSocket 服务、`app/` 产品 UI 和 `check:all`。Tauri 与安装包仍按 [实施计划](docs/plan.md) 的后续轮次规划，不能写成已通过。
 
