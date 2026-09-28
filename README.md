@@ -1,10 +1,10 @@
 # T3rra-C0d3-Talos
 
-MiniMax Code + Endfield 族视觉 + Tauri 2 的独立控制台项目。目前已具备浏览器单会话产品骨架：Node 服务持有 MiniMax ACP 会话，`app/` 沿用已验收视觉范本；Tauri 2 与安装包仍是后续规划。
+Talos 由两个仓库组成：这里维护 GUI 和产品文档；相邻 `C:\DEV\develop\Talos-CLI` 维护 mcode fork 的引擎与终端界面。项目现状只看 [status](docs/status.md)，往后做什么看 [plan](docs/plan.md)。本页仅作操作手册，不是要依次执行的任务清单。
 
 接手先读 [AGENTS.md](AGENTS.md) → [status.md](docs/status.md)。开发与文档协作方式见 [workflow.md](docs/workflow.md)。
 
-已确认的浏览器五轮实施方案与 Tauri、Windows、功能扩展、发布的后续规划入口见 [plan.md](docs/plan.md)。其中未来路线尚待分阶段规划与授权；文中的目标接口不代表当前已有能力。
+按用途选入口：[TUI Talos 主题](#tui-talos-主题验收)、[真实 TUI 欢迎页](#tui-欢迎页验收)、[GUI 网页 demo](#本地预览)、[未验收浏览器产品](#浏览器产品入口)、[内部检查](#当前机读检查)。真实请求可能消耗模型额度，不作例行检查。
 
 ## 本地预览
 
@@ -50,7 +50,7 @@ New-Item -ItemType Directory -Force .talos\product-cwd | Out-Null
 4. 如果出现工具记录，点击记录查看真实状态、路径、输入和输出；路径只表示引擎报告的工具位置，不代表文件已修改。
 5. 运行中点击黄色停止按钮。预期先显示正在停止，收到引擎权威响应后才落为完成或已中止。
 
-本轮只请主人验收可见 UI、操作路径和视觉保持。协议、类型、探针、状态合并和服务生命周期检查由执行者自行判断；当前权限规则未触发审批时，不把静态审批卡片当作通过。
+以上保留为 GUI 恢复工作后的验收参考，当前不要求重跑。内部检查由执行者判断；权限规则未触发审批时，不把静态卡片当作审批通过。
 
 ## 当前机读检查
 
@@ -61,7 +61,7 @@ python tools/check-handoff.py
 
 第一条检查 demo 结构、资源、JS 语法与基础样式约束；第二条检查交接文档相对链接、关键资产及 demo 快照 SHA-256。均不启动浏览器、不调用模型。
 
-第 1 轮环境与握手复验在 PowerShell 中使用显式 Node 24，避免 PATH 当前指向不受支持的 Node 22.15.0：
+第 1 轮环境与握手复验使用显式 Node 24，避免不同终端的 PATH 差异；当前终端版本须实际核对，不能沿用旧记录：
 
 ```powershell
 cd C:\DEV\develop\T3rra-C0d3-Talos
@@ -133,6 +133,17 @@ git diff --check
 
 预期：配置用例实际执行且零跳过、类型与源码清单通过。非 managed 用例若确认继承 fake home，报告为已复现隔离缺口；测试通过不等于独立发行通过。失败处理和修改范围按 plan，不用修改生产逻辑把检查变绿。文档收口使用本仓库现有两条 Python 检查。
 
+## TUI Talos 主题验收
+
+前置：已按上方命令从 `C:\DEV\develop\Talos-CLI` 完成构建，终端已进入 TUI；本轮不需要登录、发送消息或配置 provider。
+
+1. 输入 `/theme`，在主题列表中选择 `Talos`，按 Enter 保存。
+2. 观察欢迎区之外的正文、输入区、菜单和状态提示：应以黄灰为主，正文仍保持中性可读，成功/警告/错误仍有区别。
+3. 在主题面板中切换 light / dark，再缩窄终端；两套颜色都应可读，面板不溢出。
+4. 按 Esc 取消一次未保存选择，再重新打开确认当前主题没有被误改；不发送消息，退出即可。
+
+预期：只改变主题颜色，不改变默认主题、快捷键、滚动、思考块、工具或审批逻辑。主题能显示并切换即可视为本轮可见验收通过；是否把 Talos 设为发行默认另行决定。
+
 ## TUI 欢迎页验收
 
 必须从当前 fork 源码目录启动，不能用 PATH 中的系统 `mcode`，也不能跳过构建：
@@ -142,10 +153,17 @@ cd C:\DEV\develop\Talos-CLI
 $env:PATH="C:\Program Files\nodejs;$env:PATH"
 node -v
 pnpm build
-pnpm mcode
+if ($LASTEXITCODE -ne 0) { throw 'Build failed; do not launch stale dist.' }
+& 'C:\Program Files\nodejs\node.exe' .\dist\cli.js
 ```
 
-预期是黄色机械臂欢迎图、普通字号 `TALOS` 和中立提示文案。若看到大字 `MINIMAX CODE` 或 `MCode`，说明启动的仍是旧 `dist` 或系统安装版，不算本轮验收结果。
+这是欢迎页的复验入口，不要求重新验收，也不要求发送模型消息。依次查看：
+
+1. 构建成功后进入终端：欢迎区出现黄色机械臂和普通字号 `TALOS`。
+2. 缩窄终端再放宽：欢迎图按宽度降级，提示可读。
+3. 查看输入区后退出，不发送消息：本次只观察欢迎页；其它部位仍可能出现 `MCode`，不能凭这一点判断启动错了。
+
+若欢迎区仍显示旧的大字 logo，先记录启动路径与构建结果，视为需要排查的可见失败；不能直接否定主人反馈。纯渲染/单测不能替代以上观察，既有机读证据见 adapter。
 
 ## 仓库与资料
 

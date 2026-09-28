@@ -1,8 +1,44 @@
 # MiniMax Code 接驳证据入口
 
-此页只记录证据与待验证问题，不记录实施进度。读取日期：2026-09-28。源码根目录 `C:\DEV\develop\Talos-CLI`，上游基线 `2aed5ca703c3359dd028af51e6c4cbc6a5e15c46`；纠偏复核时 fork HEAD 为 `cf8bd414b331b54f32d2bde2a3d66e56fdd7e565`。各历史证据以所在小节的提交为准。该仓自己的 AGENTS 管它的代码；不要把上游发布同步规矩误当 Talos 的工程流程。
+此页是按需查阅的证据库，不是每轮必读清单，也不派发任务。源码根目录 `C:\DEV\develop\Talos-CLI`，上游基线 `2aed5ca703c3359dd028af51e6c4cbc6a5e15c46`；每项证据只对其标注的日期、提交和运行路径负责。该仓自己的 AGENTS 管它的代码。
 
-## 当前已有证据
+按问题选读：[原生 TUI](#原生-tui-与-gui-边界复核2026-09-29)、[配置隔离缺口](#配置离线回归实测2026-09-28)、[原生 provider](#原生-provider-与重复探针复核2026-09-28)、[ACP 契约](#单会话链路源码证据)、[真实 ACP 探针](#第-2-轮真实探针实测)。现状只见 [status](../status.md)。
+
+## 原生 TUI 与 GUI 边界复核（2026-09-29）
+
+【源码】根目录为 `C:\DEV\develop\Talos-CLI\`，以下 path:line 均相对于该根；HEAD `370c7646fdfd51ef8a812a4966538884b73db556`。本次只读取证和核对 Git，没有启动 TUI、跑引擎测试或调用模型。
+
+| 位置 | 事实与限制 |
+| --- | --- |
+| `packages/tui/src/tui/app.ts:80`、`:82`；`packages/tui/src/tui/controller/projection/turn-live-projection.ts:47`、`:57` | 已组装 TranscriptStore/TranscriptView，投影处理助手流式文本、thinking、工具调用及消息；原生功能已存在，不需要按 GUI ACP 链重新实现 |
+| `packages/tui/src/tui/controller/interaction/interaction-flow.ts:648`、`:653`、`:1203`、`:1212` | 已有权限选择页和 runtime.replyPermission 提交路径，带请求与会话身份处理；视觉改造应复用，不另造审批状态机 |
+| `packages/tui/src/tui/features/interaction/permission-picker.ts:88`、`:90`、`:118`、`:127`、`:543` | allowOnce 显示为 Allow for this conversation；可不提供 always；主选择页 Esc 拒绝、Ctrl+C 停止，提交期间禁用输入。子页 Esc 可返回，所以不能把“Esc 拒绝”泛化到每个子页，也不能照抄文本示意图的 Esc keep waiting |
+| `packages/tui/src/tui/theme/palettes.ts:365`；`packages/tui/src/tui/shell/welcome/hero.ts:11` | 默认主题 id 仍为 minimax，欢迎图使用已有语义颜色和宽度分支；欢迎页更新不等于所有主题/品牌改完 |
+| `package.json:12`、`:15` | build 负责构建，mcode 脚本只运行 dist/cli.js；改源码后未重建可能仍见旧画面。版本号 0.5.7 不能单独证明 fork 构建身份 |
+
+映射边界：TUI 组件直接使用自己的 runtime/投影；GUI 通过 ACP 适配后合并事实。两套界面的视觉参考和协议契约不可互换。【未验】本次不证明全部原生功能的运行正确性，也不判断完整 TUI 的设计已经通过。
+
+## TUI 主题复用依据（2026-09-29）
+
+【源码】根目录 `C:\DEV\develop\Talos-CLI\`，HEAD `370c7646fdfd51ef8a812a4966538884b73db556`。本次只读，无模型请求、构建或运行验收。
+
+- `packages/tui/src/tui/theme/palettes.ts:27`、`:56`、`:366`、`:455`、`:470`：内置主题已有 dark/light 调色板、默认值和注册列表；本轮 Talos 位于 `:366`，默认值和注册列表仍在 `:455`、`:470`。可添加 Talos 主题而不覆盖原主题、不改默认 fallback。
+- `packages/tui/src/tui/theme/registry.ts:28`、`:65`、`:84`；`theme/controller.ts:78`：注册表列出主题，按传入选择和 appearance 解析颜色。已有用户选择必须保留，不能为了让新主题出现而改写配置。
+- `packages/tui/src/tui/commands/catalog.ts:374` 注册 `/theme`；`packages/tui/src/tui/features/settings/theme-picker.ts` 已有预览、提交、取消与 appearance 选择。复用原菜单，不另建设置页。
+- `packages/tui/src/tui/theme/runtime.ts` 的 `tuiColors`、`tuiSelectListTheme`、`tuiEditorTheme` 和 Markdown theme 读取动态语义色；`shell/composer.ts:4`、`shell/chrome.ts:10` 沿用该层。主题能影响欢迎页之外的组件，但不保证每个硬编码颜色都随之变化。
+- `packages/tui/test/unit/tui/theme/palettes.test.ts:23` 起遍历所有内置深浅调色板，包含原配色兼容和对比度检查；相关 runtime/custom-themes/theme-picker 测试已在 `test/vitest-suites.json:177` 起登记。添加主题应保留原值兼容和阈值，不能将“预期新颜色”冒充渲染验收。
+
+【实施边界】真实终端、无色/16 色适配与各组件的最终外观仍需主人验收；本轮机读结果只证明主题注册、颜色契约和切换路径。主人反馈新版本已解决思考块体验，仅记录需求撤回，不据此断言本机 fork 已同步该版本。
+
+## 既有上游公共依据
+
+## TUI Talos 主题实测（2026-09-29）
+
+【实测】在 `C:\DEV\develop\Talos-CLI` fork HEAD `370c7646fdfd51ef8a812a4966538884b73db556` 上，新增 `talos` 内置主题，保留 `minimax` 默认主题和既有主题选择。改动仅涉及 `packages/tui/src/tui/theme/palettes.ts` 及两处既有测试断言；未新增文件、依赖或运行时状态。
+
+验证结果：显式 Node `v24.15.0`（将 `C:\Program Files\nodejs` 置于 PATH）下，主题 palette、runtime、custom-themes、theme-picker、composer 共 5 个测试文件 **137/137** 通过；standalone TypeScript 通过；source inventory **4276 files** 通过；`pnpm build` 成功，产物报告 `Built MiniMax Code 0.5.7 from 6267 source files`；`git diff --check` 通过。首次未覆盖 PATH 的构建显示 Node `v22.15.0` engine warning，随后已用显式 Node 24 重跑成功，该 warning 不计入最终构建结果。
+
+【主人待验】实际终端中通过 `/theme` 选择 `Talos`，观察欢迎区之外的正文、输入区、菜单、工具/审批提示的黄灰配色，再切换 dark/light、缩窄终端并取消返回原主题。未发送消息、未测试 provider、未改思考块、未改默认主题；本次机读结果不等于完整 TUI 视觉通过。
 
 | 等级 | 来源 | 只支持什么结论 |
 | --- | --- | --- |
@@ -192,7 +228,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 【实测】引擎 fork 提交 `107c9cf`（父提交 `b2c9930`）已落地本轮视觉切片：欢迎页改用 03 装配机械臂的 full/compact/micro 三档字符图，宽/堆叠/紧凑布局的可见标题和提示改为 Talos 中立文案，英雄图沿既有主题语义色的 warning 角色渲染。保留旧导出名作为兼容别名，未改主题默认 id、鉴权、provider、ACP、数据目录、更新器或命令入口。
 
-验证结果：Node `v24.15.0` 下欢迎页相关 Vitest `26/26`、欢迎应用筛选 `4 passed`、目标文件 ESLint、standalone TypeScript、source inventory `4276 files` 和 `git diff --check` 通过；另用 `tsx` 对宽度 80/30/15/8 做纯渲染预览，分别命中 full/compact/micro/fallback 分支。未启动真实 CLI，未发送模型请求；终端字体、颜色级别、完整欢迎页布局仍需主人目视验收。
+原执行记录：Node `v24.15.0` 下主题 palette 测试 `26/26`、欢迎应用筛选 `4 passed`（330 项被筛掉）、目标文件 ESLint、standalone TypeScript、source inventory `4276 files` 和 `git diff --check` 通过；另用 `tsx` 对宽度 80/30/15/8 做纯渲染预览。26 项不是 26 个欢迎页测试，也不是完整 TUI 套件通过。当时未启动真实 CLI、未发送模型请求；后来欢迎页的主人验收结论见 status，本次文档整理未重跑上述测试。
 
 ### 真实 custom provider 文本实测（2026-09-28）
 

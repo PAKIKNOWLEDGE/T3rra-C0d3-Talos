@@ -1,10 +1,10 @@
 # AGENTS.md — T3rra-C0d3-Talos
 
-给没有上一会话上下文的接手者。先读本文件，再读 [当前状态与下一入口](docs/status.md)。这是独立的新项目；Rhodes 的规则有选择地继承，产品实现和引擎事实没有迁入。
+给没有上一会话上下文的接手者。先读本文件，再读 [当前状态与下一入口](docs/status.md)，然后只读当前任务链接的方案和证据。不要默认通读全部 docs、归档或会话历史。Rhodes 的规则有选择地继承，产品实现和引擎事实没有迁入。
 
 ## 每轮先确认角色与任务
 
-主人在 prompt 中指定的 **Astra / Luna 是本轮职责**：Astra 负责取证、规划与复核；Luna 负责按已就绪的小轮实施与自验。不要从前文助手的自称、发言风格、会话摘要或 status 的“下一接手角色”推断自己已经换了角色，也不要用这些称呼证明当前底层模型型号。
+主人使用 **Astra / Luna** 分配规划与执行成本：Astra 负责取证、规划与复核；Luna 负责按已就绪的小轮实施与自验。按主人最近明确指定的职责工作，不做模型身份猜测，也不因切模型重做已完成工作。普通局部实现无需额外规划轮；具体规则见 workflow。
 
 行动前读取 status 顶部唯一的“当前交接卡”，核对任务标识、修订、阶段、角色和范围，首条工作说明用一句话报告本轮角色、任务与停止点。同一 session 切换模型、恢复压缩上下文也遵守此规则。主人最新明确指令优先于文件，先同步有冲突的卡片；角色声明本身不授权开启下一项。具体分工、无角色时的处理和状态转换见 [workflow 的角色交接规则](docs/workflow.md#0-角色与交接)。
 
@@ -34,7 +34,7 @@ Windows 优先的 coding-agent 桌面控制台，MiniMax Code 后端、Endfield 
 
 ## 文档流
 
-一件事只写一处：状态、验收和主人决定在 `docs/status.md`；实施方案、分轮验收目标与未来规划入口在 `docs/plan.md`；操作命令在 README；规矩在本文件与 workflow；视觉在 design；契约证据在 adapter；可迁移教训在 lessons。其余地方链接，不复制第二套待办。
+一件事只写一处：状态、验收和主人决定在 `docs/status.md`；当前方案与简要路线在 `docs/plan.md`；操作命令在 README；规矩在本文件与 workflow；视觉在 design；契约证据在 adapter；可迁移教训在 lessons。其余地方链接，不复制第二套待办或机读状态源。归档只供追溯，不是执行入口。
 
 状态是现状，不是逐日日志；过时条目改掉，历史交给 Git。证据保留版本和日期，不写进度。新材料优先并入现有文档；需要替换整篇文档时归档原件并标注替代关系。结束一轮前，必须让下一会话只靠文件就能知道当前事实和下一入口。
 
@@ -43,7 +43,7 @@ Windows 优先的 coding-agent 桌面控制台，MiniMax Code 后端、Endfield 
 | 入口 | 用途 |
 | --- | --- |
 | [docs/status.md](docs/status.md) | 当前验收、边界、下一步与决定；每次必读 |
-| [docs/plan.md](docs/plan.md) | 浏览器五轮实施方案、Tauri 等后续规划入口与 Astra 复核提示；实施前按 status 定位阅读 |
+| [docs/plan.md](docs/plan.md) | 简要路线与当前方案；只展开即将执行的一轮，不把未来方向当待办 |
 | [docs/workflow.md](docs/workflow.md) | 开发、验收、文档更新、机读闸和服务生命周期 |
 | [docs/design.md](docs/design.md) | Talos 的视觉正本、参考层级、demo 到产品的边界 |
 | [docs/lessons.md](docs/lessons.md) | Rhodes 反复踩过的坑及迁移时如何避开 |
