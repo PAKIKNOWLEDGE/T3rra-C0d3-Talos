@@ -7,14 +7,14 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 任务标识 / 修订 | `tui-visual-wiring` / `r1` |
-| 阶段 | 待主人验收 |
+| 阶段 | 已完成 |
 | 本轮角色 / 来源 | Luna；主人已验收静态范本并明确“继续推进”，按 TUI 视觉接线小轮实施 |
 | 目标 / 方案入口 | 复用现有欢迎页和主题管线，接入 Talos 机械臂与中立欢迎文案；[plan TUI 视觉接线小轮](plan.md#执行交接-tui-视觉接线小轮) |
 | 允许范围 | Talos 的接驳证据/状态/计划文档；引擎 fork 仅改欢迎设计数据和直接可见标题，具体清单见 plan |
 | 禁止范围 | 不改鉴权、provider、数据目录、ACP、更新器、遥测、CLI 命令名、GUI 第 4 轮失败项；不发模型请求、不 push |
-| 验收 / 停止点 | Luna 已跑引擎 TUI 相关单测、类型和 source inventory；主人现在只需启动当前 fork 目视欢迎页。若视觉不符先修本轮，不进入去品牌或命令改名 |
-| 完成证据 | 当前引擎目录已统一为 `C:\DEV\develop\Talos-CLI`；有效视觉改动仍在 fork HEAD `370c764`（恢复 `107c9cf`），并已用 Node 24 执行 `pnpm build`。此前截图实际显示的是旧 `dist/cli.js` 的默认 MCode 欢迎页，因此不构成源码视觉验收；下一次必须先 build 再启动 |
-| 下一接手 / 就绪性 | 主人：按下方步骤验收真实欢迎页；通过后再规划对话/工具/审批真实接线。 |
+| 验收 / 停止点 | Luna 已跑引擎 TUI 相关单测、类型、source inventory 和构建；主人已确认重建后的真实欢迎页。当前小轮到此停止，不自动进入下一轮 |
+| 完成证据 | 当前引擎目录已统一为 `C:\DEV\develop\Talos-CLI`；fork HEAD `370c764` 已恢复视觉改动，Node 24 下 `pnpm build` 成功，主人验收通过。此前旧 `dist` 的截图已按澄清处理，不计入本轮验收 |
+| 下一接手 / 就绪性 | Astra：规划下一项对话/工具/审批真实接线小轮；本轮不再打磨欢迎页视觉。 |
 
 此卡是唯一当前入口；下方验收账与 plan 的历史小轮不构成新的执行授权。角色分工详见 workflow，不从上一轮助手的自称推断本轮角色。
 
@@ -39,7 +39,7 @@
 - UI 存在明显错漏；截图显示固定 `atlas-workspace`、`C:\Projects\atlas`、`/ 200K` 样张以及密集 MiniMax 文案。不是有意交付的完成态；已验收的 `demo/` 正本仍保留。
 - 发送 `只回复 talos-ok，不要调用工具` 后，作业记录仅显示用户指令，状态却为“已完成”。事件页只有 `service.snapshot` revision 2–5 等摘要；快照到达不能证明模型文本已到达，丢失发生在哪一层尚未定位。
 - 原“5 项单测 + 服务启动/HTTP/WebSocket 烟测通过”结论仅限这些检查覆盖的范围，不能推导完整服务生命周期、全部计划要求或 UI 对话已通过。
-- 主人要求前两项先记录不修。中立引擎 fork 已由主人创建，本机源码 origin 已按指令改向该 fork；源码已确认第三方预设可保留，且已完成第一刀：provider 视图不再固定把 MiniMax 放在 custom provider 前面，19 个 targeted provider 单测和仓库 BYOK 假 provider 套件通过。已补入显式 `TALOS_NEUTRAL_RUNTIME=1` 配置闸：managed/prod 新配置不再自动种 MiniMax provider/defaultModel，已有配置不被隐式删除；默认关闭，不改变现有 upstream 语义。删除专属登录、数据隔离、厂商网络出口审计和 TUI 改造尚未实施。
+- 主人要求前两项先记录不修。中立引擎 fork 已由主人创建，本机源码 origin 已按指令改向该 fork；源码已确认第三方预设可保留，且已完成第一刀：provider 视图不再固定把 MiniMax 放在 custom provider 前面，19 个 targeted provider 单测和仓库 BYOK 假 provider 套件通过。已补入显式 `TALOS_NEUTRAL_RUNTIME=1` 配置闸：managed/prod 新配置不再自动种 MiniMax provider/defaultModel，已有配置不被隐式删除；默认关闭，不改变现有 upstream 语义。删除专属登录、数据隔离、厂商网络出口审计和完整 TUI 改造尚未实施；欢迎页视觉切片已完成。
 
 【实测】2026-09-28 使用显式 `C:\Program Files\nodejs\node.exe` 重跑环境检查与 ACP 握手：Node `v24.15.0`，mcode `0.5.7`，源码 HEAD `2aed5ca703c3359dd028af51e6c4cbc6a5e15c46`；`protocolVersion: 1`，`loadSession: true`，MCP `http/sse`，prompt 的 image/audio/embeddedContext 均关闭，session capabilities 含 list/fork/resume/close，`authMethods: []`，stderr 为空。PATH 默认 Node 仍为 `v22.15.0`，低于本项目要求；README 已固定显式 Node 24 命令。该握手未创建会话、未调用模型，也未证明后续接口。
 
@@ -51,7 +51,7 @@
 
 欢迎图已选择：主人认可 **03 装配机械臂**。字符正本已落入 design 引用的仓库文件；静态画面范本已通过，真实欢迎页视觉切片已接入引擎 fork。上一次截图展示的是未重建的默认 `dist`，不算有效验收；源码目录现为 `C:\DEV\develop\Talos-CLI`。
 
-两个仓库保持分工：Talos 维护 GUI 和产品文档，`C:\DEV\develop\Talos-CLI` 维护引擎、CLI/TUI、provider、账号与数据目录；两者通过 ACP 对接，不使用子模块。TUI 已选 A「对话流式终端」和机械臂图案，不做大字字标，见 [design](design.md#tui-设计讨论)。完整 TUI 实现前另给欢迎、对话/工具、审批三种画面范本验收。
+两个仓库保持分工：Talos 维护 GUI 和产品文档，`C:\DEV\develop\Talos-CLI` 维护引擎、CLI/TUI、provider、账号与数据目录；两者通过 ACP 对接，不使用子模块。TUI 已选 A「对话流式终端」和机械臂图案，不做大字字标，见 [design](design.md#tui-设计讨论)。欢迎页视觉切片已验收；对话/工具/审批真实接线仍未开始。
 
 上一执行小轮已完成，本地提交 `6025d0b`：删除重复浏览器 provider 向导、对应 POST 路由、临时 custom-provider 探针及脚本入口；复用原生 TUI `/provider` 交互入口及既有 CLI 子命令。该轮未运行引擎或真实模型请求。撤销“扩展同一探针到工具、取消、load”的下一步。第 4 轮 GUI 失败保留，第 5 轮继续暂停。
 
@@ -101,3 +101,4 @@
 | 2026-09-28 | 主人选择两个相邻仓库保持独立、先 TUI 再 GUI、首版自带密钥与本地工具；TUI 采用对话流，欢迎图从游戏元素绘制 ASCII，拒绝大字字标。机械臂图案方向已确认，完整画面仍待验收 |
 | 2026-09-28 | 主人确认 Talos GUI 仓库与 `PAKIKNOWLEDGE/Talos` 引擎 fork 的两仓库路线；本轮完成职责、ACP 边界、同步规则和下一入口文档整理，未改引擎代码 |
 | 2026-09-28 | 主人将相邻引擎源码目录从 `C:\DEV\develop\minimax-code` 重命名为 `C:\DEV\develop\Talos-CLI`，以减少启动时的语义混淆；后续验收必须锁定该目录并先重建 `dist` |
+| 2026-09-28 | 主人验收通过 TUI 欢迎页视觉接线；本轮只到欢迎页，未进入对话/工具/审批接线，也不继续打磨欢迎页设计 |
