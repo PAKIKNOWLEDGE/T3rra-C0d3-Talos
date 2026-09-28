@@ -86,7 +86,7 @@ cd C:\DEV\develop\T3rra-C0d3-Talos
 
 不想设置 PowerShell 环境变量时，启动产品服务后直接打开 `http://127.0.0.1:5193/provider-setup.html`。页面会显示一个独立的连接表单：填写 Provider 名称、Base URL、API 格式、模型名和 API key，点击“测试连接”。它只运行一次隔离探针，不会写入现有账号目录，也不会把 key 显示到诊断文本中。
 
-成功时页面显示“连接成功”，并说明模型已返回 `talos-custom-ok`；失败时页面显示“连接失败”，可展开诊断查看原因。这个页面是本轮新增的验收助手，不代表主对话 UI 的 provider 设置功能已经完成。
+成功时页面显示“连接成功”，并说明模型已返回 `talos-custom-ok`；失败时页面显示“连接失败”，可展开诊断查看原因。这个页面是本轮新增的开发期验收助手，不代表最终产品配置入口。最终 TUI 仍沿用引擎的 `/provider`、`/provider add`、`/provider test` 和 `/provider list`。
 
 ### 独立 custom provider 探针（命令行备用入口）
 

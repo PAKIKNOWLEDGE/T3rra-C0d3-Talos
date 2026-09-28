@@ -10,6 +10,7 @@
 - 【实测】远端 `PAKIKNOWLEDGE/T3rra-C0d3-Talos` 已创建；本轮查询 `isEmpty: true`。本地仅初始化 Git 并设置 origin，不 commit、不 push；空远端要求继续有效，首次推送前取得主人授权。
 - 【文档】当前引擎由相邻的 `C:\DEV\develop\minimax-code` fork 提供，Talos 通过 `mcode acp` 对接；详细边界见 [adapter](adapters/minimax-code.md)。产品已通过真实 initialize 接入；审批未触发仍按限制记录。
 - 【文档：主人决定】已确认浏览器单会话闭环计划，要求运行中刷新也能继续观察同一回合；实施分五轮验收。方案与后续路线唯一正本为 [plan](plan.md)。
+- 【文档：主人决定】最终 provider 配置入口仍是引擎 TUI 的 `/provider` 系列命令；浏览器 `/provider-setup.html` 只作开发期真实接驳验收助手。未来发行命令改为 `talos`，先提供兼容 `mcode` 别名并完成数据目录、ACP、更新和脚本迁移后再移除旧名。
 - 【文档：主人决定】主人自行更新 CLI 以对齐源码；真实探针沿用现有账号、模型及数据目录，使用独立测试 cwd。执行者不自行升级全局软件、不复制凭据。
 - 【源码】已阅读 ACP 启动、会话、流式投影、取消、审批及相关运行时路径，核对源码 HEAD 未变；依据已补入 adapter。源码阅读不等于真实行为验收。
 
