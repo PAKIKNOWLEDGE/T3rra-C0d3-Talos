@@ -84,9 +84,19 @@ cd C:\DEV\develop\T3rra-C0d3-Talos
 
 ### Provider 配置：复用原生 TUI
 
-在已安装的 mcode TUI 中输入 `/provider`，或在外部终端执行 `mcode provider` 打开同一管理菜单。已有配置可直接查看和使用，无需为本项目重新输入密钥。确需新增时，选择 “Add 3rd-party provider…” → 现有预设或 “Custom provider”，沿原生流程输入地址/密钥、导入或手填模型、测试保存并使用。测试保存可能调用模型。
+本轮验收必须从 `C:\DEV\develop\Talos-CLI` 构建并启动 fork，不使用 PATH 中的系统 `mcode`：
 
-这里是系统已安装 mcode 的操作入口，不证明本地 fork 的改动生效。`provider add/test/list` 是 CLI 子命令；模型发现的 `/models` 是 HTTP 接口。重复的浏览器配置页和 custom-provider 探针停止使用，代码清理状态见 [status](docs/status.md)。本轮不要求主人进行任何连接测试。
+```powershell
+cd C:\DEV\develop\Talos-CLI
+$env:PATH="C:\Program Files\nodejs;$env:PATH"
+pnpm build
+if ($LASTEXITCODE -ne 0) { throw 'Build failed; do not launch stale dist.' }
+pnpm talos
+```
+
+进入 TUI 后输入 `/provider`。列表顶部应有 `+ Add provider`；按 Enter、Space 或 `a`，应进入既有官方 provider 预设列表，并能看到 `Custom provider`。MiniMax 可以作为一个已保存 provider 行存在，但不能再是唯一的新增入口。已有配置可直接查看和使用，测试保存可能调用模型。
+
+这里验收的是 Talos fork 的原生 TUI 入口，不是浏览器配置页；`provider add/test/list` 仍是 CLI 子命令。重复的浏览器配置页和 custom-provider 探针停止使用，代码清理状态见 [status](docs/status.md)。
 
 ### 第 2 轮怎么验收
 

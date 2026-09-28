@@ -4,6 +4,22 @@
 
 按问题选读：[原生 TUI](#原生-tui-与-gui-边界复核2026-09-29)、[配置隔离缺口](#配置离线回归实测2026-09-28)、[原生 provider](#原生-provider-与重复探针复核2026-09-28)、[ACP 契约](#单会话链路源码证据)、[真实 ACP 探针](#第-2-轮真实探针实测)。现状只见 [status](../status.md)。
 
+## provider 入口与构建身份复核（2026-09-28）
+
+【源码】相邻引擎工作树 `C:\DEV\develop\Talos-CLI` 已落地本轮提交 `e5e797dff4ab26400cbb233c242cf10e59536b1c`，本轮未改变 ACP、凭据协议或真实数据。以下是本轮实现依赖的源码映射：
+
+| 位置 | 事实与实现 |
+| --- | --- |
+| `packages/tui/src/tui/features/provider/manager.ts:37`、`:103`、`:148-166`、`:205`、`:287-293` | provider 管理器原先只渲染已保存连接；本轮增加显式 `+ Add provider` 行、`a` 快捷键和 Enter/Space 选中动作，选中后通过回调离开管理器，不伪造 provider snapshot |
+| `packages/tui/src/tui/controller/product/feature-flow.ts:935-941` | `/provider` 管理器的新增入口关闭当前面板并调用既有 `showProviderOnboarding()`；官方目录和 Custom provider 仍由 onboarding 负责加载 |
+| `packages/tui/src/tui/features/provider/onboarding.ts:347-367` | onboarding 的 `Known providers` 模板和 `Custom provider` 手工入口原本已经存在，本轮复用，不重复实现 provider 保存协议 |
+| `packages/tui/src/provider/application.ts:22-62` | snapshot 仍代表已保存连接与 MiniMax credential source；官方 catalog 不应从 snapshot 猜测，必须通过 onboarding 显式加载 |
+| `package.json:2-6`、`scripts/build.mjs:137-146`、`packages/tui/src/build-info.ts:7-22` | 根包和构建产物的可见身份改为 `talos-cli` / `Built Talos CLI`；版本仍为上游基线 `0.5.7`，版本解析同时接受 Talos 产物名 |
+
+【实测】2026-09-28，显式 Node `v24.15.0` 下：`pnpm build` 输出 `> talos-cli@0.5.7 build` 与 `Built Talos CLI 0.5.7 from 6267 source files.`；provider manager 定向单测 **23/23**；standalone typecheck 通过。未启动真实 TUI、未发送模型请求、未触碰 `.talos/` 用户目录。
+
+【未验】主人尚未在真实终端进入 `/provider` 观察新增行，也未从该行进入官方预设和 Custom provider；这项可见验收通过前，不能宣称 provider 中立化完成。MiniMax 行仍可存在，但不再是唯一新增入口。
+
 ## 原生 TUI 与 GUI 边界复核（2026-09-29）
 
 【源码】根目录为 `C:\DEV\develop\Talos-CLI\`，以下 path:line 均相对于该根；HEAD `370c7646fdfd51ef8a812a4966538884b73db556`。本次只读取证和核对 Git，没有启动 TUI、跑引擎测试或调用模型。

@@ -4,12 +4,12 @@
 
 ## 项目现在在哪里
 
-**GUI 功能开发暂停，Talos-CLI 外部入口小轮已获主人验收。当前已调整成本分工：Luna 负责日常开发全流程，下一步继续 CLI 中立化，取消固定的 Astra 取证审批。** Talos 主题与缩小机械臂、ASCII 标题均已获主人验收；独立 npm 发行与周期性上游 PR 保留。产品目标仍是中立引擎、自己的 TUI、Endfield 风格 GUI，最终采用 Tauri 2。
+**GUI 功能开发暂停，当前在修正 Talos-CLI 的 provider 入口与构建身份。Luna 负责日常开发全流程，Astra 只处理架构取舍或主人点名的复核。** Talos 主题与缩小机械臂、ASCII 标题均已获主人验收；独立 npm 发行与周期性上游 PR 保留。产品目标仍是中立引擎、自己的 TUI、Endfield 风格 GUI，最终采用 Tauri 2。
 
 | 工作线 / 所属仓库 | 已有结果 | 当前缺口与状态 |
 | --- | --- | --- |
 | GUI / 本仓库 `T3rra-C0d3-Talos` | 网页视觉 demo 已验收；产品已有 ACP 适配器、Node 服务和浏览器 UI 骨架 | **暂停**。产品第 4 轮验收失败：回复不可见、UI 错漏和样张字段残留；第 5 轮刷新恢复未验收。demo 通过不等于产品通过 |
-| 中立引擎 / `C:\DEV\develop\Talos-CLI` | provider 显示不再按类型固定置顶；已加显式中立默认配置开关，并完成有限离线回归 | **下一步由 Luna 闭环一个切片**。专属登录、厂商网络出口、数据隔离、独立发行尚未解决；不能称“已去 MiniMax 化” |
+| 中立引擎 / `C:\DEV\develop\Talos-CLI` | provider 管理页已接回“+ Add provider”；构建输出和本地包名显示 Talos CLI；第三方预设与 Custom provider 继续复用原生向导 | **待主人验收本轮可见入口**。专属登录、厂商网络出口、数据隔离、独立发行尚未解决；不能称“已去 MiniMax 化” |
 | TUI / 同一 `Talos-CLI` 仓库 | 可选 Talos 配色、缩小机械臂和 ASCII `TALOS` 已获主人验收；原生对话、工具、审批和 `/provider` 功能本来就有 | **已完成这两项视觉小轮**；可作为首版外观基线，不自动追加视觉打磨；发行品牌与默认选择尚待处理 |
 | 桌面与发布 / 后续 | 保留 Tauri 2 路线，不用 Electron | **未开始**。不做第三个仓库，不因路线存在就开始打包 |
 
@@ -19,15 +19,15 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | `cli-provider-data-audit` / `r2` |
+| 任务标识 / 修订 | `cli-provider-neutral-ui` / `r3` |
 | 阶段 | 待主人验收 |
 | 本轮角色 / 来源 | Luna；主人要求继续计划，已授权按既定中立化目标自行选取小切片 |
-| 目标 / 方案入口 | Talos 启动默认进入中立运行；[plan](plan.md#当前小轮cli-中立化) |
-| 允许范围 | `Talos-CLI/packages/tui/src/cli/environment.ts` 及本仓库同步文档；不请求模型，不动真实数据 |
+| 目标 / 方案入口 | `/provider` 可进入官方预设与 Custom provider；本地构建显示 Talos；[plan](plan.md#当前小轮provider-入口与构建身份) |
+| 允许范围 | provider manager、feature-flow、构建元数据、对应测试和本仓库同步文档；不请求模型，不动真实数据 |
 | 禁止范围 | 不改默认数据目录、不迁移旧 home、不改网络出口、不处理 GUI、不 fetch/merge/push |
-| 验收 / 停止点 | 启动链设置 `TALOS_NEUTRAL_RUNTIME=1`；主人确认后停，下一小轮再处理 `.talos` 数据目录与旧 home 继承 |
-| 完成证据 | `Talos-CLI` 提交 `c677a6925f32bb79e962c85259ab7fd5d69d51c9`；改动仅写入 Talos 启动环境；本轮未运行测试，避免把未验证行为写成已通过 |
-| 下一接手 / 就绪性 | 主人验收后由 Luna 继续数据目录切片；若验收失败，先修启动环境接线 |
+| 验收 / 停止点 | 构建显示 `talos-cli@0.5.7` 与 `Built Talos CLI 0.5.7`；进入 `/provider` 能见 `+ Add provider`，Enter/Space 或 `a` 打开官方预设和 Custom provider；主人确认后停 |
+| 完成证据 | provider manager 23/23、standalone typecheck、`pnpm build` 通过；真实终端可见行为尚未由主人验收 |
+| 下一接手 / 就绪性 | 主人验收后再进入数据目录/专属登录切片；若入口失败，先修本轮，不跳到 GUI |
 
 ## 必须保留的事实
 

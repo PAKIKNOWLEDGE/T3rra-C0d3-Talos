@@ -70,6 +70,18 @@ Luna 需要落实的局部问题：
 
 验收与停止：本切片验收只确认 Talos 启动会设置中立开关，不能把它称为完全中立化或数据隔离完成。主人可用现有 Talos 启动入口观察 provider 初始状态；完成本切片后停。只有实施必然要求改变数据格式/恢复保证、协议或安全契约时才按 workflow 升级；目录命名、开关接线、普通回归问题无需 Astra。
 
+## 当前小轮：provider 入口与构建身份
+
+任务 `cli-provider-neutral-ui/r3`。目标是修复空配置时 `/provider` 看起来像 MiniMax 独占，以及本地构建仍把自己称为 MiniMax Code 的可见问题。第三方预设和 Custom provider 已存在于原生 onboarding，本轮把入口接回 provider 管理页，不重写 provider 协议或凭据逻辑。
+
+| 项目 | Luna 执行范围 |
+| --- | --- |
+| 实现 | provider 管理页顶部显示 `+ Add provider`；Enter/Space 或 `a` 进入既有官方预设/Custom provider 向导；构建根包、产物包和构建输出显示 Talos CLI；版本解析同时接受本地 Talos 产物名 |
+| 依据 | `packages/tui/src/tui/features/provider/manager.ts` 的列表与键盘动作；`feature-flow.ts` 的 onboarding 装配；`onboarding.ts` 的 Known providers/Custom provider 列表；`scripts/build.mjs` 与 `package.json` 的可见构建身份 |
+| 自验 | provider manager 定向套件、standalone typecheck、`pnpm build`；不发送模型请求，不触碰真实 provider/data |
+| 主人验收 | 从 `C:\DEV\develop\Talos-CLI` 用支持的 Node 24 执行 `pnpm build`；启动 `pnpm talos`，输入 `/provider`；首行应见 `+ Add provider`，按 Enter 或 `a` 后应见官方预设列表和 `Custom provider`。MiniMax 可作为一个 provider 行存在，但不能再是唯一配置入口 |
+| 停止 | 通过后停；下一轮再处理默认数据目录、专属登录门禁或发行 manifest，不把本轮入口修复称为完全去 MiniMax 化 |
+
 ## 已交付方案：TUI Talos 主题
 
 任务 `tui-talos-theme/r1`。目标：让 Endfield 族黄灰风格覆盖欢迎区之外的现有 TUI，先完成统一配色这一层，不重做布局和交互。视觉取值原则见 [design](design.md#tui-主题小轮)，源码入口见 [主题复用证据](adapters/minimax-code.md#tui-主题复用依据2026-09-29)。
