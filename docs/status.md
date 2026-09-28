@@ -13,8 +13,8 @@
 | 允许范围 | 本轮 Astra 只读引擎、写计划/证据/状态/README；后续 Luna 的测试与文档文件清单以 plan 对应小节为准 |
 | 禁止范围 | 运行时生产代码、真实模型请求、CLI 构建/启动、服务启停、真实账号/凭据、push；不在测试轮处理 TUI 或 GUI |
 | 验收 / 停止点 | Luna 离线实跑配置回归、类型、源码清单及文档检查；正确测试暴露生产缺陷则需复核，不擅自改生产代码；完成即停交回 Astra |
-| 完成证据 | 引擎仅修改 `packages/config/test/builtin-model-fallback.test.ts`；配置回归 7/7、standalone TypeScript、source inventory 4276 files 通过。Talos 交接检查 9 篇文档/63 个本地链接、demo 检查和 diff 检查通过。未改生产配置代码、未启动 CLI、未发真实模型请求。结果证明 managed + neutral 不继承 fake home；non-managed + neutral 仍继承，隔离缺口已固定为证据 |
-| 下一接手 / 就绪性 | Astra：复核本轮结果并决定是否安排 TUI 静态画面范本；引擎测试改动尚未提交，未 push |
+| 完成证据 | 引擎提交 `b2c9930` 仅修改 `packages/config/test/builtin-model-fallback.test.ts`；配置回归 7/7、standalone TypeScript、source inventory 4276 files 通过。Talos 文档提交 `db20858`；交接检查 9 篇文档/63 个本地链接、demo 检查和 diff 检查通过。未改生产配置代码、未启动 CLI、未发真实模型请求。结果证明 managed + neutral 不继承 fake home；non-managed + neutral 仍继承，隔离缺口已固定为证据 |
+| 下一接手 / 就绪性 | Astra：复核本轮结果并决定是否安排 TUI 静态画面范本；两个仓库均已本地提交，未 push |
 
 此卡是唯一当前入口；下方验收账与 plan 的历史小轮不构成新的执行授权。角色分工详见 workflow，不从上一轮助手的自称推断本轮角色。
 
@@ -75,7 +75,7 @@
 | 新目录交接 | 【实测】既有检查通过：43 个唯一 ID、42 处引用、4 项本地资源、JS 语法；6 个 demo 文件与搬迁源 SHA-256 一致。新增计划后的文档检查结果见下一行 | 首次冷启动已完成阅读，必需材料可读；未重复做目视验收 |
 | 计划与接驳文档收口 | 【实测】两项检查通过：9 篇文档、52 个本地链接、20 个必需文件；demo 结构/资源/JS 检查通过，SHA-256 快照未变。已补充源码证据；第 1、2 轮证据及第 3 轮内部实现已落盘 | 浏览器计划已获实施指令；未来阶段未授权实施 |
 | 两仓库接手地图与路线收口 | 【实测】Talos `python tools/check-handoff.py` 通过；引擎 `pnpm check:source` 通过（4276 files，公开源码清单与 workspace exports 完整）；两仓库仅改文档，未改引擎代码 | 【执行者自验】职责、ACP 边界、无子模块约束和下一入口已写入双方文档；不代表中立化、TUI 或 GUI 已验收 |
-| 平级 provider 与默认配置闸 | 既有配置回归 5/5、provider/BYOK/presets 等检查通过；本轮修正保留用例并扩为 7/7，生产代码未改；引擎测试改动未提交、未 push | 仅保留排序和配置闸有限结论；non-managed + neutral 仍继承 fake home，仍不证明无旧凭据读取或独立发行 |
+| 平级 provider 与默认配置闸 | 既有配置回归 5/5、provider/BYOK/presets 等检查通过；本轮修正保留用例并扩为 7/7，生产代码未改；引擎提交 `b2c9930`，未 push | 仅保留排序和配置闸有限结论；non-managed + neutral 仍继承 fake home，仍不证明无旧凭据读取或独立发行 |
 | 重复 provider 支线 | 已删除浏览器表单、POST 接口、临时配置探针和脚本入口；保留 Git 历史可恢复；未发真实请求 | 复用原生 TUI `/provider` 及既有 CLI 子命令；不再作为主人验收入口 |
 | 真实 custom provider 文本 | 【主人反馈】`https://api.xiaomimimo.com`、`mimo-v2.6-flash`、`openai-completions`；页面曾显示连接成功和 `talos-custom-ok` | 只保留当时路径的成功反馈；fork 构建身份、准确 token 用量、账号隔离及完整独立运行均未证明，不要求重复测试 |
 | 第 1 轮：环境、证据与握手 | 【实测】显式 Node 24 下 `check:env` 与 `spike:initialize` 通过；获得真实 ACP v1 握手，stderr 为空；未创建会话、未调用模型 | 主人提供成功输出并已授权推进 |

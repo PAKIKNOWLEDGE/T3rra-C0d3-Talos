@@ -234,7 +234,7 @@ Node 服务持续持有 ACP 连接；浏览器断开不关闭引擎。浏览器�
 | --- | --- |
 | 基线与复用 | 引擎基线 `cf8bd41`；复用 `packages/config/test/builtin-model-fallback.test.ts`、现有 Vitest 配置和 source inventory，不新增探针/测试框架/依赖 |
 | 引擎可写文件 | 仅 `packages/config/test/builtin-model-fallback.test.ts`；沿该仓 AGENTS 建立功能分支，文案为英文；不改 `src/`、清单或构建脚本 |
-| Talos 可写文件 | README 的复现命令、adapter 的实际结果、status 的阶段/证据；保留当前未提交角色规则文档，不把前人改动回滚或冒认成本轮新增 |
+| Talos 可写文件 | README 的复现命令、adapter 的实际结果、status 的阶段/证据；保留本轮前已有角色规则文档，不把前人改动回滚或冒认成本轮新增 |
 | 测试隔离 | 每例用新临时根，fake home 与 data dir 分开；在读配置前 mock `os.homedir`，显式设置两个 data dir 环境入口、managed 模式、中立开关与禁用 Git 自动配置；结束恢复 mocks/env/cache，只删除自己创建的临时根。不得读取真实账号或复制真实配置 |
 | 修正保留用例 | fixture 用根级 custom_provider，检查解析出的 URL、合成 key、模型和 defaultModel；reset 后重读一致，落盘配置语义保持，不补入 provider.minimax。保留原有 managed 默认/回退断言，中立开关未开启的用例显式设为关闭，避免受外部环境影响 |
 | 增补 managed 对照 | fake home 放一个含唯一标记的合成配置；managed + neutral 新 data dir 不继承它、不种 MiniMax，默认模型为空；源文件正文不变 |
