@@ -1,0 +1,32 @@
+{
+  "name": "talos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Talos browser single-session ACP probe and product shell.",
+  "engines": {
+    "node": ">=22.19 <23 || >=24.2 <27"
+  },
+  "scripts": {
+    "check:env": "tsx spike/check-environment.ts",
+    "spike:initialize": "tsx spike/initialize.ts",
+    "dev:product": "tsx src/dev.ts",
+    "test:core": "vitest run test/round3.test.ts",
+    "check:all": "npm run typecheck && npm run test:core && npm run check:demo && npm run check:handoff",
+    "typecheck": "tsc --noEmit",
+    "check:handoff": "python tools/check-handoff.py",
+    "check:demo": "python demo/talos-check.py"
+  },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "1.3.0",
+    "ws": "8.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "20.19.43",
+    "@types/ws": "8.5.13",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3",
+    "vite": "6.3.5",
+    "vitest": "3.2.4"
+  }
+}

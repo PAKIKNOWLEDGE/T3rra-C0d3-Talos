@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "skills": {
+    "ascii-ansi-colorizer": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ascii-ansi-colorizer/SKILL.md",
+      "computedHash": "5aa9f76fa173028db85696797b27a889484ad9127ed391faf92cc33f0d8a83f9"
+    },
+    "ascii-cli-logo-banner": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ascii-cli-logo-banner/SKILL.md",
+      "computedHash": "d50477d25dfc2eed122cd64ebe05d77e019e16a4b427efb81f595b87a4359614"
+    },
+    "ascii-cli-logo-banner-figletjs": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ascii-cli-logo-banner-figletjs/SKILL.md",
+      "computedHash": "ecbf22f76a87dbca31158e2ae3485d72d2df82cc4b0a023259ce872775e555c3"
+    },
+    "ascii-cli-logo-banner-python": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ascii-cli-logo-banner-python/SKILL.md",
+      "computedHash": "23774064bacd04f191e15c69f7611c15f92348818a42493529534d35cc9f138d"
+    },
+    "ascii-diagram-boxflow": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ascii-diagram-boxflow/SKILL.md",
+      "computedHash": "e58d45067adeb0cd9d7aabb5f287e238888b4db43eaa08d723a2a8b4416f3f30"
+    },
+    "ascii-image-to-ascii": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ascii-image-to-ascii/SKILL.md",
+      "computedHash": "5a78392a051ec9e5c02c09928f6f692107b1b3331421134b29d4d8f57071a0e4"
+    },
+    "ascii-mini-charts": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ascii-mini-charts/SKILL.md",
+      "computedHash": "266a07883d8c9ca2370738bdbaff24a49627566951e5b2799a6392f06c37496e"
+    },
+    "ascii-motd-profile-banner": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ascii-motd-profile-banner/SKILL.md",
+      "computedHash": "300bf5d615fb425ee5ad53e64c40d0766bf3cfee3a1a1aa00b2b4905efddb15a"
+    },
+    "ascii-progress-and-spinner": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ascii-progress-and-spinner/SKILL.md",
+      "computedHash": "bc1820e5a73b334984ac912071cd3b7fc40009da15b6782df5e1771fdd50e228"
+    },
+    "ascii-table-renderer": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ascii-table-renderer/SKILL.md",
+      "computedHash": "516fce78c78cb56b1f96022b7ea8acf6e02b2f60aed3d0fa69d69eb8b1d90f43"
+    },
+    "ascii-terminal-animation-pack": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ascii-terminal-animation-pack/SKILL.md",
+      "computedHash": "6e09c180b128202531be3a1c01c7e15d5d62b4211ba18433ee4b2b33e93a7e1e"
+    },
+    "ascii-text-art-library": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ascii-text-art-library/SKILL.md",
+      "computedHash": "b38dc6628919ea01295450d6c02d293ad1fcf5a7cb89db2d5cde1a025f6121d8"
+    },
+    "cli-ascii-logo": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": "skills/cli-ascii-logo/SKILL.md",
+      "computedHash": "9d1112dc50ba2ae64cf7c8547e7a041bad135a0eb1aeb6501bf4ecf537c6d10e"
+    },
+    "openspec-apply-change": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/openspec-apply-change/SKILL.md",
+      "computedHash": "9f4fd31611a7485b7d5ecdeeb771540dc152836b04c75d14a87cc4ca87b35d13"
+    },
+    "openspec-archive-change": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/openspec-archive-change/SKILL.md",
+      "computedHash": "c9e374e6f8b8380ab76ef194c8af913ff7c336613eae4910cf02f418e2bd92c1"
+    },
+    "openspec-explore": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/openspec-explore/SKILL.md",
+      "computedHash": "c3d568e1c6b3035d2fec15511e251295531e390145de80da4ffe5253860d7e21"
+    },
+    "openspec-propose": {
+      "source": "full-stack-skills/ascii-skills",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/openspec-propose/SKILL.md",
+      "computedHash": "d23cc33093e73d6bd78c4634f9e3a1b951a016d3c205fb5344f600eefee66f65"
+    }
+  }
+}

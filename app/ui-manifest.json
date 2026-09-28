@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "elements": [
+    { "id": "currentSessionBadge", "status": "static: 首版固定当前会话，暂不提供并行或新建会话" },
+    { "id": "recordTab", "status": "wired" },
+    { "id": "eventsTab", "status": "wired" },
+    { "id": "prompt", "status": "wired" },
+    { "id": "sendButton", "status": "wired" },
+    { "id": "stopButton", "status": "wired" },
+    { "id": "overviewToggle", "status": "wired" },
+    { "id": "aboutButton", "status": "wired" },
+    { "id": "closeDetail", "status": "wired" },
+    { "id": "doneDetail", "status": "wired" },
+    { "id": "stream", "status": "wired" },
+    { "id": "plan", "status": "static: 真实计划投影尚未接入" },
+    { "id": "usageValue", "status": "static: 引擎未报告 usage 时保持留白" },
+    { "id": "files", "status": "wired" },
+    { "id": "modelValue", "status": "static: 只显示引擎当前值，不提供配置编辑" }
+  ]
+}

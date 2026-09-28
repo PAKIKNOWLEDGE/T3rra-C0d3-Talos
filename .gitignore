@@ -1,0 +1,16 @@
+node_modules/
+dist/
+target/
+src-tauri/target/
+.sandbox/
+__pycache__/
+*.pyc
+*.log
+.env
+.env.*
+!.env.example
+docs/references/*.png
+node_modules/
+dist/
+traces/
+.talos/

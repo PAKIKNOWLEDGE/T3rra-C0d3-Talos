@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TALOS · 工业作业台 / 视觉样张 01</title>
+  <link rel="stylesheet" href="talos.css">
+  <script src="talos.js" defer></script>
+</head>
+<body>
+  <svg class="symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-grid" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 5l7 7-7 7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6h7l2 3h9v11H3z"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 6-6 6 6 6M16 6l6 6-6 6M14 3l-4 18"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><path d="m4 6 6 6-6 6M13 18h8"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5zM14 3v6h5M8 13h8M8 17h5"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v7M12 6v2"/></symbol>
+  </svg>
+
+  <header class="masthead">
+    <div class="identity"><div class="emblem" aria-hidden="true"><i></i><i></i><i></i></div><div><strong>TALOS<span> / </span></strong><p>T3rra-C0d3 · 工业作业台</p></div></div>
+    <div class="project-name"><svg class="icon"><use href="#i-folder"/></svg><span>atlas-workspace<small>本地工作区 / LOCAL WORKSPACE</small></span></div>
+    <div class="mast-tools"><span class="edition">ENDFIELD STUDY <b>01</b></span><button class="icon-button" id="aboutButton" aria-label="关于视觉样张"><svg class="icon"><use href="#i-info"/></svg></button></div>
+  </header>
+
+  <div class="workspace">
+    <nav class="sidebar" aria-label="会话导航">
+      <div class="side-heading"><span class="eyebrow">WORKSPACE / 01</span><span class="side-mark" aria-hidden="true">◈</span></div>
+      <button class="new-session" id="newSession"><svg class="icon"><use href="#i-plus"/></svg><span>新建会话<small>NEW SESSION</small></span></button>
+      <div class="section-label"><h2>会话记录</h2><span id="sessionCount">03</span></div>
+      <div class="session-list" id="sessionList"></div>
+      <div class="side-bottom">
+        <div class="workspace-stamp"><svg class="icon"><use href="#i-folder"/></svg><span>ATLAS<small>前端工作区</small></span><b>01</b></div>
+        <div class="workspace-path">C:\Projects\atlas</div>
+        <div class="branch"><span class="status-dot"></span>main<span>本地演示数据</span></div>
+      </div>
+    </nav>
+
+    <main class="main">
+      <header class="record-head">
+        <div class="record-title"><div><span class="eyebrow">SESSION RECORD <span id="recordNumber">/ 003</span></span><h1 id="sessionTitle">抽取主题令牌</h1></div><span class="phase" id="phase" role="status">待批准</span></div>
+        <div class="record-tabs" aria-label="记录视图"><button id="recordTab" class="record-tab active" aria-pressed="true">作业记录 <span>RECORD</span></button><button id="eventsTab" class="record-tab" aria-pressed="false">事件 <span>EVENTS</span></button><span class="record-date">28 SEP · LOCAL</span></div>
+      </header>
+      <section class="log" id="log" aria-label="会话内容" tabindex="0"><div class="log-inner" id="stream"></div></section>
+      <form class="composer" id="composer">
+        <label class="sr-only" for="prompt">下达指令</label>
+        <textarea id="prompt" rows="2" placeholder="下达指令，继续这项工作…"></textarea>
+        <div class="composer-bottom"><div class="mode-switch" aria-label="工作模式"><button type="button" data-mode="执行" aria-pressed="true">执行</button><button type="button" data-mode="规划" aria-pressed="false">规划</button></div><label class="model"><span class="sr-only">演示模型</span><select id="model"><option>MiniMax · 演示模型</option><option>自定义模型 · 演示</option></select></label><button type="submit" class="send" id="sendButton"><span>发送指令</span><svg class="icon"><use href="#i-arrow"/></svg></button><button type="button" class="stop" id="stopButton" hidden>中止演示 <span>■</span></button></div>
+        <div class="composer-note"><span id="composerNote">等待你的批准 · 可先补充指令</span><span>Enter 发送 <i>·</i> Shift + Enter 换行</span></div>
+      </form>
+    </main>
+
+    <aside class="inspector" id="inspector" aria-label="本轮概况">
+      <div class="inspector-heading"><span class="eyebrow">OPERATION / INFO</span><h2>本轮概况</h2></div>
+      <section class="summary-section"><div class="section-label"><h3>执行计划</h3><span id="planCount">02 / 03</span></div><ol class="plan" id="plan"></ol></section>
+      <section class="summary-section"><div class="section-label"><h3>上下文</h3><span class="eyebrow">CONTEXT</span></div><div class="usage"><strong id="usageValue">24.8<small>K</small></strong><span>/ 200K<small>样张用量</small></span></div><div class="usage-track"><i id="usageBar"></i></div><p class="subtle">仅展示信息层级，不代表引擎读数。</p></section>
+      <section class="summary-section"><div class="section-label"><h3>本轮文件</h3><span id="fileCount">03</span></div><ul class="files" id="files"></ul></section>
+      <div class="engine"><span class="engine-icon" aria-hidden="true">M</span><div><b>MINIMAX CODE</b><span>视觉样张 · 未连接引擎</span></div></div>
+    </aside>
+  </div>
+
+  <footer class="sample-bar"><span class="sample-label"><i></i>视觉样张 <b>01</b></span><div class="sample-states" aria-label="演示状态"><button data-scene="approval" aria-pressed="true">待批准</button><button data-scene="running" aria-pressed="false">运行中</button><button data-scene="complete" aria-pressed="false">完成</button><button data-scene="empty" aria-pressed="false">空会话</button></div><button id="overviewToggle" class="overview-toggle" aria-expanded="true" aria-controls="inspector">收起概况</button><span class="sample-footnote">本地交互演示 · 不读写项目文件</span></footer>
+
+  <dialog id="detailDialog" class="detail-dialog" aria-labelledby="detailTitle"><header class="dialog-head"><div><span class="eyebrow" id="detailLabel">WORK ORDER</span><h2 id="detailTitle">工单详情</h2></div><button class="icon-button" id="closeDetail" aria-label="关闭详情"><svg class="icon"><use href="#i-close"/></svg></button></header><div class="dialog-content" id="detailContent"></div><footer class="dialog-footer"><span>演示记录 / LOCAL SPECIMEN</span><button class="light-button" id="doneDetail">返回记录 <span>↗</span></button></footer></dialog>
+  <div class="toast" id="toast" role="status"></div>
+</body>
+</html>
