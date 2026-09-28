@@ -36,7 +36,7 @@
 
 本轮已完成两个仓库的接手地图与计划入口整理：Talos 维护 GUI 和产品文档，`C:\DEV\develop\minimax-code` 维护引擎、CLI/TUI、provider、账号与数据目录；两者通过 ACP 对接，不使用子模块。TUI 已选 A「对话流式终端」和机械臂图案，不做大字字标，见 [design](design.md#tui-设计讨论)。下一轮只做独立引擎首轮的源码核对与最小可重跑探针；鉴权、数据隔离和云依赖裁剪仍按证据逐步决定。完整 TUI 实现前另给欢迎、对话/工具、审批三种画面范本验收。
 
-当前入口：**第 4 轮失败保留；不进入第 5 轮，先完成独立引擎基础验证**。路线与仓库边界见 [plan 第四部分](plan.md#四中立引擎-fork-路线与候选评估)，取证见 [adapter](adapters/minimax-code.md)。主人已创建 `https://github.com/PAKIKNOWLEDGE/Talos`，并明确要求只将现有 `C:\DEV\develop\minimax-code` 的 origin 设为 `https://github.com/PAKIKNOWLEDGE/Talos.git`。已核对 fetch/push URL 均生效；引擎 fork 当前为已提交的 provider 排序与中立配置闸改动，未 push。provider 排序、BYOK 假 provider、provider presets 37/37、TUI lint、TypeScript 和源码清单均已通过；Talos 已准备独立数据目录的真实 custom provider 探针，但当前环境没有 provider 参数，因此尚未发出外部请求。下一步是主人提供 provider 环境变量后运行探针，再决定 TUI 欢迎画面小轮。
+当前入口：**第 4 轮失败保留；不进入第 5 轮，先完成独立引擎基础验证**。路线与仓库边界见 [plan 第四部分](plan.md#四中立引擎-fork-路线与候选评估)，取证见 [adapter](adapters/minimax-code.md)。主人已创建 `https://github.com/PAKIKNOWLEDGE/Talos`，并明确要求只将现有 `C:\DEV\develop\minimax-code` 的 origin 设为 `https://github.com/PAKIKNOWLEDGE/Talos.git`。已核对 fetch/push URL 均生效；引擎 fork 当前为已提交的 provider 排序与中立配置闸改动，未 push。provider 排序、BYOK 假 provider、provider presets 37/37、TUI lint、TypeScript 和源码清单均已通过；Talos 已准备独立数据目录的真实 custom provider 探针，并新增独立的 `/provider-setup.html` 本地连接向导，但当前环境没有 provider 参数，因此尚未发出外部请求。下一步是主人在向导中填入 provider 信息后运行真实文本探针，再决定 TUI 欢迎画面小轮。
 
 原 origin 为 `https://gh.xmly.dev/https://github.com/MiniMax-AI/minimax-code.git`，留作后续上游同步定位；本次未增设 upstream。两个本地仓库仍并列：本目录维护界面，`C:\DEV\develop\minimax-code` 对应引擎 fork。下一步仍需确定 fork 最小验证的实施范围；产品引擎、账号、权限和代码均未切换。
 
@@ -91,6 +91,7 @@ Tauri、Windows 工作区/进程、扩展能力和安装发布均在 plan 第二
 | 两仓库接手地图与路线收口 | 【实测】Talos `python tools/check-handoff.py` 通过；引擎 `pnpm check:source` 通过（4276 files，公开源码清单与 workspace exports 完整）；两仓库仅改文档，未改引擎代码 | 【执行者自验】职责、ACP 边界、无子模块约束和下一入口已写入双方文档；不代表中立化、TUI 或 GUI 已验收 |
 | 平级 provider 与默认配置闸 | 【实测】provider 视图统一排序；显式 `TALOS_NEUTRAL_RUNTIME=1` 时 managed/prod 新配置不写入 MiniMax provider/defaultModel，已有 provider/defaultModel 保持；配置回归 5/5、TypeScript（显式 Node 24）和既有 provider/BYOK/presets 闸通过；未 commit/push | 【执行者自验】MiniMax 与 custom provider 的排序不再按类型固定；中立闸默认关闭且不隐式删除已有配置；真实第三方模型、网络出口和发行行为仍未验收 |
 | 独立 custom provider 探针准备 | 【实测】新增 `spike/custom-provider-probe.ts`；缺少 provider 地址、模型或 key 环境变量时只输出 preflight 并退出，不创建外部请求；Talos TypeScript、交接检查、demo 检查通过 | 【执行者自验】探针会使用临时 `MINIMAX_DATA_DIR`、`TALOS_NEUTRAL_RUNTIME=1`，先执行 CLI `provider add --use` 再走 ACP 文本回合；真实外部 provider、工具、取消、load、审批尚未验收 |
+| 独立 provider 连接向导 | 【实测】新增 `/provider-setup.html`、本地 POST `/provider-probe` 和 Vite 代理；TypeScript、交接检查、demo 检查通过；未提交真实 provider 请求 | 【执行者自验】浏览器表单只把 key 交给本机临时探针，结果显示成功/失败；这是验收助手，不是主 UI 的 provider 设置完成 |
 | 第 1 轮：环境、证据与握手 | 【实测】显式 Node 24 下 `check:env` 与 `spike:initialize` 通过；获得真实 ACP v1 握手，stderr 为空；未创建会话、未调用模型 | 主人提供成功输出并已授权推进 |
 | 第 2 轮：真实单会话探针 | 【实测】真实 new/prompt 流式、cancel、跨进程 load/继续、tool_call/tool_call_update 通过；审批两种尝试均未触发 permission request，临时文件直接写入并清理 | 【执行者自验】内部闸通过；审批专项保留未触发限制 |
 | 第 3 轮：应用核心与本地服务 | 【实测】TypeScript 通过；Vitest 5 tests passed；覆盖工具部分更新、旧进程代次隔离、operationId 去重、观察者断开和 WebSocket 快照 | 【执行者自验】内部闸通过；进入第 4 轮 UI 接入 |

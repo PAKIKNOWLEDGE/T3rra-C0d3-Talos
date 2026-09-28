@@ -20,6 +20,7 @@ const vite = await createServer({
     proxy: {
       '/ws': { target: 'ws://127.0.0.1:5194', ws: true },
       '/health': { target: 'http://127.0.0.1:5194' },
+      '/provider-probe': { target: 'http://127.0.0.1:5194' },
     },
   },
 });

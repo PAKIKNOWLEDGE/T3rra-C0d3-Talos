@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TALOS · 连接模型</title>
+  <link rel="stylesheet" href="provider-setup.css">
+</head>
+<body>
+  <main class="card">
+    <header>
+      <div class="sigil" aria-hidden="true">03</div>
+      <div><p class="eyebrow">TALOS / PROVIDER SETUP</p><h1>连接一个模型</h1><p class="intro">只做本机连通性检查，不改现有 MiniMax 账号。</p></div>
+    </header>
+    <form id="providerForm">
+      <label>Provider 名称<input name="name" value="我的模型服务" required></label>
+      <label>Base URL<input name="baseUrl" placeholder="https://example.com/v1" required></label>
+      <div class="row">
+        <label>API 格式<select name="apiFormat"><option value="openai-completions">OpenAI Completions</option><option value="openai-responses">OpenAI Responses</option><option value="anthropic-messages">Anthropic Messages</option></select></label>
+        <label>模型名<input name="model" placeholder="例如：gpt-4o-mini" required></label>
+      </div>
+      <label>API key<input name="apiKey" type="password" autocomplete="off" required></label>
+      <p class="privacy">密钥只在这次本机测试中使用，不写入聊天、不保存到仓库；测试结束后临时目录自动清理。</p>
+      <button id="submitButton" type="submit">测试连接 <span>↗</span></button>
+    </form>
+    <section id="result" class="result" aria-live="polite"><strong>等待测试</strong><p>填好信息后点击“测试连接”。</p></section>
+    <a class="back" href="/">返回 Talos 主界面</a>
+  </main>
+  <script type="module" src="provider-setup.js"></script>
+</body>
+</html>

@@ -82,7 +82,13 @@ cd C:\DEV\develop\T3rra-C0d3-Talos
 
 通过后回复 **“第 1 轮通过，推进”**；若失败，贴出失败命令和完整 JSON。每个后续轮次都会在交付时给出前置条件、准确命令或 URL、3–5 个顺序动作、每步预期和机读结果。
 
-### 独立 custom provider 探针（下一轮入口）
+### 最方便的验收方式：本地连接模型页
+
+不想设置 PowerShell 环境变量时，启动产品服务后直接打开 `http://127.0.0.1:5193/provider-setup.html`。页面会显示一个独立的连接表单：填写 Provider 名称、Base URL、API 格式、模型名和 API key，点击“测试连接”。它只运行一次隔离探针，不会写入现有账号目录，也不会把 key 显示到诊断文本中。
+
+成功时页面显示“连接成功”，并说明模型已返回 `talos-custom-ok`；失败时页面显示“连接失败”，可展开诊断查看原因。这个页面是本轮新增的验收助手，不代表主对话 UI 的 provider 设置功能已经完成。
+
+### 独立 custom provider 探针（命令行备用入口）
 
 这条探针使用临时 `MINIMAX_DATA_DIR` 和临时工作目录，默认开启 `TALOS_NEUTRAL_RUNTIME=1`；不会读取或改写现有账号目录。它只有在你明确提供 provider 地址、模型名和 API key 环境变量后才会发出真实请求；缺少任一项会在 preflight 停止。
 
