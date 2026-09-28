@@ -262,3 +262,17 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 每项包含：源码 commit + path:line → 请求/响应或通知形状 → 内部事件/字段映射 → 缺失与有损处理 → 可重跑脚本和脱敏 trace → 仍未覆盖的边界。先写源码依据，再测行为；只见报文不足以推导所有语义。
 
 已有探针位于 `spike/`；原始 trace 默认忽略。真实测试前确认临时 cwd、模型/凭据前置与数据落点；不复制用户 token 或真实会话进项目。无消费需求的字段先不扩内部契约。未知方法不能靠“ACP 应该支持”硬接，opencode 专属 HTTP fallback 不迁入。
+
+### provider / 登录 / 数据边界交接证据（2026-09-28）
+
+本节把当前下一轮所需的事实集中在一个入口；它不是“去 MiniMax 化完成”声明。相邻引擎仓库为 `C:\DEV\develop\Talos-CLI`，此前记录的 fork 版本字段为 `0.5.7`，本节只整理已有源码与离线结果，不启动引擎、不请求模型。
+
+| 等级 | 证据 | 当前可下的结论 | 仍未证明 |
+| --- | --- | --- | --- |
+| 【源码】 | `packages/config/src/config.ts:168-181`、`:1869-1884`、`:1987-2010`；`packages/config/src/byok-config.ts:297-342` | managed/prod 新配置仍会自动补 MiniMax provider 和默认模型；`TALOS_NEUTRAL_RUNTIME=1` 可跳过自动补齐/区域 baseURL 同步，但保留用户已有配置 | Talos 发行是否应自动启用；中立开关是否覆盖全部 home/凭据继承路径 |
+| 【源码】 | `packages/config/src/config.ts:1880`；`packages/config/src/data-dir.ts:5`；`packages/tui/src/cli/environment.ts` | `MINIMAX_DATA_DIR`/`MAVIS_DATA_DIR` 影响数据目录选择，但非 managed 初始化分支仍可能先读取默认 home；默认目录基名仍是 `.minimax`，旧目录为 `.mavis` | 新独立目录是否落地；旧账号/会话是否会被读取、复制或迁移；失败恢复和显式迁移入口 |
+| 【源码】 | `packages/tui/src/provider/application.ts:22-61`；`packages/local-runtime-v2/src/service/model-system/catalog/provider-presets/provider-presets.service.ts:20-34,76-87,256-273` | provider 视图已按名称/ID统一排序；第三方预设保留；MiniMax 不再因类型固定置顶 | MiniMax OAuth/API Key 是否仍应在 Talos 默认界面可见；区域 pinned 网络源是否需要移除或改为用户可选 |
+| 【源码】 | `packages/tui/src/application/login-gate.ts:24-38`；`packages/tui/src/tui/features/provider/onboarding.ts:361,420,649,681` | BYOK/custom provider 可走原生 `/provider`，不要求 MiniMax 登录；managed MiniMax 模型仍有自己的登录门禁 | Talos 首版要隐藏、禁用还是保留 MiniMax 专属入口；第三方真实网络与完整 ACP 工具链 |
+| 【实测，继承上一轮记录】 | `provider-application` targeted Vitest `19/19`；配置离线回归 `7/7`；使用 `vitest.oss.config.mjs`、Node `v24.15.0` | 排序、根级 `custom_provider`、URL/合成 key/模型/defaultModel 重读，以及 managed+neutral 不复制 fake home 的行为已有可复跑离线证据 | non-managed+neutral 仍会继承 fake home；这是一项隔离缺口证据，不是隔离通过；未证明真实模型、审批、取消、load 或网络出口 |
+
+**本轮停止点**：证据已足以交给 Astra 决定下一刀，但不足以直接改生产配置。下一轮必须先回答四个边界：是否自动启用 `TALOS_NEUTRAL_RUNTIME=1`、是否改用独立数据目录、是否保留显式旧数据迁移、是否隐藏/禁用 MiniMax 专属登录入口。若方案改变状态归属、持久化、恢复或权限承诺，需先更新 plan 再交给 Luna 实施。

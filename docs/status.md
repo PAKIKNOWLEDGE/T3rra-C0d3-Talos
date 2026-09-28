@@ -4,12 +4,12 @@
 
 ## 项目现在在哪里
 
-**GUI 功能开发暂停，当前按主人特批进入 Talos-CLI 外部入口小轮。Talos 主题与缩小机械臂、ASCII 标题均已获主人验收；本轮把外部命令收敛为 `talos`，不保留 `mcode` 兼容入口，并把独立 npm 发行与周期性上游 PR 写入长期计划。** 产品目标仍是中立引擎、自己的 TUI、Endfield 风格 GUI，最终采用 Tauri 2；没有改成只做终端工具。
+**GUI 功能开发暂停，Talos-CLI 外部入口小轮已完成，当前进入 provider / 登录 / 数据边界取证。** Talos 主题与缩小机械臂、ASCII 标题均已获主人验收；外部命令已收敛为 `talos`，不保留 `mcode` 兼容入口，并已把独立 npm 发行与周期性上游 PR 写入长期计划。产品目标仍是中立引擎、自己的 TUI、Endfield 风格 GUI，最终采用 Tauri 2；没有改成只做终端工具。
 
 | 工作线 / 所属仓库 | 已有结果 | 当前缺口与状态 |
 | --- | --- | --- |
 | GUI / 本仓库 `T3rra-C0d3-Talos` | 网页视觉 demo 已验收；产品已有 ACP 适配器、Node 服务和浏览器 UI 骨架 | **暂停**。产品第 4 轮验收失败：回复不可见、UI 错漏和样张字段残留；第 5 轮刷新恢复未验收。demo 通过不等于产品通过 |
-| 中立引擎 / `C:\DEV\develop\Talos-CLI` | provider 显示不再按类型固定置顶；已加显式中立默认配置开关，并完成有限离线回归 | **部分完成**。专属登录、厂商网络出口、数据隔离、独立发行尚未解决；不能称“已去 MiniMax 化” |
+| 中立引擎 / `C:\DEV\develop\Talos-CLI` | provider 显示不再按类型固定置顶；已加显式中立默认配置开关，并完成有限离线回归 | **当前取证中**。专属登录、厂商网络出口、数据隔离、独立发行尚未解决；不能称“已去 MiniMax 化” |
 | TUI / 同一 `Talos-CLI` 仓库 | 可选 Talos 配色、缩小机械臂和 ASCII `TALOS` 已获主人验收；原生对话、工具、审批和 `/provider` 功能本来就有 | **已完成这两项视觉小轮**；可作为首版外观基线，不自动追加视觉打磨；发行品牌与默认选择尚待处理 |
 | 桌面与发布 / 后续 | 保留 Tauri 2 路线，不用 Electron | **未开始**。不做第三个仓库，不因路线存在就开始打包 |
 
@@ -19,15 +19,15 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | `cli-talos-entrypoint` / `r1` |
-| 阶段 | 待主人验收 |
-| 本轮角色 / 来源 | Luna；主人明确要求按原计划继续，并特批由本轮执行者把“纯 talos 入口、独立 npm、周期性上游 PR”写入计划 |
-| 目标 / 方案入口 | 只生成 `talos` 外部命令；[plan](plan.md#当前小轮talos-cli-外部入口) |
-| 允许范围 | Talos-CLI 构建/发行 manifest、对应离线测试；本仓库同步 status、plan、adapter。更新器、数据目录、provider、登录、ACP 和 GUI 不在本轮 |
-| 禁止范围 | 不生成 `mcode` 别名，不走上游内置更新器，不改真实凭据/会话，不请求模型，不 fetch/merge/push |
-| 验收 / 停止点 | Node 24 下构建与发行 manifest 检查通过；`talos --version` 可运行且 `mcode` launcher 不生成。之后给主人 3–5 步命令验收并停 |
-| 完成证据 | `Talos-CLI` 提交 `aaef9af` 已完成入口迁移；Node `v24.15.0` 下构建、发行 manifest、`talos --version`、source inventory、standalone boundary 和发行/同步测试 52 通过、2 跳过；未 push |
-| 下一接手 / 就绪性 | 本轮收口后由主人验收；下一轮按 CLI 去 MiniMax 化总目标选择数据/provider 小轮，复杂边界先 Astra 复核 |
+| 任务标识 / 修订 | `cli-provider-data-audit` / `r1` |
+| 阶段 | 需复核 |
+| 本轮角色 / 来源 | Luna；主人已确认上一轮验收通过并要求按计划继续 |
+| 目标 / 方案入口 | 记录 provider、登录与数据目录的源码边界和离线证据；[plan](plan.md#当前小轮cli-provider-登录-数据边界取证) |
+| 允许范围 | 只读核对 `Talos-CLI` 配置/provider/登录源码；本仓库同步 status、plan、adapter；可运行不触发模型的离线检查 |
+| 禁止范围 | 不改 provider、登录、数据目录、网络出口或 ACP；不改真实凭据/会话，不请求模型，不 fetch/merge/push |
+| 验收 / 停止点 | 文档能准确区分源码、实测、未验；记录中立开关、provider 平级、home 继承和数据目录风险；完成后停在 Astra 复核，不自行放行代码轮 |
+| 完成证据 | 已有 fork 源码取证、provider 19/19 与配置 7/7 离线记录；本轮将其整理进 adapter 并同步唯一入口；不宣称真实第三方链路或隔离已通过 |
+| 下一接手 / 就绪性 | Astra 复核默认中立运行、独立数据目录、MiniMax 专属入口和迁移策略；复核后再交给 Luna 做一个小范围代码轮 |
 
 ## 必须保留的事实
 

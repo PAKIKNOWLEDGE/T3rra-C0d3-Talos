@@ -49,11 +49,26 @@ Talos 不走上游内置更新器。后续版本通过独立 npm 包发布；上
 
 达到这些条件后结束 CLI 首版改造，回到 GUI 已知失败修复。TUI 布局重做、复杂交互、新工具体系、所有厂商云功能的替代、内置自动更新系统和 npm 正式发布后的运营维护都不是这一阶段必做项；后续按总目标另开小轮。
 
-## 当前小轮：Talos CLI 外部入口
+## 已交付小轮：Talos CLI 外部入口
 
 任务 `cli-talos-entrypoint/r1`。目标是先让构建和发行元数据只生成 `talos` 命令，为后续中立化和 npm 独立发行提供稳定入口。`mcode` 不做兼容别名。本轮不改数据目录、provider、登录、ACP 报文或 GUI，也不接上游内置更新器；更新器是否删除或退役留到独立源码轮次。
 
 执行范围：`Talos-CLI/package.json`、`scripts/build.mjs`、`scripts/package-cli-release.mjs`、发行验证脚本及对应离线测试。验收是构建产物和发行 manifest 只有 `talos` bin，版本命令可由 `talos` 启动；内部 MiniMax 包名与许可证暂不在本轮改写。完成后进入主人可见的 CLI 命令验收，再决定下一轮数据/provider 边界。
+
+## 当前小轮：CLI provider / 登录 / 数据边界取证
+
+任务 `cli-provider-data-audit/r1`。目标是把“第三方 provider 平级、日常可不依赖 MiniMax 专属账号、Talos 数据与原版隔离”拆成有源码依据的下一小步，不先改行为、不重复真实模型请求。范围只覆盖相邻引擎 fork 的现有配置/provider/登录入口、已完成的离线回归结果，以及本仓库的接驳证据、状态和方案文档。
+
+本轮先确认四件事：
+
+1. `TALOS_NEUTRAL_RUNTIME=1` 已有何种配置层效果，哪些路径仍会继承默认 home；
+2. provider 排序、第三方预设、BYOK 与 MiniMax 登录门禁分别由哪些源码入口控制；
+3. `MINIMAX_DATA_DIR`、默认 `.minimax` 数据目录和 managed/non-managed 分支是否构成真实隔离；
+4. 下一轮要不要自动启用中立开关、改独立数据目录、隐藏 MiniMax 专属入口或保留显式迁移。
+
+执行规则：先把 commit、path:line、字段映射、已测结果和未知项写入 [接驳证据](adapters/minimax-code.md)；本轮不修改 provider、登录、数据目录或网络出口，不请求模型，不改变真实凭据。完成文档同步后停在 **Astra 复核点**，由 Astra 决定下一轮最小代码改动和离线测试边界。
+
+**此处可能需要 Astra 把关**：默认数据目录是否改名、是否自动启用中立运行、MiniMax OAuth/API Key 是否仅隐藏还是彻底禁用、以及迁移旧数据的显式入口，都会影响账号、恢复和发布边界，不能由执行模型自行拍板。
 
 ## 已交付方案：TUI Talos 主题
 
