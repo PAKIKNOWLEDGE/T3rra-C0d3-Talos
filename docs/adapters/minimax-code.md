@@ -275,4 +275,4 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 | 【源码】 | `packages/tui/src/application/login-gate.ts:24-38`；`packages/tui/src/tui/features/provider/onboarding.ts:361,420,649,681` | BYOK/custom provider 可走原生 `/provider`，不要求 MiniMax 登录；managed MiniMax 模型仍有自己的登录门禁 | Talos 首版要隐藏、禁用还是保留 MiniMax 专属入口；第三方真实网络与完整 ACP 工具链 |
 | 【实测，继承上一轮记录】 | `provider-application` targeted Vitest `19/19`；配置离线回归 `7/7`；使用 `vitest.oss.config.mjs`、Node `v24.15.0` | 排序、根级 `custom_provider`、URL/合成 key/模型/defaultModel 重读，以及 managed+neutral 不复制 fake home 的行为已有可复跑离线证据 | non-managed+neutral 仍会继承 fake home；这是一项隔离缺口证据，不是隔离通过；未证明真实模型、审批、取消、load 或网络出口 |
 
-**本轮停止点**：证据已足以交给 Astra 决定下一刀，但不足以直接改生产配置。下一轮必须先回答四个边界：是否自动启用 `TALOS_NEUTRAL_RUNTIME=1`、是否改用独立数据目录、是否保留显式旧数据迁移、是否隐藏/禁用 MiniMax 专属登录入口。若方案改变状态归属、持久化、恢复或权限承诺，需先更新 plan 再交给 Luna 实施。
+本节记录已有证据，不设角色审批。开关接线、数据隔离和专属登录退役的当前执行范围见 [plan](../plan.md#当前小轮cli-中立化)，进度与下一入口见 [status](../status.md)。
