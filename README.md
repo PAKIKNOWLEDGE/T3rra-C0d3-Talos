@@ -82,6 +82,21 @@ cd C:\DEV\develop\T3rra-C0d3-Talos
 
 通过后回复 **“第 1 轮通过，推进”**；若失败，贴出失败命令和完整 JSON。每个后续轮次都会在交付时给出前置条件、准确命令或 URL、3–5 个顺序动作、每步预期和机读结果。
 
+### 独立 custom provider 探针（下一轮入口）
+
+这条探针使用临时 `MINIMAX_DATA_DIR` 和临时工作目录，默认开启 `TALOS_NEUTRAL_RUNTIME=1`；不会读取或改写现有账号目录。它只有在你明确提供 provider 地址、模型名和 API key 环境变量后才会发出真实请求；缺少任一项会在 preflight 停止。
+
+```powershell
+$env:TALOS_PROVIDER_BASE_URL = 'https://你的-provider/v1'
+$env:TALOS_PROVIDER_MODEL = '你的模型名'
+$env:TALOS_PROVIDER_API_KEY_ENV = '你的API_KEY环境变量名'
+# 可选：anthropic-messages / openai-completions / openai-responses
+$env:TALOS_PROVIDER_API_FORMAT = 'openai-completions'
+& 'C:\Program Files\nodejs\node.exe' 'node_modules/tsx/dist/cli.mjs' spike/custom-provider-probe.ts
+```
+
+预期依次看到 `phase: preflight`、`phase: provider`、`phase: conversation`；最后应有 `stopReason: end_turn`、`agent_message_chunk` 计数和 `textHead` 包含 `talos-custom-ok`。探针结束会清理临时目录；需要保留排查现场时才设置 `$env:TALOS_KEEP_PROBE_DATA = '1'`。这条命令不是当前 `check:all` 的必跑项，也不代表审批、工具、取消或 load 已验收。
+
 ### 第 2 轮怎么验收
 
 前置：第 1 轮已通过；外部 PowerShell 使用支持的 Node 24；允许使用现有 MiniMax 账号、模型和数据目录。脚本只在 `.talos/round2-*` 创建可丢弃 cwd，不启动浏览器或产品服务，结束时清理审批测试文件。

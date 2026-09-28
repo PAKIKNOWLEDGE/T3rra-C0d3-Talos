@@ -141,6 +141,12 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 本轮实现的开关名为 `TALOS_NEUTRAL_RUNTIME=1`。它是显式 opt-in，默认关闭；作用是让 managed/prod 运行时不自动创建或回填 MiniMax 默认 provider。已有用户配置保持原样，未配置 provider 时由上层 onboarding/provider 配置负责提供入口。该开关不删除通用凭据、权限、审批、沙箱或 provider 代码，也不承诺厂商云能力已被裁剪。
 
+### 真实 custom provider 探针入口（待运行）
+
+【源码】`packages/tui/src/cli/program.ts:170-257`、`packages/tui/src/cli/provider-command.ts:45-111`：CLI 支持 `provider add --base-url --api-format --model --api-key-env --use`；`--use` 先测试首个模型，成功后才保存并选为默认，失败不保存。`packages/tui/src/cli/environment.ts:48-72` 与 `packages/tui/src/runtime/data-dir.ts:20-36` 表明 `MINIMAX_DATA_DIR` 是进程级数据目录覆盖入口，探针可用独立临时目录隔离已有账号。
+
+Talos 新增 `spike/custom-provider-probe.ts`，先用上述 CLI 在临时数据目录保存并选择 provider，再用同一目录启动 ACP，执行 `initialize`、`session/new` 和纯文本 `session/prompt`。脚本只接受 API key 环境变量名，不接受命令行明文密钥；输出只保留 provider origin、模型名、stopReason、更新计数和回复前缀。环境变量不完整时只做 preflight，不发请求。当前仍是【未验】真实外部 provider；工具、取消、load、审批与网络出口审计不因脚本存在而通过。
+
 ## 记录格式与纪律
 
 每项包含：源码 commit + path:line → 请求/响应或通知形状 → 内部事件/字段映射 → 缺失与有损处理 → 可重跑脚本和脱敏 trace → 仍未覆盖的边界。先写源码依据，再测行为；只见报文不足以推导所有语义。
