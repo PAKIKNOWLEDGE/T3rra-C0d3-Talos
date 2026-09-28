@@ -119,6 +119,20 @@ python tools/check-handoff.py
 
 产品端到端烟测曾以显式 Node `v24.15.0` 启动成功：MiniMax ACP `0.5.7`、`GET /health` 返回 `{"ok":true}`、产品入口返回 HTTP 200。完整当前状态与限制见 [docs/status.md](docs/status.md)。
 
+## 引擎配置离线回归（执行者入口）
+
+用于 status 指向的 `config-offline-regression/r1` 小轮；以下命令尚不代表该轮通过。只加载相邻 fork 的源码测试，不启动系统 mcode，不需要 API key。先按 plan 修正测试并建立 fake home/data dir 隔离，再在外部 PowerShell 执行：
+
+```powershell
+cd C:\DEV\develop\minimax-code
+& 'C:\Program Files\nodejs\node.exe' 'node_modules/vitest/vitest.mjs' run --config vitest.oss.config.mjs packages/config/test/builtin-model-fallback.test.ts
+& 'C:\Program Files\nodejs\node.exe' 'node_modules/typescript/bin/tsc' -p tsconfig.standalone.json
+& 'C:\Program Files\nodejs\node.exe' scripts/source-inventory.mjs
+git diff --check
+```
+
+预期：配置用例实际执行且零跳过、类型与源码清单通过。非 managed 用例若确认继承 fake home，报告为已复现隔离缺口；测试通过不等于独立发行通过。失败处理和修改范围按 plan，不用修改生产逻辑把检查变绿。文档收口使用本仓库现有两条 Python 检查。
+
 ## 仓库与资料
 
 远端：[PAKIKNOWLEDGE/T3rra-C0d3-Talos](https://github.com/PAKIKNOWLEDGE/T3rra-C0d3-Talos)。本地 Git 仅用于后续开发，提交与推送状态见 [status.md](docs/status.md)。

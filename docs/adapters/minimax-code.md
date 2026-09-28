@@ -158,6 +158,23 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 【未验】上述源码风险不证明那次运行一定读取了旧凭据，也不证明 fork 代码一定未被显式选择；它们说明此前“隔离可靠”“已验 fork”的结论缺乏证据。后续测试应锁定构建身份并离线验证配置继承，而非重复真实连接。
 
+### 配置离线回归规划依据（2026-09-28）
+
+【源码】Astra 复核 `C:\DEV\develop\minimax-code` 的 HEAD 仍为 `cf8bd414b331b54f32d2bde2a3d66e56fdd7e565`，工作树干净。本次未运行引擎、测试或模型请求。
+
+- `packages/config/test/builtin-model-fallback.test.ts:16` 已用临时 data dir 和显式 managed 模式；`:113` 的中立配置保留用例需改为根级 `custom_provider`，断言也应读取 `config.custom_provider`。应核对 URL、合成 key、模型及默认选择，并在 reset 后重读，不能只断言名称或默认模型字符串。
+- `packages/config/src/config.ts:168` 显式 `__MAVIS_RUNTIME_MANAGED=0` 可覆盖 prod 默认；`:1880` 非 managed 分支先于中立分支读取默认 home 的配置；`:1890` managed + neutral 新配置仅写 logLevel；`:2054` 解析根级 custom_provider。`packages/config/src/byok-config.ts:67` 保留对象形状并规范 thinking 字段。以上是配置事实，不证明连接可用或完整数据隔离。
+- `packages/config/test/config-file-permissions.test.ts:37` 提供 `os.homedir` mock 的现有做法，`:47` 后恢复 mocks/env。该文件的 POSIX 权限套件在 Windows 跳过；新配置内容断言应放在原 builtin-model-fallback 测试内并在 Windows 实跑，不复制平台 skip。测试 home 和 data dir 均须位于测试创建的临时根内，不触及真实 home。
+- `test/vitest-suites.json:161` 已登记原测试；`vitest.oss.config.mjs` 从清单导入测试并将 workspace 包映射至源码。直接运行此测试验证 fork 源码配置行为，不需要启动系统 mcode 或构建 CLI。它也不证明将来运行的 CLI 产物来自该提交。
+
+【未验】预期非 managed + neutral 仍会继承虚构 home 的配置；后续离线用例用于复现这项已知限制，不把“复制成功”称为隔离通过。更改继承策略、发行目录与构建身份另行规划。
+
+### 配置离线回归实测（2026-09-28）
+
+【实测】由 Luna 在 fork 工作树 `cf8bd414b331b54f32d2bde2a3d66e56fdd7e565` 上只修改 `packages/config/test/builtin-model-fallback.test.ts` 后运行：显式 Node `v24.15.0`、Vitest `4.1.11`，该文件 7/7 通过；引擎 standalone TypeScript 通过；`scripts/source-inventory.mjs` 通过（4276 files）。Talos 交接、demo 和 diff 检查也通过；本轮未启动 CLI、未发真实模型请求。
+
+测试现在以根级 `custom_provider` 验证 URL、合成 key、模型、`defaultModel` 以及 reset 后重读一致。另两个用例使用分离的 fake home/data dir：managed + neutral 不复制 fake home、不种 MiniMax；显式 non-managed + neutral 仍复制 fake home 配置并解析出 synthetic key/default model。这复现并固定了现有继承行为，属于隔离缺口证据，不是中立隔离通过。生产配置代码未改，fork CLI 构建来源仍未锁定。
+
 ### 真实 custom provider 文本实测（2026-09-28）
 
 【主人反馈】主人在 `/provider-setup.html` 中使用 provider origin `https://api.xiaomimimo.com`、模型 `mimo-v2.6-flash` 和 `openai-completions`，页面显示“连接成功，模型已返回 talos-custom-ok”。这是当时所运行路径的成功反馈。提交 `74df78b` 的 `src/service/ws-server.ts:132` 起使用进程退出码和整段 trace 子串判定成功，未对结构化 ACP 结果逐项验真；本次未重读原始 trace，不能升级为 fork 构建、隔离或完整独立运行证明。API key 不写入此文档。
