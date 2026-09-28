@@ -8,7 +8,7 @@
 
 行动前读取 status 顶部唯一的“当前交接卡”，核对任务标识、修订、阶段、角色和范围，首条工作说明用一句话报告本轮角色、任务与停止点。同一 session 切换模型、恢复压缩上下文也遵守此规则。主人最新明确指令优先于文件，先同步有冲突的卡片；角色声明本身不授权开启下一项。具体分工、无角色时的处理和状态转换见 [workflow 的角色交接规则](docs/workflow.md#0-角色与交接)。
 
-Talos 现在由两个相邻、分工明确的仓库组成：本仓库维护 GUI、文档与产品视觉；`C:\DEV\develop\minimax-code` 是主人创建的引擎 fork，维护 CLI/TUI、provider、账号与数据目录。两仓库通过 ACP 对接，不使用 Git 子模块、不移动目录，也不让 GUI 直接导入引擎内部模块。
+Talos 现在由两个相邻、分工明确的仓库组成：本仓库维护 GUI、文档与产品视觉；`C:\DEV\develop\Talos-CLI` 是主人创建的引擎 fork，维护 CLI/TUI、provider、账号与数据目录。两仓库通过 ACP 对接，不使用 Git 子模块；目录已由主人统一命名，后续不要随意移动，也不让 GUI 直接导入引擎内部模块。
 
 ## 项目与取舍
 
@@ -50,4 +50,4 @@ Windows 优先的 coding-agent 桌面控制台，MiniMax Code 后端、Endfield 
 | [docs/adapters/minimax-code.md](docs/adapters/minimax-code.md) | MiniMax 源码入口、已知证据、待查契约 |
 | [demo/talos.html](demo/talos.html) | 已验收静态交互 demo，不接后端 |
 
-仓库边界：`C:\DEV\develop\minimax-code` 是本项目相邻的自有引擎 fork；`C:\DEV\develop\t3rra-C0d3` 仍是只读的 Rhodes 经验来源。引擎 fork 的代码、CLI/TUI、provider、凭据与数据目录属于引擎仓库；Talos 只通过 ACP 和固定的启动参数使用它。新项目视觉已带入本地，不再以临时目录为正本。
+仓库边界：`C:\DEV\develop\Talos-CLI` 是本项目相邻的自有引擎 fork；`C:\DEV\develop\t3rra-C0d3` 仍是只读的 Rhodes 经验来源。引擎 fork 的代码、CLI/TUI、provider、凭据与数据目录属于引擎仓库；Talos 只通过 ACP 和固定的启动参数使用它。新项目视觉已带入本地，不再以临时目录为正本。

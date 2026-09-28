@@ -13,7 +13,7 @@
 | 允许范围 | Talos 的接驳证据/状态/计划文档；引擎 fork 仅改欢迎设计数据和直接可见标题，具体清单见 plan |
 | 禁止范围 | 不改鉴权、provider、数据目录、ACP、更新器、遥测、CLI 命令名、GUI 第 4 轮失败项；不发模型请求、不 push |
 | 验收 / 停止点 | Luna 已跑引擎 TUI 相关单测、类型和 source inventory；主人现在只需启动当前 fork 目视欢迎页。若视觉不符先修本轮，不进入去品牌或命令改名 |
-| 完成证据 | 引擎 fork 提交 `107c9cf`；Node 24 下欢迎页 Vitest `26/26`、欢迎应用筛选 `4 passed`、目标 ESLint、TypeScript、source inventory `4276 files`、纯渲染宽度预览和 diff 检查通过；未启动真实 CLI、未发模型请求 |
+| 完成证据 | 当前引擎目录已统一为 `C:\DEV\develop\Talos-CLI`；有效视觉改动仍在 fork HEAD `370c764`（恢复 `107c9cf`），并已用 Node 24 执行 `pnpm build`。此前截图实际显示的是旧 `dist/cli.js` 的默认 MCode 欢迎页，因此不构成源码视觉验收；下一次必须先 build 再启动 |
 | 下一接手 / 就绪性 | 主人：按下方步骤验收真实欢迎页；通过后再规划对话/工具/审批真实接线。 |
 
 此卡是唯一当前入口；下方验收账与 plan 的历史小轮不构成新的执行授权。角色分工详见 workflow，不从上一轮助手的自称推断本轮角色。
@@ -24,7 +24,7 @@
 - 【文档：主人验收】Talos demo 经疏密调整后已通过。它是给后续模型看的设计范本，不需再宏大规划或重新设计一版。
 - 【实测】已将四个 demo 文件与两个字体复制进 `demo/`，六张新游戏参考图放入 `docs/references/`。搬迁不改视觉代码；快照散列见 `demo/baseline.sha256.json`。
 - 【文档：主人授权】允许本地提交，不允许 push。两个仓库均已有本地提交；此前“仅初始化、不 commit”的约束已被后续授权替代。远端当前内容本轮未查询。
-- 【源码】相邻 `C:\DEV\develop\minimax-code` 是引擎 fork 源码仓库；Talos 默认仍解析 PATH 中的已安装 mcode，并非自动启动该 fork 的产物。已安装 CLI 的 initialize 证据不能证明 fork 改动生效；详细边界见 [adapter](adapters/minimax-code.md)。
+- 【源码】相邻 `C:\DEV\develop\Talos-CLI` 是引擎 fork 源码仓库；Talos 默认仍解析 PATH 中的已安装 mcode，并非自动启动该 fork 的产物。已安装 CLI 的 initialize 证据不能证明 fork 改动生效；详细边界见 [adapter](adapters/minimax-code.md)。
 - 【文档：主人决定】已确认浏览器单会话闭环计划，要求运行中刷新也能继续观察同一回合；实施分五轮验收。方案与后续路线唯一正本为 [plan](plan.md)。
 - 【文档：主人决定】复用引擎已有的 provider 配置功能，最终发行命令为 `talos`。原生交互入口是 TUI `/provider` 菜单，CLI provider 子命令也保留；此前记录的斜杠 add/test/list 子命令不准确。重复浏览器向导已删除；`mcode` 兼容别名只是候选建议，未由主人确定。
 - 【文档：主人决定】主人自行更新 CLI 以对齐源码；真实探针沿用现有账号、模型及数据目录，使用独立测试 cwd。执行者不自行升级全局软件、不复制凭据。
@@ -49,9 +49,9 @@
 
 ## 3. 项目交接背景（当前入口见顶部卡片）
 
-欢迎图已选择：主人认可 **03 装配机械臂**。字符正本已落入 design 引用的仓库文件；静态画面范本已通过，真实欢迎页视觉切片已接入引擎 fork，待主人目视验收。
+欢迎图已选择：主人认可 **03 装配机械臂**。字符正本已落入 design 引用的仓库文件；静态画面范本已通过，真实欢迎页视觉切片已接入引擎 fork。上一次截图展示的是未重建的默认 `dist`，不算有效验收；源码目录现为 `C:\DEV\develop\Talos-CLI`。
 
-两个仓库保持分工：Talos 维护 GUI 和产品文档，`C:\DEV\develop\minimax-code` 维护引擎、CLI/TUI、provider、账号与数据目录；两者通过 ACP 对接，不使用子模块。TUI 已选 A「对话流式终端」和机械臂图案，不做大字字标，见 [design](design.md#tui-设计讨论)。完整 TUI 实现前另给欢迎、对话/工具、审批三种画面范本验收。
+两个仓库保持分工：Talos 维护 GUI 和产品文档，`C:\DEV\develop\Talos-CLI` 维护引擎、CLI/TUI、provider、账号与数据目录；两者通过 ACP 对接，不使用子模块。TUI 已选 A「对话流式终端」和机械臂图案，不做大字字标，见 [design](design.md#tui-设计讨论)。完整 TUI 实现前另给欢迎、对话/工具、审批三种画面范本验收。
 
 上一执行小轮已完成，本地提交 `6025d0b`：删除重复浏览器 provider 向导、对应 POST 路由、临时 custom-provider 探针及脚本入口；复用原生 TUI `/provider` 交互入口及既有 CLI 子命令。该轮未运行引擎或真实模型请求。撤销“扩展同一探针到工具、取消、load”的下一步。第 4 轮 GUI 失败保留，第 5 轮继续暂停。
 
@@ -100,3 +100,4 @@
 | 2026-09-28 | 主人将非 UI/非直观使用层面的验收交由执行者判断；UI、实际操作和视觉仍需主人验收 |
 | 2026-09-28 | 主人选择两个相邻仓库保持独立、先 TUI 再 GUI、首版自带密钥与本地工具；TUI 采用对话流，欢迎图从游戏元素绘制 ASCII，拒绝大字字标。机械臂图案方向已确认，完整画面仍待验收 |
 | 2026-09-28 | 主人确认 Talos GUI 仓库与 `PAKIKNOWLEDGE/Talos` 引擎 fork 的两仓库路线；本轮完成职责、ACP 边界、同步规则和下一入口文档整理，未改引擎代码 |
+| 2026-09-28 | 主人将相邻引擎源码目录从 `C:\DEV\develop\minimax-code` 重命名为 `C:\DEV\develop\Talos-CLI`，以减少启动时的语义混淆；后续验收必须锁定该目录并先重建 `dist` |

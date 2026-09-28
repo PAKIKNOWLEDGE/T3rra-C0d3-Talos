@@ -1,6 +1,6 @@
 # MiniMax Code 接驳证据入口
 
-此页只记录证据与待验证问题，不记录实施进度。读取日期：2026-09-28。源码根目录 `C:\DEV\develop\minimax-code`，上游基线 `2aed5ca703c3359dd028af51e6c4cbc6a5e15c46`；纠偏复核时 fork HEAD 为 `cf8bd414b331b54f32d2bde2a3d66e56fdd7e565`。各历史证据以所在小节的提交为准。该仓自己的 AGENTS 管它的代码；不要把上游发布同步规矩误当 Talos 的工程流程。
+此页只记录证据与待验证问题，不记录实施进度。读取日期：2026-09-28。源码根目录 `C:\DEV\develop\Talos-CLI`，上游基线 `2aed5ca703c3359dd028af51e6c4cbc6a5e15c46`；纠偏复核时 fork HEAD 为 `cf8bd414b331b54f32d2bde2a3d66e56fdd7e565`。各历史证据以所在小节的提交为准。该仓自己的 AGENTS 管它的代码；不要把上游发布同步规矩误当 Talos 的工程流程。
 
 ## 当前已有证据
 
@@ -51,7 +51,7 @@
 
 ## 单会话链路源码证据
 
-核对日期：2026-09-28。以下均基于提交 `2aed5ca703c3359dd028af51e6c4cbc6a5e15c46`，版本清单 `0.5.7`；本次复核工作树干净。表中路径以只读源码根目录 `C:\DEV\develop\minimax-code\` 为前缀，行号对应此提交。除明确标为【实测】外，均未运行真实 CLI 或模型，相关单测只阅读、未执行。
+核对日期：2026-09-28。以下均基于提交 `2aed5ca703c3359dd028af51e6c4cbc6a5e15c46`，版本清单 `0.5.7`；本次复核工作树干净。表中路径以只读源码根目录 `C:\DEV\develop\Talos-CLI\` 为前缀，行号对应此提交。除明确标为【实测】外，均未运行真实 CLI 或模型，相关单测只阅读、未执行。
 
 “拟映射”指 [实施计划](../plan.md) 要建立的内部契约，目前无产品实现；完整运行时报文形状和脱敏 trace 仍须探针补齐。源码和安装包版本号一致也不自动证明构建来源一致。
 
@@ -92,7 +92,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 ## 中立引擎 fork 评估取证（2026-09-28）
 
-只读核对本机源码，HEAD 为 `2aed5ca703c3359dd028af51e6c4cbc6a5e15c46`、版本 `0.5.7`，读取前后工作树均干净。下表上游路径统一相对于绝对根目录 `C:\DEV\develop\minimax-code\`；Talos 自身路径另列。这次未构建 fork、未运行上游测试、未配置或调用自定义模型、未做网络流量审计。候选取舍见 [plan](../plan.md)，不将源代码能力或测试定义升级为本机实测。
+只读核对本机源码，HEAD 为 `2aed5ca703c3359dd028af51e6c4cbc6a5e15c46`、版本 `0.5.7`，读取前后工作树均干净。下表上游路径统一相对于绝对根目录 `C:\DEV\develop\Talos-CLI\`；Talos 自身路径另列。这次未构建 fork、未运行上游测试、未配置或调用自定义模型、未做网络流量审计。候选取舍见 [plan](../plan.md)，不将源代码能力或测试定义升级为本机实测。
 
 | 等级与 path:line | 核对结果 | 映射到候选方案 / 尚未证明 |
 | --- | --- | --- |
@@ -143,7 +143,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 ### 原生 provider 与重复探针复核（2026-09-28）
 
-【源码】以下引擎路径均相对于 `C:\DEV\develop\minimax-code\`，提交 `cf8bd414b331b54f32d2bde2a3d66e56fdd7e565`，版本字段仍为 `0.5.7`；本次只读复核，不调用引擎或模型。
+【源码】以下引擎路径均相对于 `C:\DEV\develop\Talos-CLI\`，提交 `cf8bd414b331b54f32d2bde2a3d66e56fdd7e565`，版本字段仍为 `0.5.7`；本次只读复核，不调用引擎或模型。
 
 | 源码位置 | 事实与可用结论 |
 | --- | --- |
@@ -160,7 +160,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 ### 配置离线回归规划依据（2026-09-28）
 
-【源码】Astra 复核 `C:\DEV\develop\minimax-code` 的 HEAD 仍为 `cf8bd414b331b54f32d2bde2a3d66e56fdd7e565`，工作树干净。本次未运行引擎、测试或模型请求。
+【源码】Astra 复核 `C:\DEV\develop\Talos-CLI` 的 HEAD 仍为 `cf8bd414b331b54f32d2bde2a3d66e56fdd7e565`，工作树干净。本次未运行引擎、测试或模型请求。
 
 - `packages/config/test/builtin-model-fallback.test.ts:16` 已用临时 data dir 和显式 managed 模式；`:113` 的中立配置保留用例需改为根级 `custom_provider`，断言也应读取 `config.custom_provider`。应核对 URL、合成 key、模型及默认选择，并在 reset 后重读，不能只断言名称或默认模型字符串。
 - `packages/config/src/config.ts:168` 显式 `__MAVIS_RUNTIME_MANAGED=0` 可覆盖 prod 默认；`:1880` 非 managed 分支先于中立分支读取默认 home 的配置；`:1890` managed + neutral 新配置仅写 logLevel；`:2054` 解析根级 custom_provider。`packages/config/src/byok-config.ts:67` 保留对象形状并规范 thinking 字段。以上是配置事实，不证明连接可用或完整数据隔离。

@@ -124,7 +124,7 @@ python tools/check-handoff.py
 用于 status 指向的 `config-offline-regression/r1` 小轮；以下命令尚不代表该轮通过。只加载相邻 fork 的源码测试，不启动系统 mcode，不需要 API key。先按 plan 修正测试并建立 fake home/data dir 隔离，再在外部 PowerShell 执行：
 
 ```powershell
-cd C:\DEV\develop\minimax-code
+cd C:\DEV\develop\Talos-CLI
 & 'C:\Program Files\nodejs\node.exe' 'node_modules/vitest/vitest.mjs' run --config vitest.oss.config.mjs packages/config/test/builtin-model-fallback.test.ts
 & 'C:\Program Files\nodejs\node.exe' 'node_modules/typescript/bin/tsc' -p tsconfig.standalone.json
 & 'C:\Program Files\nodejs\node.exe' scripts/source-inventory.mjs
@@ -132,6 +132,20 @@ git diff --check
 ```
 
 预期：配置用例实际执行且零跳过、类型与源码清单通过。非 managed 用例若确认继承 fake home，报告为已复现隔离缺口；测试通过不等于独立发行通过。失败处理和修改范围按 plan，不用修改生产逻辑把检查变绿。文档收口使用本仓库现有两条 Python 检查。
+
+## TUI 欢迎页验收
+
+必须从当前 fork 源码目录启动，不能用 PATH 中的系统 `mcode`，也不能跳过构建：
+
+```powershell
+cd C:\DEV\develop\Talos-CLI
+$env:PATH="C:\Program Files\nodejs;$env:PATH"
+node -v
+pnpm build
+pnpm mcode
+```
+
+预期是黄色机械臂欢迎图、普通字号 `TALOS` 和中立提示文案。若看到大字 `MINIMAX CODE` 或 `MCode`，说明启动的仍是旧 `dist` 或系统安装版，不算本轮验收结果。
 
 ## 仓库与资料
 
