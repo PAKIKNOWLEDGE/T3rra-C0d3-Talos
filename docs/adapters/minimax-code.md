@@ -20,6 +20,22 @@
 
 【未验】主人尚未在真实终端进入 `/provider` 观察新增行，也未从该行进入官方预设和 Custom provider；这项可见验收通过前，不能宣称 provider 中立化完成。MiniMax 行仍可存在，但不再是唯一新增入口。
 
+## provider catalog 平级性复核（2026-09-28）
+
+【源码】相邻引擎工作树 `C:\DEV\develop\Talos-CLI` 基线提交 `bc5ad01441dafa153caf55cdd78893aca97b4621`，本轮工作树只改 provider catalog、管理页文案、对应测试，以及本地运行数据的源码清单隔离。实现依赖的源码映射如下：
+
+| 位置 | 事实与实现 |
+| --- | --- |
+| `packages/local-runtime-v2/src/service/model-system/catalog/provider-presets/provider-presets.service.ts:20-24` | 禁用集合只保留 `minimax-cn`、`minimax-coding-plan`、`minimax-cn-coding-plan`；中性 `minimax` 不再因品牌身份从 catalog 过滤。 |
+| `packages/local-runtime-v2/src/service/model-system/catalog/provider-presets/provider-presets.service.test.ts:227-249`、`:761-773` | 离线目录夹具验证 `minimax` 与第三方 preset 同时保留，并按既有区域顺序参与排序；没有为 MiniMax 增加置顶逻辑。 |
+| `packages/tui/src/tui/features/provider/onboarding.ts:347-364` | 官方 preset 与 `Custom provider` 都映射到同一 `Provider catalog` 分组；仍复用原有保存、模型发现和测试连接流程。 |
+| `packages/tui/src/tui/features/provider/manager.ts:133-164` | 管理页只描述已配置连接和内置登录；`+ Add provider` 明确进入统一目录，不把目录内容伪装成已保存连接。 |
+| `.gitignore:1-7`、`scripts/source-inventory.mjs:11-20` | 本地 `.talos/` 运行数据不属于公开源码，加入忽略和清单扫描排除；未读取、提交或改写其中凭据、会话和日志。 |
+
+【实测】2026-09-28，显式 Node `v24.15.0` 下：`pnpm build` 成功，输出 `> talos-cli@0.5.7 build` 与 `Built Talos CLI 0.5.7 from 6267 source files.`；provider preset、onboarding、manager 三个定向 Vitest 文件 **78/78** 通过；standalone typecheck 通过；`pnpm check:source` 通过（4276 files）；`git diff --check` 通过。未启动真实 TUI、未发送模型请求、未触碰 `.talos/` 内容。
+
+【未验】主人尚未在真实终端从 `/provider` → `+ Add provider` 目视确认目录分组；本条不证明 MiniMax 登录、区域网络出口、默认数据目录、独立 npm 发行或完整第三方模型链路已经中立化。若本地 catalog 快照缺少 `minimax`，应记录数据源问题，不由 UI 假造。
+
 ## 原生 TUI 与 GUI 边界复核（2026-09-29）
 
 【源码】根目录为 `C:\DEV\develop\Talos-CLI\`，以下 path:line 均相对于该根；HEAD `370c7646fdfd51ef8a812a4966538884b73db556`。本次只读取证和核对 Git，没有启动 TUI、跑引擎测试或调用模型。

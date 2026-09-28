@@ -9,7 +9,7 @@
 | 工作线 / 所属仓库 | 已有结果 | 当前缺口与状态 |
 | --- | --- | --- |
 | GUI / 本仓库 `T3rra-C0d3-Talos` | 网页视觉 demo 已验收；产品已有 ACP 适配器、Node 服务和浏览器 UI 骨架 | **暂停**。产品第 4 轮验收失败：回复不可见、UI 错漏和样张字段残留；第 5 轮刷新恢复未验收。demo 通过不等于产品通过 |
-| 中立引擎 / `C:\DEV\develop\Talos-CLI` | provider 管理页已接回“+ Add provider”；构建输出和本地包名显示 Talos CLI；第三方预设与 Custom provider 继续复用原生向导 | **待主人验收本轮可见入口**。专属登录、厂商网络出口、数据隔离、独立发行尚未解决；不能称“已去 MiniMax 化” |
+| 中立引擎 / `C:\DEV\develop\Talos-CLI` | MiniMax 已回到官方 provider preset catalog；Custom 与厂商 preset 共用 `Provider catalog` 分组；管理页明确只展示已配置连接与内置登录 | **待主人验收本轮目录平级性**。构建与定向机读检查已通过；专属登录、厂商网络出口、数据隔离、独立发行尚未解决 |
 | TUI / 同一 `Talos-CLI` 仓库 | 可选 Talos 配色、缩小机械臂和 ASCII `TALOS` 已获主人验收；原生对话、工具、审批和 `/provider` 功能本来就有 | **已完成这两项视觉小轮**；可作为首版外观基线，不自动追加视觉打磨；发行品牌与默认选择尚待处理 |
 | 桌面与发布 / 后续 | 保留 Tauri 2 路线，不用 Electron | **未开始**。不做第三个仓库，不因路线存在就开始打包 |
 
@@ -19,15 +19,15 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | `cli-provider-neutral-ui` / `r3` |
+| 任务标识 / 修订 | `cli-provider-catalog-parity` / `r4` |
 | 阶段 | 待主人验收 |
-| 本轮角色 / 来源 | Luna；主人要求继续计划，已授权按既定中立化目标自行选取小切片 |
-| 目标 / 方案入口 | `/provider` 可进入官方预设与 Custom provider；本地构建显示 Talos；[plan](plan.md#当前小轮provider-入口与构建身份) |
-| 允许范围 | provider manager、feature-flow、构建元数据、对应测试和本仓库同步文档；不请求模型，不动真实数据 |
+| 本轮角色 / 来源 | Luna；主人已通过上一轮，继续按“产品中立、源码尊重上游”方案推进 |
+| 目标 / 方案入口 | 官方 provider preset 与 Custom provider 在新增目录同层级；[plan](plan.md#当前小轮provider-catalog-parity) |
+| 允许范围 | provider preset catalog、onboarding 分组、provider manager 文案、对应测试和本仓库同步文档；不请求模型，不动真实数据 |
 | 禁止范围 | 不改默认数据目录、不迁移旧 home、不改网络出口、不处理 GUI、不 fetch/merge/push |
-| 验收 / 停止点 | 构建显示 `talos-cli@0.5.7` 与 `Built Talos CLI 0.5.7`；进入 `/provider` 能见 `+ Add provider`，Enter/Space 或 `a` 打开官方预设和 Custom provider；主人确认后停 |
-| 完成证据 | provider manager 23/23、standalone typecheck、`pnpm build` 通过；真实终端可见行为尚未由主人验收 |
-| 下一接手 / 就绪性 | 主人验收后再进入数据目录/专属登录切片；若入口失败，先修本轮，不跳到 GUI |
+| 验收 / 停止点 | 关闭当前 TUI 后重建；`/provider` → `+ Add provider` → 目录中 MiniMax、DeepSeek、Z.AI 等与 `Custom provider` 同属 `Provider catalog`；主人确认后停 |
+| 完成证据 | provider preset、onboarding、manager 定向 Vitest 78/78；standalone typecheck、`pnpm build`、`pnpm check:source`（4276 files）和 `git diff --check` 通过；真实终端可见行为仍待主人验收 |
+| 下一接手 / 就绪性 | 主人验收后再进入数据目录/专属登录切片；若目录缺 provider，先核对 catalog 快照，不跳到 GUI |
 
 ## 必须保留的事实
 
