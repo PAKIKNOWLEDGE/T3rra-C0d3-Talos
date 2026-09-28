@@ -18,6 +18,19 @@
 
 映射边界：TUI 组件直接使用自己的 runtime/投影；GUI 通过 ACP 适配后合并事实。两套界面的视觉参考和协议契约不可互换。【未验】本次不证明全部原生功能的运行正确性，也不判断完整 TUI 的设计已经通过。
 
+## Talos 外部入口与发行边界（2026-09-28）
+
+【源码】基线为 `C:\DEV\develop\Talos-CLI`，改动前 HEAD `5bf53da`。本轮读取并修改 `package.json`、`scripts/build.mjs`、`scripts/package-cli-release.mjs`、`scripts/verify-cli-release.mjs`、`scripts/publish-cli-release.mjs` 及对应离线测试。
+
+- `package.json` 的本地脚本入口改为 `talos -> node dist/cli.js`，不再生成 `mcode` 脚本。
+- `scripts/build.mjs` 写出的 `dist/package.json` 只声明 `bin.talos = cli.js`。
+- `scripts/package-cli-release.mjs` 的发行 manifest 只声明 `bin.talos = cli.js`；MIT、NOTICE 和第三方许可证复制逻辑不变。
+- 发行验证与 release notes 的命令示例改为 `talos --version`。包名、上游 repository 字段、数据目录和内置更新器本轮不改；Talos 计划不依赖内置更新器，后续以独立 npm 发行和周期性候选 PR 为边界。
+
+【实测】显式 Node `v24.15.0` 下构建成功；`dist/package.json` 的 `bin` 只有 `talos`；`dist/cli.js --version` 返回 `0.5.7`；source inventory、standalone boundary 和 `test/source-sync.test.mjs`（52 通过、2 跳过）通过。
+
+【未验】安装后 npm launcher 和 Windows 更新路径尚未验证；本条不能据此宣布完全去 MiniMax 化、数据隔离或 npm 已发布。
+
 ## TUI 主题复用依据（2026-09-29）
 
 【源码】根目录 `C:\DEV\develop\Talos-CLI\`，HEAD `370c7646fdfd51ef8a812a4966538884b73db556`。本次只读，无模型请求、构建或运行验收。
