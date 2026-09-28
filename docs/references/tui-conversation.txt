@@ -1,0 +1,29 @@
+TALOS / CONVERSATION FRAME
+
+╭─ TALOS ───────────────────────────────────────────────────╮
+│ workspace  C:\DEV\sandbox\talos-run      model  custom     │
+│ status     READY                                          │
+├───────────────────────────────────────────────────────────┤
+│ you                                                        │
+│  Read the current project status and list the next safe    │
+│  step.                                                     │
+│                                                           │
+│ talos                                                      │
+│  I found the handoff card. I am checking the next step…    │
+│                                                           │
+│ tool  inspect status.md                                    │
+│  path   docs/status.md                                     │
+│  state  reading                                           │
+│                                                           │
+│ talos                                                      │
+│  The status card points to the TUI visual review.          │
+│  ▌                                                        │
+├───────────────────────────────────────────────────────────┤
+│ enter message…                                             │
+╰───────────────────────────────────────────────────────────╯
+
+Rules for this frame:
+- stream text in place; do not redraw the whole screen or steal focus
+- keep tool details collapsed to one readable row until expanded
+- show the actual provider/model/workspace values when known
+- leave a visible empty state when a value is not supplied

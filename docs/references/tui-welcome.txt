@@ -1,0 +1,22 @@
+TALOS / WELCOME FRAME
+
+                     ▄
+              ▄▄▄████▀▀█▄
+      ▄▄▄▄███████████▄▄███▄
+         █████████▀▀▀▀███████▄
+     ████████▀▀▀       ▀███████▄
+      ███████            ▀▀███▀▄
+       ███████▄           ▄██▀▀██▄
+        ████████         ▀█▀    ██▀
+         ███████▀        ▀██   ▀█▀
+         ███████          ▀█▀
+    ▄▄▄▄▄███████▄▄▄▄▄
+    █████████████████
+
+                         TALOS
+                   coding console
+
+  [Enter] start      [/provider] providers      [Q] quit
+
+  The arm is a compact welcome mark, not a wordmark.
+  The real model and workspace appear after connection.

@@ -1,0 +1,22 @@
+TALOS / APPROVAL FRAME
+
+╭─ ACTION REQUEST ───────────────────────────────────────────╮
+│ tool  write_file                                           │
+│ path  C:\DEV\sandbox\talos-run\acceptance-note.txt        │
+│                                                           │
+│ The engine is asking for permission before this action.    │
+│ Review the request, then choose one option:                │
+│                                                           │
+│   › Allow once                                             │
+│     Allow always                                           │
+│     Reject                                                 │
+│     Cancel                                                 │
+│                                                           │
+│ [↑↓] move   [Enter] choose   [Esc] keep waiting           │
+╰───────────────────────────────────────────────────────────╯
+
+After selection:
+- show “sending decision…” until the engine answers
+- keep the card visible if the response is late or unknown
+- remove the card only after the engine acknowledges the decision
+- preserve the exact option label supplied by the engine

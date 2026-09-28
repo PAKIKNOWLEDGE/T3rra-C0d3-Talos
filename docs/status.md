@@ -6,15 +6,15 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | `config-offline-regression` / `r1` |
-| 阶段 | 已完成 |
-| 本轮角色 / 来源 | Luna；主人明确“你是 Luna 你现在来执行”，按 `config-offline-regression/r1` 实施 |
-| 目标 / 方案入口 | 修正第三方配置保留测试、用 fake home 确认继承现状；[plan 配置离线回归小轮](plan.md#执行交接配置离线回归小轮) |
-| 允许范围 | 本轮 Astra 只读引擎、写计划/证据/状态/README；后续 Luna 的测试与文档文件清单以 plan 对应小节为准 |
-| 禁止范围 | 运行时生产代码、真实模型请求、CLI 构建/启动、服务启停、真实账号/凭据、push；不在测试轮处理 TUI 或 GUI |
-| 验收 / 停止点 | Luna 离线实跑配置回归、类型、源码清单及文档检查；正确测试暴露生产缺陷则需复核，不擅自改生产代码；完成即停交回 Astra |
-| 完成证据 | 引擎提交 `b2c9930` 仅修改 `packages/config/test/builtin-model-fallback.test.ts`；配置回归 7/7、standalone TypeScript、source inventory 4276 files 通过。Talos 文档提交 `db20858`；交接检查 9 篇文档/63 个本地链接、demo 检查和 diff 检查通过。未改生产配置代码、未启动 CLI、未发真实模型请求。结果证明 managed + neutral 不继承 fake home；non-managed + neutral 仍继承，隔离缺口已固定为证据 |
-| 下一接手 / 就绪性 | Astra：复核本轮结果并决定是否安排 TUI 静态画面范本；两个仓库均已本地提交，未 push |
+| 任务标识 / 修订 | `tui-static-frames` / `r1` |
+| 阶段 | 待主人验收 |
+| 本轮角色 / 来源 | Luna；主人明确“你现在是 Luna，你继续执行”，按机械臂 TUI 静态画面范本小轮实施 |
+| 目标 / 方案入口 | 欢迎、对话/工具、审批三种静态终端画面；[plan TUI 静态画面范本小轮](plan.md#执行交接机械臂-tui-静态画面范本小轮) |
+| 允许范围 | Talos 仓库的 `docs/references/`、`docs/design.md`、`docs/plan.md`、`docs/status.md`；只做文本范本和交接说明 |
+| 禁止范围 | 不改引擎仓库、不改 TUI 运行逻辑、不接真实 ACP/模型、不启动服务、不改 GUI 第 4 轮失败项、不推送 |
+| 验收 / 停止点 | Luna 自验文档与 diff 检查；主人目视三张文本范本。通过或提出具体改动后再决定是否进入真实 TUI 接线 |
+| 完成证据 | 已新增 `docs/references/tui-welcome.txt`、`tui-conversation.txt`、`tui-approval.txt` 及入口说明 `tui-frames.md`；已把入口写入 design。`check-handoff.py`、`demo/talos-check.py`、`git diff --check` 通过；尚未实现真实 TUI |
+| 下一接手 / 就绪性 | 主人：按 `docs/references/tui-frames.md` 做视觉验收；通过后由 Astra 定真实 TUI 接线小轮。 |
 
 此卡是唯一当前入口；下方验收账与 plan 的历史小轮不构成新的执行授权。角色分工详见 workflow，不从上一轮助手的自称推断本轮角色。
 
@@ -49,7 +49,7 @@
 
 ## 3. 项目交接背景（当前入口见顶部卡片）
 
-欢迎图已选择：主人认可 **03 装配机械臂**。字符正本已落入 design 引用的仓库文件，未接入 TUI；只确认图案，完整欢迎页、对话、工具及审批画面仍未验收。
+欢迎图已选择：主人认可 **03 装配机械臂**。字符正本已落入 design 引用的仓库文件；本轮补齐欢迎、对话/工具、审批三张静态画面范本，仍未接入真实 TUI。
 
 两个仓库保持分工：Talos 维护 GUI 和产品文档，`C:\DEV\develop\minimax-code` 维护引擎、CLI/TUI、provider、账号与数据目录；两者通过 ACP 对接，不使用子模块。TUI 已选 A「对话流式终端」和机械臂图案，不做大字字标，见 [design](design.md#tui-设计讨论)。完整 TUI 实现前另给欢迎、对话/工具、审批三种画面范本验收。
 

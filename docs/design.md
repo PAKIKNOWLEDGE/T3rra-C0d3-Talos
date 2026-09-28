@@ -30,7 +30,7 @@ TUI 采用对话流式终端方向：主阅读区留给连续对话和代码，�
 
 欢迎区使用取材于游戏元素的小幅字符图案，配普通产品名称；不做大号 ASCII 字母字标。依据主人指定的 `cli-ascii-logo` skill，使用 Unicode 块字符及黄色前景。参考目录为 `C:\DEV\develop\tmp\Manuel-ref-image`，批次为 `END1.jpg`、`endfield2.jpg`、`end3.jpg`、`end4.jpg`、`end5.webp`、`end6.png`、`end7.png`；均仅作设计参考，不是产品发布资产。
 
-欢迎图选定 03 装配机械臂，字符正本为 [tui-arm.txt](references/tui-arm.txt)，采用黄色前景、普通字号 Talos 名称。图案借鉴参考图的工业设备和生产设施语汇，属于原创简化轮廓，不声称还原某一游戏模型。画布为 36 列 × 12 行；只确认图案方向，欢迎区排版、窄窗口降级与真实终端效果仍需完整范本验收。其他候选不再作为默认方案。
+欢迎图选定 03 装配机械臂，字符正本为 [tui-arm.txt](references/tui-arm.txt)，采用黄色前景、普通字号 Talos 名称。图案借鉴参考图的工业设备和生产设施语汇，属于原创简化轮廓，不声称还原某一游戏模型。画布为 36 列 × 12 行；欢迎、对话/工具、审批三种静态画面范本见 [tui-frames.md](references/tui-frames.md)，真实终端效果仍需后续接线验收。其他候选不再作为默认方案。
 
 本机临时预览在忽略目录 `.talos/tui-art/`；`alternatives.py` 生成四案的纯文本、ANSI 色彩版、严格 ASCII 降级、单张字符栅格 PNG 及 `alternatives.png` 对比图。PNG 只预览字符外观，不证明真实终端渲染；未接入引擎。接手不依赖这些临时文件，应使用已落盘的机械臂字符正本。整体配色、密度、菜单、输入区仍待可见验收；图案通过不等于整个 TUI 通过。
 
