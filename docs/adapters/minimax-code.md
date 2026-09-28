@@ -276,3 +276,5 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 | 【实测，继承上一轮记录】 | `provider-application` targeted Vitest `19/19`；配置离线回归 `7/7`；使用 `vitest.oss.config.mjs`、Node `v24.15.0` | 排序、根级 `custom_provider`、URL/合成 key/模型/defaultModel 重读，以及 managed+neutral 不复制 fake home 的行为已有可复跑离线证据 | non-managed+neutral 仍会继承 fake home；这是一项隔离缺口证据，不是隔离通过；未证明真实模型、审批、取消、load 或网络出口 |
 
 本节记录已有证据，不设角色审批。开关接线、数据隔离和专属登录退役的当前执行范围见 [plan](../plan.md#当前小轮cli-中立化)，进度与下一入口见 [status](../status.md)。
+
+【实测，源码落地】Talos-CLI 提交 `c677a6925f32bb79e962c85259ab7fd5d69d51c9` 在 `packages/tui/src/cli/environment.ts:67-74` 将 `TALOS_NEUTRAL_RUNTIME=1` 写入 TUI 启动目标环境；同一函数仍设置显式 data dir、区域、构建环境和 managed 标记。该切片只改变启动时的配置 profile 选择：managed 运行不再自动种入或恢复 MiniMax 默认 provider，用户已有显式 provider 仍由配置层读取。它没有改默认目录 `.minimax`、没有阻止显式 `MINIMAX_DATA_DIR`、没有迁移或删除旧 home，也没有证明真实 provider、网络出口、工具或审批链路。
