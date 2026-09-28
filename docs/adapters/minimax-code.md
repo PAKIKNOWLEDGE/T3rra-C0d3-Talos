@@ -147,6 +147,12 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 Talos 新增 `spike/custom-provider-probe.ts`，先用上述 CLI 在临时数据目录保存并选择 provider，再用同一目录启动 ACP，执行 `initialize`、`session/new` 和纯文本 `session/prompt`。脚本只接受 API key 环境变量名，不接受命令行明文密钥；输出只保留 provider origin、模型名、stopReason、更新计数和回复前缀。环境变量不完整时只做 preflight，不发请求。当前仍是【未验】真实外部 provider；工具、取消、load、审批与网络出口审计不因脚本存在而通过。
 
+### 真实 custom provider 文本实测（2026-09-28）
+
+【主人验收】【实测】主人在 `/provider-setup.html` 中使用 provider origin `https://api.xiaomimimo.com`、模型 `mimo-v2.6-flash` 和 `openai-completions` 完成一次真实连接；页面显示“连接成功，模型已返回 talos-custom-ok”。向导只有在临时 CLI `provider add --use` 成功、ACP 会话完成且收到 `end_turn` 与 `talos-custom-ok` 时才显示成功，因此这次记录证明真实 custom provider 的文本链路已经打通。API key 未写入文档或 trace。
+
+这项实测只覆盖 provider 保存/选中、ACP 握手、session/new 和纯文本 prompt；工具执行、取消、load/继续、审批和网络出口隔离仍未验收。
+
 ## 记录格式与纪律
 
 每项包含：源码 commit + path:line → 请求/响应或通知形状 → 内部事件/字段映射 → 缺失与有损处理 → 可重跑脚本和脱敏 trace → 仍未覆盖的边界。先写源码依据，再测行为；只见报文不足以推导所有语义。
