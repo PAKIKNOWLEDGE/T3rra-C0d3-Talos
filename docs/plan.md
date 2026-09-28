@@ -258,6 +258,20 @@ Node 服务持续持有 ACP 连接；浏览器断开不关闭引擎。浏览器�
 | 验证 | `python tools/check-handoff.py`、`python demo/talos-check.py`、`git diff --check`；另检查范本文本链接和机械臂画布宽度，不使用浏览器自动化 |
 | 主人验收 | 打开 `docs/references/tui-frames.md`，按其中 5 步查看三张文本范本；主人回复“通过”或指出具体画面与区域。通过后再由 Astra 定真实 TUI 接线小轮 |
 
+### 执行交接：TUI 视觉接线小轮
+
+本轮目标：把已通过的机械臂静态范本接入引擎现有欢迎页渲染管线，先交付一个可真实启动、可目视的欢迎页切片。只做视觉层和直接显示文案，完成后停在主人真实 TUI 验收点。
+
+| 项目 | 执行约束 |
+| --- | --- |
+| 复用依据 | 先读 [adapter 的 TUI 视觉接线依据](adapters/minimax-code.md#tui-视觉接线依据2026-09-28)；引擎现有 `packages/tui/src/tui/shell/welcome/design.ts`、`hero.ts`、`component.ts` 与 `theme/runtime.ts` |
+| Talos 可写文件 | `docs/adapters/minimax-code.md`、`docs/status.md`、`docs/plan.md`；记录当前 fork commit、path:line、映射和未覆盖项 |
+| 引擎可写文件 | `packages/tui/src/tui/shell/welcome/design.ts`、`hero.ts`、`component.ts`、相关维护说明及为保持断言所必需的欢迎页单测；不改主题默认 id 和其它运行模块 |
+| 必须实现 | 复用既有宽/中/窄布局；欢迎图使用 36 列机械臂；显示普通字号 `TALOS` 或中立标题；保留 `/provider`、输入和状态动作不变 |
+| 禁止扩展 | 不删除所有 MiniMax 字符串、不改登录/鉴权/provider、不开新主题系统、不改 `mcode`/`talos` 命令、不改数据目录、不做真实模型请求、不改 GUI |
+| 验证 | 引擎欢迎页相关单测、TypeScript、`pnpm check:source`、git diff；Talos `python tools/check-handoff.py`；不使用浏览器自动化，不启动用户服务 |
+| 主人验收 | 使用当前 fork 的可重跑启动入口打开 TUI，观察宽屏和窄屏欢迎页：机械臂位置、TALOS 普通字号、无大字字标、入口提示可读。通过后再规划对话/工具/审批真实接线 |
+
 最小验证应包括：断开厂商端点后指定模型仍可运行；文件工具真实落盘且审批可拒绝；取消与重启加载具有权威结果；原版数据和凭据未被读写；更新流程不会重新安装原版。网络测试需区分模型请求、用户选配 MCP/工具目标、默认厂商请求，不能以搜不到域名字符串替代运行证明。无法验证的云能力标为禁用或未提供，不伪装成功。
 
 复杂 provider 兼容性、完整 TUI 重做和安装发布均不并入首轮。没有承诺几天完成；主题配色/文案成本较低，账号与默认路由剥离成本中等，彻底排除厂商服务/构建产物并长期跟随上游成本较高且持续发生。最小验证后才有依据估算后续工作量。

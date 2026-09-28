@@ -175,6 +175,25 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 测试现在以根级 `custom_provider` 验证 URL、合成 key、模型、`defaultModel` 以及 reset 后重读一致。另两个用例使用分离的 fake home/data dir：managed + neutral 不复制 fake home、不种 MiniMax；显式 non-managed + neutral 仍复制 fake home 配置并解析出 synthetic key/default model。这复现并固定了现有继承行为，属于隔离缺口证据，不是中立隔离通过。生产配置代码未改，fork CLI 构建来源仍未锁定。
 
+### TUI 视觉接线依据（2026-09-28）
+
+本轮实施前读取相邻引擎 fork 当前 HEAD `b2c993022a1ee8ecaf90bb754ea66e65031ce5d4`，工作树干净。以下只覆盖欢迎页与主题渲染这一个视觉切片；不把品牌、鉴权、provider、命令改名或会话逻辑混进来。
+
+| 等级与 path:line | 源码事实 | 本轮映射 / 未覆盖 |
+| --- | --- | --- |
+| 【源码】`packages/tui/src/tui/shell/welcome/design.ts:4-57`、`:59-85` | 欢迎页文案、入口提示、英雄图最小宽度和 ASCII 字样集中在一个 design 常量；`hero.ts` 读取其 `hero` 尺寸和图形数组 | 将欢迎页视觉数据替换为 Talos 机械臂与中立文案；保留窄屏降级和既有布局算法。真实终端视觉仍需运行验收 |
+| 【源码】`packages/tui/src/tui/shell/welcome/hero.ts:11-38` | 英雄图按终端宽度选择 full/medium/micro/fallback，并使用主题颜色居中渲染 | 复用现有渲染管线，将 36 列机械臂作为宽屏与中屏图形；不新增终端绘图库 |
+| 【源码】`packages/tui/src/tui/shell/welcome/component.ts:79-164` | 宽、堆叠、紧凑三种欢迎布局都读取同一 design 常量；紧凑标题仍单独写有 `MCode` | 本轮只清理欢迎页可见标题与文案；不改状态、输入、会话和审批组件。其它运行文案仍可能显示 MCode，属于后续去品牌轮 |
+| 【源码】`packages/tui/src/tui/theme/runtime.ts:14-56`、`theme/palettes.ts:27-56`、`:365` | 主题运行时以语义颜色渲染，默认 palette id 为 `minimax`；欢迎图颜色来自 `brand`、`wordmarkHighlight` 等角色 | 本轮沿用现有颜色角色，不改默认 palette、主题选择持久化或对比度契约，避免把视觉接线扩成主题系统重构 |
+
+实现边界：只改引擎 fork 的欢迎设计数据及其直接显示标题；不改登录门禁、provider 列表、ACP、数据目录、更新器、遥测或 CLI 入口。验证优先使用现有 TUI 单测与 TypeScript/source inventory；未启动真实 CLI，不发送模型请求。
+
+### TUI 视觉接线实测（2026-09-28）
+
+【实测】引擎 fork 提交 `107c9cf`（父提交 `b2c9930`）已落地本轮视觉切片：欢迎页改用 03 装配机械臂的 full/compact/micro 三档字符图，宽/堆叠/紧凑布局的可见标题和提示改为 Talos 中立文案，英雄图沿既有主题语义色的 warning 角色渲染。保留旧导出名作为兼容别名，未改主题默认 id、鉴权、provider、ACP、数据目录、更新器或命令入口。
+
+验证结果：Node `v24.15.0` 下欢迎页相关 Vitest `26/26`、欢迎应用筛选 `4 passed`、目标文件 ESLint、standalone TypeScript、source inventory `4276 files` 和 `git diff --check` 通过；另用 `tsx` 对宽度 80/30/15/8 做纯渲染预览，分别命中 full/compact/micro/fallback 分支。未启动真实 CLI，未发送模型请求；终端字体、颜色级别、完整欢迎页布局仍需主人目视验收。
+
 ### 真实 custom provider 文本实测（2026-09-28）
 
 【主人反馈】主人在 `/provider-setup.html` 中使用 provider origin `https://api.xiaomimimo.com`、模型 `mimo-v2.6-flash` 和 `openai-completions`，页面显示“连接成功，模型已返回 talos-custom-ok”。这是当时所运行路径的成功反馈。提交 `74df78b` 的 `src/service/ws-server.ts:132` 起使用进程退出码和整段 trace 子串判定成功，未对结构化 ACP 结果逐项验真；本次未重读原始 trace，不能升级为 fork 构建、隔离或完整独立运行证明。API key 不写入此文档。

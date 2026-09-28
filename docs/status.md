@@ -6,15 +6,15 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | `tui-static-frames` / `r1` |
+| 任务标识 / 修订 | `tui-visual-wiring` / `r1` |
 | 阶段 | 待主人验收 |
-| 本轮角色 / 来源 | Luna；主人明确“你现在是 Luna，你继续执行”，按机械臂 TUI 静态画面范本小轮实施 |
-| 目标 / 方案入口 | 欢迎、对话/工具、审批三种静态终端画面；[plan TUI 静态画面范本小轮](plan.md#执行交接机械臂-tui-静态画面范本小轮) |
-| 允许范围 | Talos 仓库的 `docs/references/`、`docs/design.md`、`docs/plan.md`、`docs/status.md`；只做文本范本和交接说明 |
-| 禁止范围 | 不改引擎仓库、不改 TUI 运行逻辑、不接真实 ACP/模型、不启动服务、不改 GUI 第 4 轮失败项、不推送 |
-| 验收 / 停止点 | Luna 自验文档与 diff 检查；主人目视三张文本范本。通过或提出具体改动后再决定是否进入真实 TUI 接线 |
-| 完成证据 | 已新增 `docs/references/tui-welcome.txt`、`tui-conversation.txt`、`tui-approval.txt` 及入口说明 `tui-frames.md`；已把入口写入 design。`check-handoff.py`、`demo/talos-check.py`、`git diff --check` 通过；尚未实现真实 TUI |
-| 下一接手 / 就绪性 | 主人：按 `docs/references/tui-frames.md` 做视觉验收；通过后由 Astra 定真实 TUI 接线小轮。 |
+| 本轮角色 / 来源 | Luna；主人已验收静态范本并明确“继续推进”，按 TUI 视觉接线小轮实施 |
+| 目标 / 方案入口 | 复用现有欢迎页和主题管线，接入 Talos 机械臂与中立欢迎文案；[plan TUI 视觉接线小轮](plan.md#执行交接-tui-视觉接线小轮) |
+| 允许范围 | Talos 的接驳证据/状态/计划文档；引擎 fork 仅改欢迎设计数据和直接可见标题，具体清单见 plan |
+| 禁止范围 | 不改鉴权、provider、数据目录、ACP、更新器、遥测、CLI 命令名、GUI 第 4 轮失败项；不发模型请求、不 push |
+| 验收 / 停止点 | Luna 已跑引擎 TUI 相关单测、类型和 source inventory；主人现在只需启动当前 fork 目视欢迎页。若视觉不符先修本轮，不进入去品牌或命令改名 |
+| 完成证据 | 引擎 fork 提交 `107c9cf`；Node 24 下欢迎页 Vitest `26/26`、欢迎应用筛选 `4 passed`、目标 ESLint、TypeScript、source inventory `4276 files`、纯渲染宽度预览和 diff 检查通过；未启动真实 CLI、未发模型请求 |
+| 下一接手 / 就绪性 | 主人：按下方步骤验收真实欢迎页；通过后再规划对话/工具/审批真实接线。 |
 
 此卡是唯一当前入口；下方验收账与 plan 的历史小轮不构成新的执行授权。角色分工详见 workflow，不从上一轮助手的自称推断本轮角色。
 
@@ -49,7 +49,7 @@
 
 ## 3. 项目交接背景（当前入口见顶部卡片）
 
-欢迎图已选择：主人认可 **03 装配机械臂**。字符正本已落入 design 引用的仓库文件；本轮补齐欢迎、对话/工具、审批三张静态画面范本，仍未接入真实 TUI。
+欢迎图已选择：主人认可 **03 装配机械臂**。字符正本已落入 design 引用的仓库文件；静态画面范本已通过，真实欢迎页视觉切片已接入引擎 fork，待主人目视验收。
 
 两个仓库保持分工：Talos 维护 GUI 和产品文档，`C:\DEV\develop\minimax-code` 维护引擎、CLI/TUI、provider、账号与数据目录；两者通过 ACP 对接，不使用子模块。TUI 已选 A「对话流式终端」和机械臂图案，不做大字字标，见 [design](design.md#tui-设计讨论)。完整 TUI 实现前另给欢迎、对话/工具、审批三种画面范本验收。
 
