@@ -19,14 +19,14 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | `cli-provider-catalog-parity` / `r4` |
+| 任务标识 / 修订 | `cli-provider-catalog-parity` / `r5` |
 | 阶段 | 待主人验收 |
 | 本轮角色 / 来源 | Luna；主人已通过上一轮，继续按“产品中立、源码尊重上游”方案推进 |
-| 目标 / 方案入口 | 官方 provider preset 与 Custom provider 在新增目录同层级；[plan](plan.md#当前小轮provider-catalog-parity) |
-| 允许范围 | provider preset catalog、onboarding 分组、provider manager 文案、对应测试和本仓库同步文档；不请求模型，不动真实数据 |
+| 目标 / 方案入口 | `/provider` 首屏直接显示官方 provider preset 与 Custom provider；已配置连接从目录入口进入；[plan](plan.md#当前小轮provider-catalog-parity) |
+| 允许范围 | provider preset catalog、`/provider` 路由、onboarding 目录与管理入口、未配置连接过滤、对应测试和本仓库同步文档；不请求模型，不动真实数据 |
 | 禁止范围 | 不改默认数据目录、不迁移旧 home、不改网络出口、不处理 GUI、不 fetch/merge/push |
-| 验收 / 停止点 | 关闭当前 TUI 后重建；`/provider` → `+ Add provider` → 目录中 MiniMax、DeepSeek、Z.AI 等与 `Custom provider` 同属 `Provider catalog`；主人确认后停 |
-| 完成证据 | provider preset、onboarding、manager 定向 Vitest 78/78；standalone typecheck、`pnpm build`、`pnpm check:source`（4276 files）和 `git diff --check` 通过；真实终端可见行为仍待主人验收 |
+| 验收 / 停止点 | 关闭当前 TUI 后重建；`/provider` 直接进入目录；目录中 MiniMax、DeepSeek、Z.AI、Custom provider 同属 `Provider catalog`，另有 `Manage configured connections`；主人确认后停 |
+| 完成证据 | provider preset、onboarding、manager、provider application、feature-flow 定向 Vitest 99/99；standalone typecheck、`pnpm build`、`pnpm check:source`（4276 files）和 `git diff --check` 通过；真实终端可见行为仍待主人验收 |
 | 下一接手 / 就绪性 | 主人验收后再进入数据目录/专属登录切片；若目录缺 provider，先核对 catalog 快照，不跳到 GUI |
 
 ## 必须保留的事实

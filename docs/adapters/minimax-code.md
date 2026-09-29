@@ -36,6 +36,21 @@
 
 【未验】主人尚未在真实终端从 `/provider` → `+ Add provider` 目视确认目录分组；本条不证明 MiniMax 登录、区域网络出口、默认数据目录、独立 npm 发行或完整第三方模型链路已经中立化。若本地 catalog 快照缺少 `minimax`，应记录数据源问题，不由 UI 假造。
 
+## `/provider` 首屏目录复核（2026-09-29）
+
+【源码】相邻引擎工作树 `C:\DEV\develop\Talos-CLI` 在 provider parity 修订后继续沿用 `models.dev` preset catalog；本次新增的是入口层语义，不改变 provider 协议或认证实现：
+
+| 位置 | 事实与实现 |
+| --- | --- |
+| `packages/tui/src/tui/controller/product/command-flow.ts:1330` | `/provider` 现在直接调用 `showProviderOnboarding()`，首屏先展示 catalog，而不是先进入 MiniMax 连接管理器。 |
+| `packages/tui/src/tui/features/provider/onboarding.ts:18-19`、`:59-66`、`:151-168`、`:347-379`、`:522-530` | 页面标题改为 `Provider catalog`；官方 preset 与 `Custom provider` 共用 `Provider catalog` 分组；`Manage configured connections` 作为独立入口打开已保存连接和内置登录。该入口不复制保存协议。 |
+| `packages/tui/src/tui/controller/product/feature-flow.ts:774-839` | 目录仍先加载 provider preset，再读取当前连接；管理入口回到既有 `showProviderManager()`，不会创建第二套连接状态机。 |
+| `packages/tui/src/provider/application.ts:41-64` | 未配置且未选用的 MiniMax API Key 不再写入 provider snapshot；MiniMax OAuth 只有在管理页中作为现有内置登录来源显示。 |
+
+【实测】2026-09-29，显式 Node `v24.15.0` 下，provider onboarding、manager、provider application、feature-flow 定向 Vitest **99/99** 通过；standalone typecheck 通过；`pnpm build` 输出 `Built Talos CLI 0.5.7 from 6267 source files.`；`pnpm check:source` 通过（4276 files）；`git diff --check` 通过。未发送模型请求、未修改真实数据目录。
+
+【未验】主人尚未在真实终端观察新的 `/provider` 首屏；本条不证明 provider catalog 网络刷新、第三方模型连接、MiniMax 登录或数据隔离已经完成。
+
 ## 原生 TUI 与 GUI 边界复核（2026-09-29）
 
 【源码】根目录为 `C:\DEV\develop\Talos-CLI\`，以下 path:line 均相对于该根；HEAD `370c7646fdfd51ef8a812a4966538884b73db556`。本次只读取证和核对 Git，没有启动 TUI、跑引擎测试或调用模型。

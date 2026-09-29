@@ -84,15 +84,15 @@ Luna 需要落实的局部问题：
 
 ## 当前小轮：provider catalog parity
 
-任务 `cli-provider-catalog-parity/r4`。目标是让 provider 的产品语义真正中立：MiniMax 作为一个正常 preset 回到官方目录，DeepSeek、Z.AI 等其他厂商与它同层，Custom provider 作为同一目录中的开放式兜底入口保留。`/provider` 管理页继续表示已配置连接，不把完整目录硬塞进已配置列表。
+任务 `cli-provider-catalog-parity/r5`。目标是让 `/provider` 首屏真正呈现中立目录：MiniMax 作为一个正常 preset 与 DeepSeek、Z.AI 等其他厂商同层，Custom provider 作为同一目录中的开放式兜底入口保留；已配置连接从目录内的明确入口进入。
 
 | 项目 | Luna 执行范围 |
 | --- | --- |
-| 实现 | provider preset parser 不再排除 `minimax`，仅保留旧区域别名的过滤；onboarding 将厂商 preset 与 Custom provider 放在同一 `Provider catalog` 分组；管理页文案明确“已配置连接/内置登录”和“新增目录”是两层语义 |
-| 依据 | `packages/local-runtime-v2/src/service/model-system/catalog/provider-presets/provider-presets.service.ts` 的过滤集合；`packages/tui/src/tui/features/provider/onboarding.ts` 的 provider list；`packages/tui/src/tui/features/provider/manager.ts` 的管理页展示 |
-| 自验 | provider preset catalog、provider onboarding、provider manager 定向 Vitest 78/78；standalone typecheck；`pnpm build`、`pnpm check:source`（4276 files）和 `git diff --check` 已通过 |
-| 主人验收 | 关闭当前 TUI 后从 `C:\DEV\develop\Talos-CLI` 重建并运行 `pnpm talos`；输入 `/provider`，选 `+ Add provider`；预期 MiniMax、DeepSeek、Z.AI 等 preset 与 `Custom provider` 同属一个 provider 目录分组。返回管理页时，页面只列已配置连接和内置登录 |
-| 未覆盖 | 不改变 MiniMax OAuth/API Key 的认证实现，不改数据目录，不删除 Custom，不做长列表常驻显示；如果本地 catalog 快照没有 MiniMax，记录为 catalog 数据问题，不用 UI 假造 |
+| 实现 | provider preset parser 不再排除 `minimax`，仅保留旧区域别名的过滤；`/provider` 直接打开统一 catalog；厂商 preset 与 Custom provider 同属 `Provider catalog`；`Manage configured connections` 打开保存连接管理器；未配置的 MiniMax API Key 不再伪装成已存在的连接 |
+| 依据 | `packages/local-runtime-v2/src/service/model-system/catalog/provider-presets/provider-presets.service.ts` 的过滤集合；`packages/tui/src/tui/commands/catalog.ts` 与 `packages/tui/src/tui/controller/product/command-flow.ts` 的 `/provider` 路由；`packages/tui/src/tui/features/provider/onboarding.ts` 的目录与管理入口；`packages/tui/src/provider/application.ts` 的连接快照 |
+| 自验 | provider preset、onboarding、manager、provider application、feature-flow 定向 Vitest 99/99；standalone typecheck；`pnpm build`、`pnpm check:source` 和 `git diff --check` |
+| 主人验收 | 关闭旧 TUI 后从 `C:\DEV\develop\Talos-CLI` 重建并运行 `pnpm talos`；输入 `/provider`。首屏直接预期看到 MiniMax、DeepSeek、Z.AI、Custom provider 同属 `Provider catalog`，并看到 `Manage configured connections`；不应先出现 MiniMax API Key/OAuth 两行。选管理入口后才进入已配置连接页 |
+| 未覆盖 | 不改变 MiniMax OAuth/API Key 的认证实现，不改数据目录，不删除 Custom，不做真实模型请求；如果本地 catalog 快照没有 MiniMax，记录为 catalog 数据问题，不用 UI 假造 |
 | 停止 | 主人通过后停；下一轮再处理默认数据目录、专属登录门禁或发行 manifest |
 
 ## 已交付方案：TUI Talos 主题
