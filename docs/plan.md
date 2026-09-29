@@ -95,6 +95,19 @@ Luna 需要落实的局部问题：
 | 未覆盖 | 不改变 MiniMax OAuth/API Key 的认证实现，不改数据目录，不删除 Custom，不做真实模型请求；如果本地 catalog 快照没有 MiniMax，记录为 catalog 数据问题，不用 UI 假造 |
 | 停止 | 主人通过后停；下一轮再处理默认数据目录、专属登录门禁或发行 manifest |
 
+## 建议下一小轮：Talos 数据目录与旧 home 继承
+
+任务建议 `cli-data-directory-isolation/r6`。目标是让 Talos 启动时使用明确、可审计的独立数据落点，不悄悄读取、复制或改写原版 MiniMax home；本节是下一轮规划入口，不代表已经开始实施。
+
+| 项目 | Luna 下一轮范围 |
+| --- | --- |
+| 先查源码 | 复核 `packages/config/src/config.ts:1880` 的 non-managed 默认 home 继承、`packages/config/src/data-dir.ts:5` 的 `.minimax` 默认目录，以及 `packages/tui/src/cli/environment.ts` 的 Talos 启动环境接线；先写入 adapter 证据，再决定最小改动 |
+| 实施目标 | 在 Talos 启动链中固定显式数据目录；未配置时不从默认 home 复制 MiniMax provider、凭据或会话；已有真实数据不迁移、不删除，保留失败可恢复入口 |
+| 验证方式 | 使用 fake home 与可丢弃 data dir 的离线回归：新启动得到的配置、provider 快照、会话落点都在测试目录内；再验证显式 custom provider 可保存和重读；不请求真实模型、不触碰用户真实目录 |
+| 可能需要 Astra 把关 | 只有当隔离要求必须改变数据格式、会话恢复保证或跨进程迁移契约时升级；单纯目录、环境变量和配置继承修复由 Luna 完成 |
+| 主人验收 | 以后会提供一个可复制的启动命令和 3–5 步检查：启动临时目录、确认没有继承旧 MiniMax provider、写入一份测试 custom 配置、退出重启后确认仍在同一临时目录 |
+| 停止 | 证明“未读取旧 home + 新目录可重读”后停；专属登录退役、网络出口与 npm 发行另开小轮 |
+
 ## 已交付方案：TUI Talos 主题
 
 任务 `tui-talos-theme/r1`。目标：让 Endfield 族黄灰风格覆盖欢迎区之外的现有 TUI，先完成统一配色这一层，不重做布局和交互。视觉取值原则见 [design](design.md#tui-主题小轮)，源码入口见 [主题复用证据](adapters/minimax-code.md#tui-主题复用依据2026-09-29)。
