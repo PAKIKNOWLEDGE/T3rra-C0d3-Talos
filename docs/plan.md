@@ -2,6 +2,15 @@
 
 本页只讲往哪里走和本轮如何做；实际进度、验收与授权以 [status](status.md) 为准。先保存现有源码的本地 WIP 恢复点，再核验和修复；测试失败不阻止保存。当前小轮以 status 为准，不开展路线表的新功能。未来路线不自动生成执行任务，完成一个小轮后停在对应验收点。
 
+## 已交付小轮：只读更新构建契约
+
+任务 cli-update-build-boundary/r1。复用已退役更新器的产品行为，只修构建检查与回归。修改前使用现有干净本地提交作为恢复点。
+
+- required inputs 保留其余能力，将旧 update/application 改成 CLI main 与 TUI update-flow 的实际输出检查；不能只删失败断言。
+- 统一 nonBundledSources 增加旧 cli/update、update/application、update/service 和 update/prefix-update；即使只出现在输入图而未输出字节，也拒绝。旧源码保留供上游审查。
+- 既有 source-sync 测试覆盖合法产物、缺失/零输出入口、每种旧安装器再入图和既有私有宿主禁入。用合成metafile，不执行安装。
+- 跑release-tools、source inventory、实际build与standalone检查；只运行本地产物update状态命令，不请求registry。完成后本地提交并停，其他失败独立处理。
+
 ## 产品方向与顺序
 
 维护两个仓库：本仓库做 GUI 和产品文档，`C:\DEV\develop\Talos-CLI` 做引擎和 TUI。先把 fork 与 TUI 做成可用的独立终端产品，再恢复 GUI，最后做桌面外壳；不是同时开三条实施线。

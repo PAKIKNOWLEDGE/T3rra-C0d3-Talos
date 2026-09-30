@@ -510,6 +510,16 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 【未验】独立 npm 包未发布；真实 registry、安装升级、跨版本新版提醒均未验证。检测器可以在包身份确认后、首发之前用假响应开发；规划见 [plan](../plan.md#npm-发行与版本提醒)，该方案不是已实现事实。
 
+### 只读更新构建检查依据（2026-10-01）
+
+【源码】Talos-CLI HEAD 30d23b8（本地WIP），版本0.5.7。完整路径 C:/DEV/develop/Talos-CLI/scripts/check-standalone-boundary.mjs:11-28 仍要求 update/application 输出字节；与前述已退役产品入口冲突。C:/DEV/develop/Talos-CLI/scripts/lib/retired-sources.mjs:28-30 只有原native宿主禁入，尚未限制旧更新安装模块。
+
+【源码】C:/DEV/develop/Talos-CLI/packages/tui/src/cli/main.ts:151-155,277-279 直接输出未配置只读状态；C:/DEV/develop/Talos-CLI/packages/tui/src/tui/controller/product/update-flow.ts:18-23 为相同TUI状态入口。修检查时要求二者实际有输出字节，并从完整构建输入图拒绝旧安装链，保留已有权限、反馈、插件等required检查。
+
+【实测】2026-10-01，Node24.15.0，本地提交cf2a6fb：release-tools64通过/2平台跳过；合成图正反例覆盖缺失/零字节入口、四种旧更新模块和原native宿主零字节再入图；4277文件清单、实际build和standalone均通过。本地产物update只输出未配置来源与不自动安装，不查询网络。
+
+【未验】未运行完整verify、原生POSIX或实际终端UI；此约束不是npm发布、新版查询、安装升级的证据。
+
 ### 旧 home 技能信任隔离依据（2026-09-30）
 
 【源码】审查仓库 `C:\DEV\develop\Talos-CLI`，HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4`，版本 `0.5.7`；有此前未提交改动，HEAD 只表示基点。以下初始行号对应本轮修改前源码。

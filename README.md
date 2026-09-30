@@ -349,3 +349,19 @@ if ($LASTEXITCODE -ne 0) { throw 'Build failed; do not launch stale dist.' }
 远端：[PAKIKNOWLEDGE/T3rra-C0d3-Talos](https://github.com/PAKIKNOWLEDGE/T3rra-C0d3-Talos)。本地 Git 仅用于后续开发，提交与推送状态见 [status.md](docs/status.md)。
 
 `demo/` 为可运行范本，`docs/` 为交接地图，`docs/references/` 为主人提供的游戏参考图，`tools/` 为交接检查。字体与参考图的来源及分发待办见 [design.md](docs/design.md)；这些资料不代表整个目录已有统一开源许可。
+
+## 只读更新构建边界检查
+
+这是内部检查，无需主人配置 provider 或发送消息。固定受支持的 Node 后，在引擎仓库执行：
+
+```powershell
+cd C:\DEV\develop\Talos-CLI
+$env:PATH="C:\Program Files\nodejs;$env:PATH"
+pnpm test:release-tools
+pnpm check:source
+pnpm build
+pnpm check:standalone
+node dist/cli.js update
+```
+
+预期：真实 CLI/TUI 只读入口被构建；旧更新安装链进入输入图时检查拒绝。最后的命令只输出更新来源未配置和不自动安装，不启动安装器。检查结果与剩余失败见 status。

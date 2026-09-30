@@ -19,17 +19,17 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | git-checkpoint-policy / r2 |
-| 阶段 | Git 保护已落实；已知质量问题独立保留，不阻止保存 |
-| 本轮角色 / 来源 | Luna；主人明确要求失败也保存到 Git，优先保护成果，不等待整库检查 |
-| 目标 / 方案入口 | 两仓库现有源码建立 WIP 恢复点；工作流区分保存与验收，优先 Python；[workflow](workflow.md#5-服务资产和-git) |
-| 允许范围 | 本地 WIP 提交、工作流纠正、状态与失败清单；不追加功能 |
-| 禁止范围 | 不推送，不丢弃改动，不等待测试通过才保存，不将 WIP 当验收通过，不请求真实模型 |
-| 验收 / 停止点 | 恢复点可读取、提交范围明确，两仓库工作树收口；本轮不重跑全套测试 |
-| 完成证据 | CLI 30d23b8 保存114文件的积累工作（113已跟踪+退出语测试）；文档74a5dc2保存当时四文件。均在 codex/recovery-20260930，本地 WIP，没有 push。此前恢复提交06d5f62/aebb6b8保留。规则更新另以本地提交保存 |
-| 下一接手 / 就绪性 | Git 前置已完成，可继续 CLI 技术收口。下一小轮仅修 check:standalone 的旧更新器构建契约：检查真实只读入口并禁止旧安装链进入产物，补正反例；不同时修46项 capability 或其他失败，不重新开展 Git 整理 |
+| 任务标识 / 修订 | cli-update-build-boundary / r1 |
+| 阶段 | 已完成（内部构建契约验收），已本地提交 |
+| 本轮角色 / 来源 | Luna；主人要求继续计划，处理唯一下一入口 |
+| 目标 / 方案入口 | 只读更新入口必须进入产物，旧更新安装链不得进入产物；[plan](plan.md#当前小轮只读更新构建契约) |
+| 允许范围 | 构建边界脚本、统一禁入表、既有release-tools回归及本仓库文档 |
+| 禁止范围 | 不改更新产品行为、不运行模型或网络、不推送、不修其他测试失败、不删除上游源码 |
+| 验收 / 停止点 | 正反例回归、实际构建图检查、只读命令离线运行、源码清单和文档检查；保存本地提交后停 |
+| 完成证据 | CLI cf2a6fb（三个检查文件），基点30d23b8保留。release-tools64通过/2平台跳过，source inventory4277文件通过，build和实际standalone通过；dist/cli.js update只输出未配置来源/不自动安装。未请求模型或registry，未推送 |
+| 下一接手 / 就绪性 | 本轮完成并停。下一小轮优先处理主题默认迁移回归：只核对runtime/custom-themes/palettes/theme-picker四组现有测试，将已验收Talos默认与旧minimax兼容映射的真实契约补齐；不改视觉、不重跑全部capability、不同时修其他失败。修改前确认干净Git基点 |
 
-当前检查账（2026-10-01，积累工作树，非干净提交验证）：check:source、check:tsconfig、release-tools、类型、构建、artifact、Windows policy、status-contract通过；capability为4935通过/46失败/61跳过（14失败文件），Windows source-contract为4失败/1通过；smoke与BYOK失败尚待归因。lint两项已局部改写但未复跑，不记通过；check:standalone仍要求已退役update/application进入构建，尚未修改。完整verify未通过，POSIX原生未运行；这些都不妨碍WIP保存。失败逐小轮修复，不宣布独立发行完成。
+当前检查账（2026-10-01，积累工作树，非干净提交验证）：check:source、check:tsconfig、release-tools、类型、构建、artifact、Windows policy、status-contract通过；capability为4935通过/46失败/61跳过（14失败文件），Windows source-contract为4失败/1通过；smoke与BYOK失败尚待归因。lint两项已局部改写但未复跑，不记通过；check:standalone旧契约已由本轮修复并通过，不能继续列为未修失败。完整verify未通过，POSIX原生未运行；这些都不妨碍WIP保存。失败逐小轮修复，不宣布独立发行完成。
 
 事故说明：本轮前段使用旧版 Windows PowerShell 未显式指定 UTF-8 读取，再保存，造成权限 facade、fs-permission 与 facade 测试三文件乱码，测试一度无法解析。不是事前已有错误；先前工具说明中“pre-existing”归因不正确。随后恢复文本、保留原有平台/工作区测试改动，并由 Astra 独立复核。没有提交出错时的乱码版本，没有推送、删除用户资料或重置工作树。源码恢复不能据此宣称整体发行完成。
 
