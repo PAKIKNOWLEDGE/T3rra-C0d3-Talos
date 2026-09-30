@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | GUI 网页 demo | 本仓库 `demo/talos.html`，Endfield 风格网页 | GUI 视觉正本；不接引擎，产品实现位于 `app/`，两者不能混称 |
 | TUI 文本示意图 | `docs/references/tui-*.txt` | 等宽文本构图参考；不是终端程序，不证明滚动、按键或权限行为 |
-| 真实 TUI 欢迎页 | 相邻 `Talos-CLI` 的欢迎组件 | 实际终端中的机械臂与普通字号标题；不代表整个 TUI 的设计范围 |
+| 真实 TUI 欢迎页 | 相邻 `Talos-CLI` 的欢迎组件 | 实际终端中的 `TALOS` 字标与三六边形标识；不代表整个 TUI 的设计范围 |
 
 验收状态只看 [status](status.md)。讨论时说清对象和部位，避免只说“范本”“接线”或“通过”。
 
@@ -38,13 +38,13 @@
 
 TUI 采用对话流式终端方向：主阅读区留给连续对话和代码，工具详情与菜单按需展开。不要照搬 GUI 三栏或预设常驻侧栏；GUI 的已验收范本不因此改动。
 
-欢迎区使用取材于游戏元素的小幅字符图案，配普通产品名称；不做大号 ASCII 字母字标。依据主人指定的 `cli-ascii-logo` skill，使用 Unicode 块字符及黄色前景。参考目录为 `C:\DEV\develop\tmp\Manuel-ref-image`，批次为 `END1.jpg`、`endfield2.jpg`、`end3.jpg`、`end4.jpg`、`end5.webp`、`end6.png`、`end7.png`；均仅作设计参考，不是产品发布资产。
+当前欢迎页保留已获主人认可的六行 Unicode `TALOS` 字标；右侧改用 GUI demo 顶栏的三六边形标识，以纯 ASCII 绘制，窄屏有简版。字标是静态字符资产，不在运行时加载 ANSI Shadow 字体。真实终端的验收记录统一见 status；GUI demo 本身不改。
 
-欢迎图选定 03 装配机械臂，字符正本为 [tui-arm.txt](references/tui-arm.txt)，采用黄色前景、普通字号 Talos 名称。图案借鉴工业设备和生产设施语汇，属于原创简化轮廓，不声称还原某一游戏模型。画布为 36 列 × 12 行；欢迎、对话/工具、审批三种文本示意图见 [tui-frames.md](references/tui-frames.md)。其他候选不再作为默认方案。
+此前 03 装配机械臂的 [字符稿](references/tui-arm.txt) 和 [文本示意图](references/tui-frames.md) 仅供历史构图参考，已不作为真实欢迎页标识。游戏参考目录 `C:\DEV\develop\tmp\Manuel-ref-image` 的素材仅用于设计比对，不是发布资产。
 
 原生 TUI 已有对话、工具、审批与 provider 交互。视觉调整复用这些组件；文本示意图中的动态选项、Esc 和“仅一次”文案不能直接作为行为规范。真实边界见 [adapter](adapters/minimax-code.md#原生-tui-与-gui-边界复核2026-09-29)，不要把 GUI 的 ACP 卡片契约移植成另一套 TUI 业务逻辑。
 
-本机临时预览在忽略目录 `.talos/tui-art/`；`alternatives.py` 生成四案的纯文本、ANSI 色彩版、严格 ASCII 降级、单张字符栅格 PNG 及 `alternatives.png` 对比图。PNG 只预览字符外观，不证明真实终端渲染；未接入引擎。接手不依赖这些临时文件，应使用已落盘的机械臂字符正本。整体配色、密度、菜单、输入区仍待可见验收；图案通过不等于整个 TUI 通过。
+旧机械臂本机预览位于忽略目录 `.talos/tui-art/`，不能作为当前欢迎页依据。真实图案以相邻引擎 `packages/tui/src/tui/shell/welcome/design.ts` 为准；代码断言不能替代终端目视。整体配色、密度、菜单、输入区仍需分别验收；图案通过不等于整个 TUI 通过。
 
 ### TUI 主题小轮
 
