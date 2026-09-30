@@ -6,6 +6,12 @@ Talos 由两个仓库组成：这里维护 GUI 和产品文档；相邻 `C:\DEV\
 
 按用途选入口：[TUI 欢迎 ASCII 标题](#tui-欢迎-ascii-标题验收)、[TUI Talos 主题](#tui-talos-主题验收)、[GUI 网页 demo](#本地预览)、[未验收浏览器产品](#浏览器产品入口)、[内部检查](#当前机读检查)。真实请求可能消耗模型额度，不作例行检查。
 
+## CLI 预览版的搜索限制
+
+当前没有默认联网搜索服务。主对话保留自配 MCP 的接线，但本项目尚未验证真实搜索；Explore/Verifier 内置子代理暂不具备网络搜索。`/provider` 配置的是对话模型，`/mcp` 目前只查看状态，不是搜索配置界面。不要将模型自身知识或未经联网验证的回答当作搜索结果。
+
+首次 npm 发行按 CLI 预览版准备。默认中立搜索、便捷配置和子代理搜索适配属于首发后的独立工作；正式发行说明必须保留上述限制。发行边界见 [plan](docs/plan.md#首次-npm-预览版与搜索后置)，当前结果见 [status](docs/status.md)。
+
 ## 本地预览
 
 前置：浏览器、Python 3；静态检查另需 Node.js。第 1 轮真实握手使用 `C:\\Program Files\\nodejs\\node.exe`（支持的 Node 24），无需启动模型会话；后续真实探针沿用现有账号、模型和数据目录。
@@ -82,6 +88,17 @@ cd C:\DEV\develop\T3rra-C0d3-Talos
 
 第 1 轮已完成，以上命令保留给执行者内部复验，不要求主人重跑或查看 JSON。
 
+### TUI 内部回归检查
+
+在相邻引擎仓库使用支持的 Node 24 运行整个 `tui-app` 文件：
+
+```powershell
+cd C:\DEV\develop\Talos-CLI
+& 'C:\Program Files\nodejs\node.exe' node_modules/vitest/vitest.mjs run --config vitest.oss.config.mjs packages/tui/test/unit/tui-app.test.ts
+```
+
+这是使用假 runtime 的离线技术检查，不发送真实模型请求。测试显式指定语言，包含中英文历史界面用例；执行者检查所有用例通过且没有跳过。此类测试维护没有新的界面行为，不要求主人重新配置模型或手工验收。实际结果见 [status](docs/status.md)。
+
 ### Provider 配置：复用原生 TUI
 
 本轮验收必须从 `C:\DEV\develop\Talos-CLI` 构建并启动 fork，不使用 PATH 中的系统 `mcode`：
@@ -94,9 +111,150 @@ if ($LASTEXITCODE -ne 0) { throw 'Build failed; do not launch stale dist.' }
 pnpm talos
 ```
 
-进入 TUI 后输入 `/provider`。列表顶部应有 `+ Add provider`；按 Enter、Space 或 `a`，应进入既有官方 provider 预设列表，并能看到 `Custom provider`。MiniMax 可以作为一个已保存 provider 行存在，但不能再是唯一的新增入口。已有配置可直接查看和使用，测试保存可能调用模型。
+进入 TUI 后输入 `/provider`。列表顶部应有 `+ Add provider`；按 Enter、Space 或 `a`，应进入既有官方 provider 预设列表，并能看到 `Custom provider`。MiniMax 可以作为一个 provider 预设存在，但不能再是唯一的新增入口。Talos 新构建默认使用用户 home 下的 `.talos`（带 profile 时为 `.talos-<profile>`）；旧 `.minimax` 中的配置和密钥不会自动导入，因此首次启动可能需要在 `/provider` 重新配置。测试保存可能调用模型。要在可丢弃目录中验证，可先在同一终端设置 `$env:MINIMAX_DATA_DIR='C:\path\to\disposable-talos-data'`，再启动 `pnpm talos`；显式目录优先于默认 `.talos`。
 
 这里验收的是 Talos fork 的原生 TUI 入口，不是浏览器配置页；`provider add/test/list` 仍是 CLI 子命令。重复的浏览器配置页和 custom-provider 探针停止使用，代码清理状态见 [status](docs/status.md)。
+
+### 预设目录中立出口自验
+
+本轮改变的是预设目录的网络请求目标，界面没有新增可供目视判断的行为。主人无需进入 `/provider`、断网、抓包或消耗模型请求。Luna 已用注入 fetch 的离线测试核对：Talos 中立模式直接请求 `models.dev`，不请求 MiniMax 目录和排序服务；直连失败仍读取本地预设快照。定向测试 39/39、类型、构建、源码清单和新产物启动检查通过。其他云功能出口尚未包含在这一轮。
+
+### 自动遥测中立化自验
+
+当前 Talos 中立模式禁用上游使用统计、性能指标与自动故障诊断上传，即便配置中这些开关为 true。本地诊断仍保留；此处不覆盖用户主动 `/feedback` 或其他云功能。执行者已用假网络和临时合成配置验证，无需主人查看 JSON 或手动改配置。
+
+复验内部回归时在相邻引擎仓库运行：
+
+```powershell
+cd C:\DEV\develop\Talos-CLI
+& 'C:\Program Files\nodejs\node.exe' node_modules/vitest/vitest.mjs run --config vitest.oss.config.mjs packages/tui/test/unit/business-telemetry-privacy.test.ts packages/tui/test/unit/incident-reporter-privacy.test.ts packages/local-runtime/test/unit/metrics-telemetry-privacy.test.ts packages/local-runtime/test/unit/error-reporting-privacy.test.ts
+```
+
+新构建的 `telemetry status` / `telemetry preview` 显示实际阻断原因；preview 不发送请求。在已指定可丢弃数据目录的同一终端可运行 `& 'C:\Program Files\nodejs\node.exe' dist/cli.js telemetry preview`，预期三通道 `enabled:false`、阻断原因 `TALOS_NEUTRAL_RUNTIME` 和 `request:null`。内部结果与边界见 [status](docs/status.md)。
+
+### 上游反馈退役验收
+
+前置：关闭旧 TUI，使用本轮已经构建的 fork 产物。此验收不需要登录、配置模型或发送模型请求；在外部 PowerShell 启动：
+
+```powershell
+cd C:\DEV\develop\Talos-CLI
+pnpm talos
+```
+
+1. 欢迎区不再推荐 `/feedback` 上传；原字标、三六边形标识和布局保持原样，可看到 `/doctor` 本地诊断提示。
+2. 输入 `/feedback`：预期显示 `Upstream feedback upload is unavailable in Talos`，说明不会上传报告或诊断附件；不打开登录网页或确认面板。
+3. 输入 `/feedback test`：预期同一不可用说明，没有模型回复，输入框仍可使用。正常退出即可。
+
+内部网络阻断由执行者自验，不要求主人抓包或查看 JSON。结果见 [status](docs/status.md)。
+
+### 插件来源中立化验收
+
+前置：关闭旧 TUI，使用本轮已构建的产物；不需要登录或请求模型。在外部 PowerShell 启动：
+
+```powershell
+cd C:\DEV\develop\Talos-CLI
+pnpm talos
+```
+
+1. 输入 `/plugins`：应打开插件管理页，说明为本地插件，不要求 MiniMax 登录、不加载上游市场。
+2. 顶部只出现 All Plugins、Installed、Local；按 Tab 可在三者间循环，不出现 MiniMax Official。没有本地插件时显示 `No matching plugins` 是正常空态；这里不要求安装测试插件。
+3. 按 Esc 返回聊天，输入框仍可用；正常退出即可。
+
+内部已验证本地列表、安装/启停/移除/刷新仍使用原有 Runtime；厂商云 transport、身份 scope 和下载被阻断。GitHub 来源解析使用独立网络路径，实际 GitHub 安装与自配 MCP 真实连接未在本轮验收；不需要主人花模型请求。技术结果见 [status](docs/status.md)。
+
+### 内置云工具退役自验
+
+Talos 中立模式不再提供厂商 Matrix 默认搜索/媒体工具或激活 mcode-tools；模型需要网络搜索时可由你显式配置 MCP。本地文件/Shell 工具、审批与自配 MCP 保留。此轮是内部能力边界验证，不要求主人反复打开 MCP 页或发送付费请求。
+
+执行者复验离线回归：
+
+```powershell
+cd C:\DEV\develop\Talos-CLI
+& 'C:\Program Files\nodejs\node.exe' node_modules/vitest/vitest.mjs run --config vitest.oss.config.mjs packages/tui/test/unit/mcode-tools-integration.test.ts packages/local-runtime-v2/src/service/mcp/runtime/builtin-matrix.test.ts packages/local-runtime-v2/test/integration/mcp/local-mcp-public-facade.integration.test.ts packages/local-runtime-v2/test/integration/mcp/project-mcp.integration.test.ts packages/local-runtime/test/unit/local-native-tools.test.ts
+```
+
+网络使用假客户端，配置使用临时目录；Windows 的 POSIX socket 路径测试跳过属平台限制。内置程序的不可用反馈已由执行者核对。日常仍使用 `pnpm build` 和 `pnpm talos`，未引入新的启动方式；当前分发产物仍包含厂商资源，清理安排见 [status](docs/status.md)。
+
+### 权限检查按宿主平台运行
+
+Windows 日常继续使用 `pnpm build`、`pnpm talos`。本问题不要求安装 WSL；Git Bash 能执行 shell，但启动的 Windows Node 仍是 win32，不能代替 Linux/macOS 的文件权限和路径验证。
+
+引擎已有平台分派。执行者在 `Talos-CLI` 根目录先查看适用检查，不直接拿整个 POSIX policy 文件当 Windows 必过闸：
+
+```powershell
+pnpm verify --list
+pnpm verify --profile windows --list
+```
+
+`test:windows` 保留原 Windows source-contract，权限现有独立正式入口 `test:windows-policy`，已自动接入 Windows verifier。执行者在支持的 Node 环境复跑：
+
+```powershell
+cd C:\DEV\develop\Talos-CLI
+$env:PATH="C:\Program Files\nodejs;$env:PATH"
+node -v
+pnpm test:windows-policy
+```
+
+预期为 Windows 适用公共权限与 native delete 用例通过；POSIX 回收/真实chmod/专属路径用例按原生宿主条件跳过，打印跳过数而非冒充通过。没有 `-t` 过滤、stat mock 或复制测试文件；在非Windows调用该命令直接报平台错误。当前结果与未验证范围见 [status](docs/status.md)。实际计数以 status 为准；主人无需手动验收或请求模型。
+
+原 `test:windows` 卷检查与旧安装器失败仍单列待复核；新权限闸通过不等于它们已解决，也不代表全平台或整库验证通过。完整 verify 中源代码导出要求已提交且干净的跟踪工作树，当前大量未提交修改应先使用适用的独立检查，不为运行 verify 自动提交或丢弃改动。
+
+另一台类 Unix 机器的验证在后续交接时进行，**当前不要求主人操作**。以下是通用说明，实际待验源码快照及校验材料尚未生成。先取得同一份经审查的源码快照（包含待验修改）、锁文件及版本/校验记录，确认本机 Node 与项目 engines 匹配、工作区支持原生文件权限，并在该机重新准备依赖；不复制 Windows 的 node_modules 或 dist。届时在引擎根目录运行：
+
+```sh
+uname -srm
+node -p "JSON.stringify({platform:process.platform,arch:process.arch,node:process.version})"
+pnpm --version
+pnpm verify --list
+pnpm test:policy
+```
+
+报告 OS/架构、源码身份、命令退出码和完整失败信息，由 Luna 解读。Linux 结果不代表 macOS/Seatbelt 验证，反之亦然；要发布相应平台还需完成其余适用的构建/安装与验证闸，单项 policy 通过不等于发行通过。未连接远端前，本地 Windows 纠偏和开发仍可继续。
+
+### 中立权限分类说明
+
+当前 neutral 模式不发送上游权限云分类请求。Auto 继续依据本地规则与安全检查判断，无法判定的操作请求确认；不自动切换到 Full access。规则允许/拒绝、危险操作保护及审批回复仍使用既有实现。独立网络阻断由执行者离线验证。
+
+若要看说明，关闭旧 TUI 后使用本轮已构建产物（支持的 Node 24）：
+
+```powershell
+cd C:\DEV\develop\Talos-CLI
+pnpm talos
+```
+
+1. 输入 `/permission` 打开权限模式面板，预期仍有 Ask、Auto、Full access。
+2. 在足够宽的终端查看 Auto，说明为 `Local checks; confirm uncertain actions`，表示本地检查、未知确认，不承诺云端自动审批。
+3. 按 Esc 关闭即可；无需切换模式或发送工具/模型请求。原选择不变。
+
+技术结果见 [status](docs/status.md)。此前在 Windows 直接运行 POSIX policy 文件的失败清单，需先按上述宿主平台分工归因。对应发行平台的权限检查必须通过；不能把该清单全算产品缺陷，也不能把未验平台算通过。
+
+### npm 更新（尚未接入）
+
+当前没有可供使用的 Talos npm 升级命令；请继续使用上方本地源码构建入口。重新构建 fork 后，`talos update` 与 TUI `/update` 只显示“此构建尚未配置 Talos npm 更新源”，不会检查或安装更新。可以用以下命令检查刚构建产物的反馈：
+
+```powershell
+cd C:\DEV\develop\Talos-CLI
+& 'C:\Program Files\nodejs\node.exe' dist/cli.js update
+```
+
+预期输出包含 `no Talos npm update source configured` 和 `Talos does not install updates automatically`。确定正式包名并交付检测器后，本节再写入准确的手动 npm 安装命令。路线见 [plan](docs/plan.md#npm-发行与版本提醒)，现状见 [status](docs/status.md)。
+
+可见验收只需三步，不需要模型凭据或请求：
+
+1. 关闭旧 TUI，在 `C:\DEV\develop\Talos-CLI` 按上面的 Node 24 流程运行 `pnpm build`，确保启动的是新产物。
+2. 运行上方 `dist/cli.js update` 命令；预期只打印未配置 Talos npm 更新源及不会自动安装的提示，退出码为 0。
+3. 运行 `pnpm talos`，在 TUI 输入 `/update`；预期对话区出现相同含义的状态，不打开安装确认面板、不退出或重启。正常退出 TUI 即可。
+
+### MiniMax 专属登录退役验收
+
+前置：关闭旧 TUI，在 `C:\DEV\develop\Talos-CLI` 使用上方 Node 24 命令重新构建并启动 `pnpm talos`。可以使用现有 `.talos` 配置；以下步骤不要求发送模型请求，也不要求输入 API Key。
+
+1. 输入 `/provider`：应看到平级的 MiniMax、其他官方预设和 Custom provider；已配置连接中不应出现 `MiniMax OAuth` 或 Token Plan 行。MiniMax API Key 仍可作为普通 provider 配置。
+2. 返回主界面，打开 `/` 命令列表：不应推荐 `/login`、`/logout`、`/checkin`。
+3. 手动输入 `/login` 和 `/checkin`：应得到可见的不可用提示，不弹出 MiniMax 授权网页；输入 `/logout` 也应提示由 `/provider` 管理模型。
+4. 在另一个 PowerShell 窗口先进入 `C:\DEV\develop\Talos-CLI`，运行 `& 'C:\Program Files\nodejs\node.exe' dist/cli.js --help`：帮助中不列登录/登出；运行同一命令加 `login` 或 `acp login` 应显示 `/provider` 提示并以错误码退出。
+
+预期体验：Talos 不再要求 MiniMax 账号；用户从 `/provider` 选择并配置模型，MiniMax 只是可选的 API Key provider。此处只验入口与提示，不测试模型连接或第三方 OAuth 登录。
 
 ### 第 2 轮怎么验收
 

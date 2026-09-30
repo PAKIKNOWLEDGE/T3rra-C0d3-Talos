@@ -298,6 +298,264 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 原执行记录：Node `v24.15.0` 下主题 palette 测试 `26/26`、欢迎应用筛选 `4 passed`（330 项被筛掉）、目标文件 ESLint、standalone TypeScript、source inventory `4276 files` 和 `git diff --check` 通过；另用 `tsx` 对宽度 80/30/15/8 做纯渲染预览。26 项不是 26 个欢迎页测试，也不是完整 TUI 套件通过。当时未启动真实 CLI、未发送模型请求；后来欢迎页的主人验收结论见 status，本次文档整理未重跑上述测试。
 
+### Talos 专属登录入口（2026-09-29）
+
+【源码】Talos-CLI fork HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 工作树。`packages/tui/src/index.ts:24-33` 在加载 CLI 前调用 `configureTuiRuntimeEnvironment`，后者在 `packages/tui/src/cli/environment.ts:69-74` 设置 `TALOS_NEUTRAL_RUNTIME=1`。以下是专属 MiniMax OAuth 的可用入口，不等同于第三方 provider 的 API Key 配置。
+
+| 入口与源码 | 行为 | 本轮处理与边界 |
+| --- | --- | --- |
+| 【源码】`packages/tui/src/cli/program.ts:114-145`、`packages/tui/src/cli/auth-command.ts:29-62` | `talos login` 和 `talos acp login` 调用同一个 `runTuiLogin`，后者创建认证应用并启动浏览器授权 | neutral 模式在认证应用创建前拒绝，两条命令均给出 `/provider` 提示；不改第三方 provider 凭据 |
+| 【源码】`packages/tui/src/tui/controller/product/command-flow.ts:1270-1273`、`:1521-1548`、`:1550-1564` | `/login`、provider 重登录回调和 `/checkin` 缺登录引导都进入区域选择器，随后调用 MiniMax OAuth | neutral 模式在区域选择器前拒绝，三条可见路径同样不会进入浏览器授权 |
+| 【源码】`packages/tui/src/tui/controller/product/feature-flow.ts:949-968`、`packages/tui/src/tui/app.ts:310`、`packages/tui/src/provider/application.ts:29-76` | provider 管理页的 OAuth 重登录回调指向 `startMiniMaxLogin()`，快照原有 MiniMax OAuth 行 | neutral 模式不传入该回调、不显示 OAuth 行，并拒绝 Token Plan；MiniMax API Key、Codex OAuth 和 custom provider 保留 |
+| 【源码】`packages/tui/src/application/login-gate.ts:8-12` | 缺登录文案仍把用户引导到 `/login` 或 `talos login` | neutral 模式改提示为 `/provider`；保留非 neutral 原文案和原生鉴权实现 |
+
+【实测，离线】显式 Node `v24.15.0` 下，登录和 provider 定向回归连同现有 command-flow、login-gate 测试 **72/72** 通过；standalone TypeScript、构建（`Built Talos CLI 0.5.7`）、源码清单（4277 files）与引擎 `git diff --check` 通过。使用临时数据目录启动新构建：`talos --help` 不列 login/logout；`talos login`、`talos acp login` 均返回退出码 1 和 `/provider` 提示。测试注入假端口确认 neutral 快照无 MiniMax OAuth、保留 MiniMax API Key/Codex OAuth/custom provider，并在调用底层端口前拒绝 Token Plan。未请求模型或读取真实账号。
+
+【未验】真实 TUI 的菜单外观、第三方 OAuth 完整登录、旧配置中已选 Token Plan 的后续行为，以及所有间接云功能入口尚未由本轮证明。专属底层模块暂留以利审计和上游同步；不等于 Talos 发行已完成中立化。
+
+### Talos 预设目录网络出口（2026-09-30）
+
+【源码】Talos-CLI fork HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 工作树。`packages/tui/src/cli/environment.ts:73` 在 Talos 入口设置 `TALOS_NEUTRAL_RUNTIME=1`。
+
+| 路径 | 已核对行为 | 本轮映射 |
+| --- | --- | --- |
+| 【源码】`packages/local-runtime-v2/src/service/model-system/catalog/provider-presets/provider-presets.client.ts:34-51,73-101` | CN 刷新先向 MiniMax origin 请求 descriptor，再取镜像目录和图标；EN 直接请求 `models.dev/api.json` | neutral 模式 CN/EN 均直接访问 `models.dev`；非 neutral 路径保留 |
+| 【源码】同一 client `:106-136`、`provider-presets.service.ts:75-100` | 列表查询向 MiniMax `common_config` 请求置顶 provider IDs，失败才用本地区域数组 | neutral 模式直接用本地区域数组，不请求 `common_config` |
+| 【源码】`provider-presets.service.ts:272-348`、`provider-presets.repository.ts:15-45` | 后台刷新写快照；读取本地与打包快照；快照含图标 base URL | 保持离线快照，但不复用旧镜像 ETag 或向界面提供旧镜像图标地址 |
+
+【未验】遥测、诊断、反馈、云插件等其他厂商出口另轮审计；本轮不承诺全进程零 MiniMax 请求。
+
+【实测，离线】注入 fetch 的预设目录测试在 Node `v24.15.0` 下 **39/39** 通过：CN neutral 仅向 `https://models.dev/api.json` 发刷新请求，不请求 MiniMax descriptor 或 `common_config`；直连成功写入 `models.dev` 图标来源，失败继续显示本地快照，旧镜像 ETag 不发送到直连请求，旧镜像图标 URL 不进入视图。standalone TypeScript 与源码清单（4277 files）通过。构建最初两次在清理旧 `dist` 时遇到 Windows `EPERM`；主人关闭旧程序后重试成功，产物报告 `Built Talos CLI 0.5.7`，可丢弃数据目录下 `--version` 和 `--help` 均退出码 0。未启动真实 TUI、未发真实网络请求或模型请求。
+
+### Windows 权限自动闸依据（2026-09-30）
+
+【源码】Talos-CLI HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 工作树，实施前：`scripts/lib/vitest-suites.mjs:29-45` 明确禁止重复登记测试文件；已有 policy 组仅有 `packages/local-runtime/test/unit/local-permission-facade.test.ts`，所以新 Windows 命令复用该组，而非重复文件登记。`scripts/run-vitest-suite.mjs:9-38` 当前仅解析 group，保留 Windows TEMP 实路径和串行文件约束；新命令应校验实际 host，不用 -t 排除模式。
+
+【源码】`packages/local-runtime/src/permissions/facade.ts:541-549,1092-1169` 的 Windows hard safety 位于 checker/core 前，回收 launcher 缺失、危险永久删除等返回 `safety-immune`；因此 POSIX 期待 checker 的 shred 日志/普通 `safety` 来源不能代表 Windows 公共契约。原 `rm /tmp`、POSIX rm 改写及路径 transforms 回归需在 POSIX 原生运行，Windows 则明确提供 .cmd/PowerShell 样本和已校验 launcher 字节，测试既有边界不改变生产行为。
+
+【源码】`packages/agent-modules/permission/src/tools/fs-permission.ts:1076-1107` 工作区决定外部写入能力，先前 `echo ... > /tmp/...` 日志用例没有选择工作区。可移植用例应给会话 cwd 和相对目标，继续要求相同 allow 与 checker/core 日志结构，不能改为接受 ask/deny。缺失/篡改回收脚本、根删除及公共规则仍需对应平台断言。
+
+【源码与实测，离线】同一HEAD后续工作树：`package.json:19` 提供 `test:windows-policy`，复用唯一登记的policy文件；`scripts/run-vitest-suite.mjs:10-21` 校验显式宿主约束，错误平台在加载Vitest前拒绝；`scripts/verify.mjs:60-61` 在Windows/full流程中登记新闸。没有在suite重复登记文件或使用 -t 字符串过滤。`test/source-sync.test.mjs` 原focused-gates与runner测试补匹配/不匹配平台断言，完整发布工具回归通过。
+
+【源码与实测，离线】`packages/local-runtime/test/unit/local-permission-facade.test.ts` 按实际win32/darwin/linux执行平台断言：POSIX原用例保留并加真实chmod坏脚本对照；Windows新增 engine/core targets-only回收计划、default/auto/bypass/off早期硬拒绝及对应日志。原重定向日志夹具的 /tmp/home 边界不稳定且走不同规则，改用明确会话cwd的tee目标，精确断言已建模writeAuthorizedTarget日志，普通工作区外非temp目标ask。`packages/agent-modules/permission/src/tools/bash-checker.ts:709-723` 的 allowTempWrite 既有策略仍保留，不为过测试改变其语义或生产权限。
+
+【实测】使用 Node v24.15.0 运行正式pnpm命令，143通过、15原生POSIX用例平台跳过、零失败；verifier两份Windows列表都含新闸。脚本前置不匹配平台、TEMP规范化和源清单唯一登记也有自动回归。实际结果见 [status](../status.md)。
+
+【未验】原生类Unix policy结果仍未取得；早前Windows source contract中的fsutil/旧更新launcher失败本轮未修。只有测试与检查脚本变更，未改变生产权限；没有运行实际删除或联网模型。
+
+### POSIX 删除回归的平台元数据夹具（2026-09-30）
+
+【源码】Talos-CLI HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 后续工作树：`packages/local-runtime/src/infra/ensure-trash-script.ts:29-44,121-153` 创建 POSIX 脚本并校验原字节与 stat.mode 的执行位；`packages/local-runtime/src/permissions/facade.ts:547-549,1199-1235` 把脚本健康检查放在 off/bypass 等模式之前，异常拒绝且不得回退永久删除。`packages/local-runtime/test/unit/local-permission-facade.test.ts:79-93,481-595,1419-1430` 明确模拟 darwin/linux，却仍使用 Windows 的 fs.statSync 元数据。NTFS 没有给出 POSIX execute bits，预期回收改写未能执行。
+
+【r1 曾采用的实施约束，现由下方 Astra r2 复核替代】只在测试中为已登记的合成脚本标注 POSIX mode；不 mock 脚本字节/存在性，不返回虚假 available、不改变生产检查、不对全局文件放行。缺失/篡改/去执行位须保持拒绝。宿主路径解析仍是 Windows，不把其结果称真实 POSIX 执行验证。
+
+【实测，Git Bash 核验】2026-09-30 使用本机 `C:\Program Files\Git\bin\bash.exe`（GNU Bash 5.2.15，x86_64-pc-msys）和 Node `v24.15.0` 对独立临时 printf 脚本验证。Git Bash 执行 `chmod +x` 后，自己的 stat 报 755，脚本正常打印合成标记；从 Git Bash 启动同一个 Windows Node 时仍为 `process.platform=win32`、mode=666、`stat.mode & 0111=0`，PowerShell 再读结果相同。没有执行删除、没有改仓库或用户配置。因此仅把测试启动 shell 改成 Git Bash，不会改变 POSIX 模拟分支所读的 Windows Node 文件元数据；真实 Bash 执行与 Node 平台模拟是两个证据范围。
+
+【源码，Astra 复核】`scripts/verify.mjs:75-81` 的 `test:policy` 明确限定 `platforms: ['darwin','linux']`；`test/vitest-suites.json:202-204` 的 policy 组只有完整 `local-permission-facade.test.ts`。直接调用 Vitest 文件绕过了该平台分派。`test/windows-contract.test.mjs:21-34` 及其余用例主要覆盖 Windows 路径/旧更新安装，不自动证明 Windows 权限全覆盖。`scripts/run-vitest-suite.mjs:17-37` 还包含 Windows TEMP 实路径及串行文件策略，复验优先遵循现有 runner。
+
+【既有报告，Astra 读取】r1 临时报告 `talos-permission-posix-targeted-r1.json` 仅用于说明未完成模拟：152个登记用例中8通过、1失败、143未选；失败在 POSIX off-mode 回收改写的 executionPlan.transforms 精确路径断言（当时测试行579）。r2 已撤销模拟 stat 和依赖用例；该报告不再作为当前通过证据。没有取得原生 Linux/macOS 测试；生产 facade/脚本未因本轮平台纠偏修改。
+
+【复核结论】r1 mock 不再扩展为 Windows 上的 POSIX 模拟层。Luna 已精确撤销 stat 接线和依赖其通过的 Windows 反向用例，保留独立 cwd 修正；后续Windows权限入口已保留真实chmod的原生坏脚本用例，其原生结果仍待验证。当前 Windows 失败清单需按平台归因，不能全部称产品缺陷或全部忽略；执行范围见 [plan](../plan.md#当前小轮posix-回收脚本平台夹具)。
+
+【未验】主人另一台类 Unix 机器的 OS/架构、文件系统、Node 和原生测试结果未知；Linux 与 macOS 不互相替代验收。Git Bash 探针没有执行真实删除，不能证明回收站后端功能。
+
+### 权限写入测试的工作区归因（2026-09-30）
+
+【源码】Talos-CLI HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 后续工作树：`packages/local-runtime/src/permissions/facade.ts:1045-1061` 优先 session.workspaceDir，再 agent.defaultWorkspaceDir，缺两者时回退 os.homedir。`packages/local-runtime/test/unit/local-permission-facade.test.ts:77-101,2020-2038,2119-2144` fake dataDir 默认 mkdtemp(tmpdir)，会话查询总返回 undefined；两项写入用例没有指定工作区。Windows tmpdir 属用户 home 子目录，写入实际触发工作区边界允许，并非 temp 自动写入允许。
+
+【源码】`packages/agent-modules/permission/src/tools/fs-permission.ts:1024-1045,1076-1107` 精确写入目标允许；temp 便利仅作用于 READ_ONLY_TOOLS，普通写入仍查工作区/允许路径/用户规则。`tools/fs-checker.ts:46-73` 依据目标与上下文调用路径权限。修正应明确测试的会话 cwd，让 dataDir 路径真正位于 cwd 外；保留生产 fallback 和原 ask/allow 断言，不能用改生产权限迎合错误夹具。
+
+【源码与实测，离线】同一 HEAD 工作树，仅 `packages/local-runtime/test/unit/local-permission-facade.test.ts` 增加 sessionWorkspaceDir 测试注入：普通 dataDir 写入目标与选定 cwd 不重叠，default/auto 返回 ask；回合精确 plan.md 返回 allow，相邻 .bak 与撤销精确授权后的原目标返回 ask，不持久化规则。另设无 session/agent 工作区的 home 目标，固定原生产 fallback 及工作区允许行为；六项对照全部通过。完整套件逐名称确认仅删除原两项失败，没有新增或跳过；实际数字和剩余问题见 [status](../status.md#当前技术收口缺口权限-facade-13项剩余失败)。
+
+【未验】本轮未修改权限生产逻辑，没有执行合成写入命令；不代表完整权限套件、home 信任范围或数据隔离已收口。
+
+### Talos 权限云分类（2026-09-30）
+
+【源码】Talos-CLI HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 工作树，实施前依据（引擎仓库相对路径）：
+
+| 路径 | 事实与处理约束 |
+| --- | --- |
+| `packages/agent-modules/permission/src/classifier/cloud-classify-client.ts:24-51,61-63` | 云分类只按 managed 决定是否启用，neutral 当前不覆盖；endpoint 为厂商 `/mavis/api/v1/permission/check` |
+| `packages/agent-modules/permission/src/http-cloud-gateway-client.ts:56-100,165-172` | 分类器上传序列化工具输入、home/workspace 与 conversation context，取得上游 token；错误用现有 timeout/unavailable verdict 返回而非 allow，neutral 需发送前阻断 |
+| `packages/local-runtime/src/permissions/facade.ts:774-826,851-915` | Auto 不可用分类器直接返回本地 baseAsk；规则与安全 deny 在此前已处理。本轮改变 gate，不修改规则或 ask gate，不自动开启 Full access |
+| `packages/tui/src/tui/features/interaction/permission-mode-picker.ts:12-17` | Auto 原提示为 Ask only when risk is high；neutral 退役云判断后须如实说明本地检查/未知确认 |
+
+【源码，下一隔离审计】`packages/local-runtime/src/permissions/facade.ts:999-1011` 仍把旧 `.minimax` home 的 skills/.builtin-skills 加入只读工具的技能资产路径候选。此为需审计的信任/隔离路径，不在本轮云分类切片中盲改，也不能宣称此前目录命名已经证明完全隔离。
+
+【源码与实测，离线】同 HEAD 的后续工作树，`packages/agent-modules/permission/src/classifier/cloud-classify-client.ts:62` neutral 不启用 cloud classifier；`src/http-cloud-gateway-client.ts:57-59` 直调在 request/context/token/fetch 前返回原 `kind:timeout`、`cloud:unavailable`，而非 allow。`packages/local-runtime/src/permissions/facade.ts:813-821` 仍走既有 baseAsk，不改变核心规则/审批；`packages/tui/src/tui/features/interaction/permission-mode-picker.ts:122-127` Auto 的 neutral 说明为 `Local checks; confirm uncertain actions`。
+
+【实测，离线】managed=true、neutral 下用 engine/core 两种 owner 检查合成 `npm publish`（不执行），假 gateway 即便会 allow 也未调用；本地显式 allow、deny 和危险根删除拒绝仍生效。直调分类器无 request 属性或 token 读取、无 fetch；非 neutral 仍按原协议解析 fake allow。完整权限 facade 新发现的既有失败已做仅撤回本轮改动的同环境对照，比较后原字节恢复；失败清单和检查结果只见 [status](../status.md#当前技术收口缺口权限-facade-13项剩余失败)，没有据此宣称权限全量通过。
+
+【未验】未跑真实云分类或模型；Auto 新说明未做真实终端目视。尚未列完所有厂商出口，旧 home 技能信任路径及完整隔离另轮核对。
+
+### 中立搜索的现有调用链与缺口（2026-09-30）
+
+【源码】本轮为只读说明，Talos-CLI HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 的后续工作树。`packages/local-runtime-v2/src/service/mcp/project-config.ts:20-55` 读取工作区 `.mcp.json`；`runtime/config-file.ts:6-9` 读取 profile 的 mcp.json；`tools/runtime-tools.ts:43-67` 将已配置 MCP 映射为回合工具；`packages/agent-tools/src/mcp-disclosure/plan.ts:30-65` 决定直接展示或延迟发现，后者由 `tool-search.ts:31-39` 与 `mcp-invoke.ts` 搜索定义再调用。`packages/local-runtime-v2/src/service/mcp/runtime/local-mcp.service.ts:814-849` 把调用参数路由到选定服务，失败明确返回，不提供假搜索结果。
+
+【源码】`packages/tui/src/tui/controller/product/feature-flow.ts:1316-1347` 的 `/mcp` 是检查状态面板，并非搜索 provider 配置向导。`/provider` 管理模型服务，两者不是同一配置。原生 web_search 的自定义 adapter 是开发注入接口，不能声称普通用户已有搜索设置页。
+
+【源码缺口】`packages/agent-tools/src/desktop/canonical-tool-policy.ts:53-72` 的 Explore/Verifier MCP ceiling 只接受 builtin-matrix web_search；`packages/local-runtime-v2/src/service/turn-system/agent-host/assembly/local-turn-tool-catalog.ts:176-183` 实际应用该筛选。因此主对话可接配置的搜索 MCP，不等于这些内置子代理也已支持；关闭 Matrix 后它们没有这条内置网络搜索。修复需要定义只读搜索身份/能力契约，不能简单放开所有 MCP 或修改审批。本轮不修改此策略。
+
+【未验】尚未选定或配置真实搜索服务，未运行真实 MCP 搜索，也没有默认替代搜索、搜索配置 UI 或子代理中立搜索适配。原工具发现/调用源码只能证明接线方式，不代表开箱即用搜索已交付。
+
+### Talos 内置 Matrix 与 mcode-tools（2026-09-30）
+
+【源码】Talos-CLI HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 工作树，改动前依据（路径相对引擎仓库）：
+
+| 路径 | 行为与边界 |
+| --- | --- |
+| `packages/local-runtime-v2/src/service/mcp/initialize.ts:65-67`；`runtime/local-mcp.service.ts:290-307,947-975,1074-1094` | 内置 Matrix flag 与连接池控制服务注册/展示。服务禁用时已有过滤内部 v2 Matrix 标记的运行视图逻辑；应扩展 neutral，不能把自配同名服务删掉 |
+| `packages/local-runtime-v2/src/service/mcp/runtime/builtin-matrix.ts:36-78,101-127,179-216` | builder 创建 stdio 子服务和工具列表，token override 将上游凭据传给子进程；neutral 应拒绝 builder/token、描述返回空 |
+| `packages/agent-tools/src/desktop/matrix-client.ts:88-195`；`matrix-env.ts:11-48` | 厂商 Matrix 网关可 POST、PUT、GET；仅取消注册仍不能防直调，发送与 header 读取需 unavailable。用户自配 MCP 不使用这专属 client |
+| `packages/tui/src/runtime/lifecycle.ts:158,323-340`；`runtime/embedded-host.ts:48-52` | beta.mcodeTools 可激活 integration，并通过 capability 投影提供工具；neutral 应覆盖 config，不能自动启动 broker |
+| `packages/tui/src/runtime/mcode-tools-integration.ts:83-120`；`cli/mcode-tools-environment.ts:40-55,100-122`；`cli/mcode-tools-entry.ts:1-6` | prepare 校验产物、创建目录、启动租约 broker、改 PATH，子程序入口最终动态导入嵌入 cli.mjs；需在这些副作用前阻断 neutral |
+| `scripts/build.mjs:83,129-131`；`scripts/lib/mcode-tools-artifact.mjs` | 构建仍打包厂商嵌入资源及内部 launcher；本轮只处理运行通道，资源排除/来源与许可证属于发行依赖审计 |
+
+【源码补查】`packages/local-runtime/src/api/local-native-tools.ts:118-123` 在 product gate 开启时默认创建 native web_search；`packages/local-runtime/src/web-search/local-web-search-client.ts:16-42` 调用 LocalMatrixClient，后者 `packages/local-runtime/src/matrix/local-matrix-client.ts:21-33` 继承 DesktopMatrixClient。因此 HTTP 阻断已覆盖，但默认工具描述仍应在 neutral 撤下；显式注入的自定义 adapter 不属于厂商默认通道，保留。
+
+【源码与实测，离线】同 HEAD 后续工作树，`packages/local-runtime-v2/src/service/mcp/initialize.ts:66-68` 与 `runtime/local-mcp.service.ts:292,948-973` 在 neutral 不注册、不显示内置 Matrix，并只过滤带内部标记的运行视图；用户同名服务保留，合成 mcp.json 字节不变。`runtime/builtin-matrix.ts:40,78,106,229-234` 在 builder、工具描述、token override 前保护。`packages/agent-tools/src/desktop/matrix-client.ts:93,109,127,151,175,200,298-303` 阻断直调 POST/上传/下载/header 获取，LocalMatrixClient 继承该行为。`packages/local-runtime/src/api/local-native-tools.ts:118-123` neutral 不创建默认 Matrix 搜索 adapter，明确注入的自定义 adapter 保留。
+
+【源码与实测，离线】`packages/tui/src/runtime/lifecycle.ts:158-159,328` neutral 不调用云工具准备器；`runtime/embedded-host.ts:52-53` 保持 capability ceiling 为 false，不改持久化 beta 配置；`runtime/mcode-tools-integration.ts:84-89` 即使直调 requested=true 也不校验资源、不建 broker/目录或改 PATH。`cli/mcode-tools-environment.ts:54,110,146-151` 阻止环境直调激活；`cli/mcode-tools-entry.ts:4-11` neutral 返回明确不可用提示、退出码 1，跳过嵌入 cli.mjs import。离线回归证明零身份读取/fetch、通用 MCP 与原生工具保留；非 neutral 原租约和网络协议测试保留。POSIX socket 限制用例在 Windows 依原测试跳过，不虚报通过。结果见 [status](../status.md)。
+
+【实测，本地产物】Node `v24.15.0` 构建后，在临时子进程设置 neutral 并调用内部 mcode-tools 入口，实际输出 `Upstream cloud tools are unavailable in Talos. Configure your own MCP server.`，退出码 1；未导入厂商程序，没有真实模型请求。该检查不证明已从产物移除厂商资源。
+
+【未验】本轮不以注册关闭证明全进程无厂商请求，也不证明已去除厂商打包资源。第三方网络搜索可由自配 MCP 提供，不假造内置替代。
+
+### Talos 插件市场与云连接器（2026-09-30）
+
+【源码】Talos-CLI HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 工作树，以下相对引擎仓库，实施前依据：
+
+| 路径 | 链路与边界 |
+| --- | --- |
+| `packages/local-runtime-v2/src/service/plugin-system/initialize.ts:45-56,70-105,123-133,214-227` | registry、connector 共用 PluginSystemCloudTransport；初始 scope 读取上游账号，官方目录默认 origin 为厂商域；neutral 应不提供该账号 scope |
+| `packages/local-runtime-v2/src/service/plugin-system/cloud-transport.ts:81-145,147-164` | 签名请求、账号 getter、fetch 与官方下载写盘均由这里管理，需要发送前明确阻断 |
+| `packages/local-runtime-v2/src/service/plugin-system/plugin/runtime/registry-client.ts:60-155`；`packages/local-runtime-v2/src/service/plugin-system/app/cloud-client.ts:65` | 市场分页/工单式管理/下载授权及云 connector API 共用该 transport；阻断后返回协议内明确错误，不修改权限/审批 |
+| `packages/local-runtime-v2/src/service/plugin-system/plugin/import/github-source.ts:8-29,276-290`；`initialize.ts:79-82` | 用户主动 GitHub importer 使用独立 fetch，不使用厂商 registry；需保持可用，不能用公共网络总开关误伤 |
+| `packages/tui/src/plugin/application.ts:11-33,55-70`；`packages/tui/src/cli/plugin-command.ts:43-60` | 默认合并 official/local，CLI 来源列表也推荐两者；neutral 默认改 local，显式 official 给 unavailable |
+| `packages/tui/src/tui/features/plugin/manager.ts:15-16,135-150,183-197,210-214,290-303` | 页面默认四来源及 MiniMax Official 标签；neutral 保留本地管理 tab，旧 official 缓存不出现在可操作列表 |
+
+【源码与实测，离线】同一 HEAD 后续工作树，`packages/local-runtime-v2/src/service/plugin-system/cloud-transport.ts:83,107,148,166,413-423` 在认证/dispatch、下载和写盘前阻断 neutral，明确返回 `PLUGIN_CLOUD_UNAVAILABLE`；泛型账号读取器在 neutral 返回 undefined 而不调用上游 getter。`initialize.ts:44-49,75,88,107,125` 将 registry、connector、host connector 与 plugin scope 全接到该读取器，GitHub importer 保留独立 fetch。
+
+【源码与实测，离线】`packages/tui/src/plugin/application.ts:15-36,59,77-81` 默认仅查 local 并防旧 mixed snapshot 暴露 official；明确 official 的查询/变更在调用 Runtime 前失败。`cli/plugin-command.ts:46-63` 只报告 local 来源和刷新；`tui/features/plugin/manager.ts:16-19,140-153,194,219-222,307` 保留 All/Installed/Local，计数与可操作项只来自本地，不推荐官方市场。源码所接的 cloud getter 不影响用户模型凭据或自配 MCP。
+
+【实测，离线】四组既有回归覆盖 neutral 下无厂商身份读取/签名/dispatch，下载被拒绝且 target 文件不存在，异步响应后变成 neutral 也不写盘；本地列表/安装/启停/移除/刷新仍委托 Runtime。GitHub source 在 neutral 下通过独立假 API fetch 解析 commit，证明未被厂商 transport 阻断；不是实际远程安装测试。非 neutral 原鉴权、签名、限流式下载边界和 connector 权限用例保留。TUI 夹具证明本地 tabs/计数/启停正常；真实终端待主人验收，结果见 [status](../status.md)。
+
+【未验】内置 Matrix MCP 云工具和 mcode-tools broker 是其他链，本轮只记录其存在，不实现。真实 GitHub 安装、插件执行与全进程抓包均不属于本轮离线证明。
+
+### Talos 上游反馈上传（2026-09-30）
+
+【源码】Talos-CLI HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 的工作树，以下为实施前依据，路径相对引擎仓库：
+
+| 源码路径 | 原行为与处置边界 |
+| --- | --- |
+| `packages/tui/src/tui/controller/product/feedback-flow.ts:32-72`；`packages/tui/src/tui/controller/product/command-flow.ts:1301` | `/feedback` 先检查上游账号再 prepare，创建确认上传面板；neutral 应在账号读取前返回说明，不作为模型正文 |
+| `packages/tui/src/runtime/lifecycle.ts:522-544`；`packages/tui/src/runtime/adapter.ts:405-423` | adapter 委托工单服务及诊断 uploader；单纯隐藏按钮不够，直调服务仍可上传 |
+| `packages/tui/src/runtime/feedback/service.ts:111-168,171-270,332-385` | prepare 保存草稿，submit 读认证并上传诊断、创建/确认 ticket；neutral 需在 prepare/submit 与发送边界阻断，cancel 保留清理能力 |
+| `packages/tui/src/runtime/feedback/ticket.ts:18-21` | 默认工单 origin 使用上游 public gateway，路径为 `/minimax-cloud/api/v1/feedback/ticket`；本轮不替换为未经交付的 Talos 后端 |
+| `packages/tui/src/runtime/feedback/diagnostic-upload.ts:71-90,155-190` | flush 日志、收集会话/文件、脱敏 ZIP，向厂商 `/matrix/api/v1/log/upload` 换取 presign，随后 PUT；neutral 需在采集之前阻断，异步后发送前再次检查 |
+| `packages/tui/src/tui/commands/catalog.ts:348-354`；`packages/tui/src/tui/shell/welcome/design.ts:19,32` | 原目录与欢迎页仍推荐反馈上传；退役后须撤下该推荐，保留布局和其他功能 |
+
+【源码与实测，离线】同一 HEAD 后续工作树：`packages/tui/src/tui/controller/product/feedback-flow.ts:36-39` 在账号查询前给明确说明；`packages/tui/src/runtime/feedback/service.ts:113,173,340,367,402,541-548` 用 `feedback_unavailable`、403、不可重试保护 prepare/submit、上传与工单发送/确认边界；cancel 保留清理能力。`packages/tui/src/runtime/feedback/diagnostic-upload.ts:75,79,92,163,187` 在采集之前、异步刷新/采集之后以及 presign/PUT 前阻断；`catalog.ts:350-357` 不推荐 neutral 反馈命令，但仍识别手动输入；`welcome/design.ts:19,32,41,49` 改推荐本地 `/doctor`，保持原布局。
+
+【实测，离线】既有反馈测试覆盖 neutral 直调不读账号、不 flush/采集/上传，旧草稿提交拒绝而取消仍成功，异步期间切换 neutral 后不再创建工单或查询工单，不执行后续 PUT。完整 TUI 覆盖 `/feedback` 空参数和带描述均只写提示，runtime prepare/submit 与模型发送零调用。保留非 neutral 的原始脱敏、上传确认、取消和重试测试。结果见 [status](../status.md)；未请求真实上游网络或模型，真实终端展示待主人验收。
+
+【未验】这一轮只处理上游反馈链；其他云出口、工具服务和完整数据隔离另轮核对。不覆盖独立外部进程/工具或显式用户配置的模型网络。
+
+### Talos 自动遥测出口（2026-09-30）
+
+【源码】Talos-CLI HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 的工作树，改动前依据：
+
+| 完整仓库相对路径 | 行为与映射 |
+| --- | --- |
+| `packages/tui/src/cli/environment.ts:67-74` | Talos 默认设置 neutral 标记，TUI/headless/ACP 共用入口 |
+| `packages/tui/src/analytics/business-telemetry.ts:126-191,248-258`；`packages/tui/src/tui/launcher.ts:140-151,248-267` | 使用统计只尊重 config opt-in 和两项环境 opt-out，neutral 不阻断；发送到 hailuo/talkie/xingye 的 reporter |
+| `packages/config/src/telemetry-policy.ts:11-22`；`packages/local-runtime/src/runtime/host-metrics.ts:108-142` | metrics 内建云 reporter 在 managed 且显式开启时创建；共享策略没有 neutral 条件。显式注入的自定义 reporter 是独立接口，不属于内建厂商出口 |
+| `packages/tui/src/observability/incident-reporter.ts:308-325,373-420,511-513` | 故障记录按策略写 pending 或 local，上传前检查策略再取得账号认证；neutral 尚无独立约束 |
+| `packages/local-runtime/src/error-reporting/reporter.ts:65-100,104-110` | runtime 故障诊断在入队和发送时检查同一 diagnostics 策略；阻断该策略可覆盖两个阶段 |
+| `packages/tui/src/cli/telemetry-command.ts:26-67` | status/preview 用统计策略描述三类通道；neutral 下也可能显示可开启和上游请求预览，需要与实际阻断一致 |
+
+【源码结论】本轮共享策略优先阻断 neutral，保留本地记录和非 neutral opt-in/脱敏行为；业务统计同时在 track/drain 再检查。需要离线证明所有内建上传路径零 fetch、旧 pending 不发送且 local 仍可记录。
+
+【源码与实测，离线】同一 HEAD 的后续工作树：`packages/config/src/telemetry-policy.ts:16` 优先阻断 neutral；`packages/tui/src/analytics/business-telemetry.ts:132-134,157-160,191` 在策略、发送和收集处分别阻断；`packages/tui/src/cli/telemetry-command.ts:39-54` 报告无法 opt-in、不提供请求预览。四个既有 privacy 文件新增 neutral 回归：配置全开仍不创建统计客户端/发送请求，收集后切换 neutral 丢弃排队事件，故障诊断不取得上游账号认证、不补传旧 pending，保留新 local 记录；非 neutral 原有脱敏与 opt-out 测试通过。结果见 [status](../status.md)。
+
+【实测，本地产物】支持的 Node `v24.15.0` 构建后，独立临时 data dir 中合成 config 设三类 telemetry 为 true；`telemetry preview` 实际返回三通道 `configured:true`、`enabled:false`、`blockedBy:TALOS_NEUTRAL_RUNTIME`，以及 `optInAvailable:false`、`optInSetting:null`、`request:null`。输出说明 local diagnostics 保留。没有真实网络、凭据或模型请求；这证明该产物入口政策和反馈，不是全进程抓包验证。
+
+【未验】反馈是独立用户操作上传通道，云插件、工具服务与其他厂商请求未包含本轮。不能将遥测阻断宣称为完整进程无厂商出口。
+
+### TUI 回归归因依据（2026-09-30）
+
+【实测】Talos-CLI HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 的后续工作树，Node `v24.15.0` 重跑 `packages/tui/test/unit/tui-app.test.ts` 得到 306/332 通过、26 项失败。离线假 runtime，没有真实模型请求。原始机器报告留在临时目录，不提交。
+
+【源码】相关显示事实：`packages/tui/src/tui/shell/welcome/design.ts:4-7` 使用已验收的 `Field notes`；`packages/tui/src/tui/platform/terminal-title.ts:40` 使用 Talos；`packages/tui/src/tui/features/inspection/product-inspection.ts:201` 标题为 `Talos status`；`packages/tui/src/tui/controller/interaction/questionnaire-continuation.ts:102` 为 `Answer sent · Talos is continuing…`。测试仍期待旧文案。模型 ID 与可选 provider 名称不是产品品牌，不随意替换。
+
+【源码】`packages/tui/src/tui/features/session-mutation/copy.ts:13-39` 从系统 `Intl.DateTimeFormat().resolvedOptions().locale` 选语言；`copy.en.ts:180-182` 与 `copy.zh-Hans.ts` 提供等价失败文案。当前中文机器上的英文硬编码断言导致历史/回退失败，不能据此判定恢复逻辑损坏。测试需要显式语言夹具并覆盖中英文交互，保留原功能断言。
+
+【实测】同版本工作树只修改 `packages/tui/test/unit/tui-app.test.ts` 的测试夹具和产品文案预期：`:51-65` 在每个用例固定 host locale 并在结束时恢复 spy；`:6915-6956` 分别覆盖 en-US/zh-CN 的普通/全屏历史显示与 Esc 返回。原 26 个失败的对应测试全部通过，完整重跑无跳过；保留原请求参数、历史唯一性、错误重试和非成功回退断言。`Intl` 仅在测试中替换，真实 TUI 跟随系统语言的行为未改变。未使用翻译模块 mock，没有真实 provider 请求；完整结果见 [status](../status.md)。
+
+### Talos 旧更新入口（2026-09-30）
+
+【源码】Talos-CLI fork HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 的工作树。以下路径相对引擎仓库。Talos CLI 启动先设置 `TALOS_NEUTRAL_RUNTIME=1`，随后才动态加载命令实现。
+
+| 入口 | 已核对行为 | 本轮边界 |
+| --- | --- | --- |
+| 【源码】`packages/tui/src/index.ts:31`、`packages/tui/src/update/prefix-update.ts` | 每次启动调用 `prepareMcodePrefixProcess()`，可能处理旧 npm-prefix 更新状态 | 待按 r2 隔离旧更新准备；当前源码仍有调用 |
+| 【源码】`packages/tui/src/cli/program.ts:145-150`、`packages/tui/src/cli/main.ts:153-156`、`packages/tui/src/cli/update.ts:21-35` | `talos update` 可创建上游更新应用、检查并安装原包 | 待改为只读状态入口；包身份未定期间只能解释未配置，不能进入旧更新应用 |
+| 【源码】`packages/tui/src/tui/launcher.ts:475-478,824-833`、`packages/tui/src/tui/app-composition.ts:399-413` | TUI 启动会调用更新检查；重启可调度旧 prefix activation | 待切断旧回调与 activation；未来自己的只读检测按独立契约接入 |
+| 【源码】`packages/tui/src/tui/commands/catalog.ts:136-142`、`packages/tui/src/tui/controller/product/command-flow.ts:1060` | `/update` 可进入旧安装流程 | 待保留分发并改为状态提示，帮助不得再承诺自动安装 |
+| 【源码】`scripts/build.mjs:145-146`、`scripts/package-cli-release.mjs:65-69,79` | 本地产物身份为 `talos-cli`、private；发行 manifest 仍为 `@minimax-ai/code`、private、上游 repository，只有 bin 已是 `talos`；打包要求已提交且干净的工作树 | 改名 CLI bin 不等于可发布自己的 npm 包。正式包名、版本及发行身份必须在发行准备轮确认并统一；不能凭 GitHub 用户名推断 npm scope |
+
+【源码复核，Astra 规划轮】当时只读检查确认上述旧调用仍存在；此前可见 Talos 更新文案不证明更新器已退役。该轮未修改引擎代码或运行 npm 查询。自己的更新目标尚未确定，不能查询占位包或以 MiniMax registry 结果证明 Talos 版本。
+
+【源码与实测，Luna r2】同一 HEAD 的后续工作树中，`packages/tui/src/index.ts:30-31` 改为直接运行 CLI，不再准备 prefix 更新；`packages/tui/src/tui/launcher.ts:459-462,795-809` 不再向 TUI 注入旧 `inspect/apply`，普通重启直接启动子进程；`packages/tui/src/cli/main.ts:153-157,279-281` 的 `talos update` 只写未配置状态；`packages/tui/src/tui/controller/product/update-flow.ts:8-27` 的 `/update` 只写相同含义的状态。`app-composition.ts` 中可选的未来通知渲染钩子仍在，但 Talos launcher 不提供旧检查回调。旧 `cli/update.ts`、`update/application.ts` 和 `update/prefix-update.ts` 留在源码中，现有产品入口无调用链。Node 24 构建后的 `dist/cli.js update` 输出 `Talos 0.5.7: this build has no Talos npm update source configured. Use the current source build; Talos does not install updates automatically.`；`--help` 说明为 `Show Talos update status`。这是本地产物实测，不是 npm 查询或真实发布验证。
+
+【未验】独立 npm 包未发布；真实 registry、安装升级、跨版本新版提醒均未验证。检测器可以在包身份确认后、首发之前用假响应开发；规划见 [plan](../plan.md#npm-发行与版本提醒)，该方案不是已实现事实。
+
+### 旧 home 技能信任隔离依据（2026-09-30）
+
+【源码】审查仓库 `C:\DEV\develop\Talos-CLI`，HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4`，版本 `0.5.7`；有此前未提交改动，HEAD 只表示基点。以下初始行号对应本轮修改前源码。
+
+| 完整路径与行号 | 事实与处理要求 |
+| --- | --- |
+| `C:/DEV/develop/Talos-CLI/packages/local-runtime/src/skills/roots.ts:22-68,71-119` | canonical skill roots 来自 dataDir；工作区 `.minimax/skills` 是受 external 总开关与来源开关控制的外部来源；home 外部来源为 `.claude/.codex/.agents`，没有固定 home `.minimax/skills` fallback；但 `workspaceRootsToScan`（141-158）在发现上层 `.git` 时返回沿途父目录，可能把 home 当 workspace 根，中立模式需排除这一隐式旧 home 来源，保留其他项目来源 |
+| `C:/DEV/develop/Talos-CLI/packages/local-runtime/src/skills/builtin.ts:385-405` | builtin candidates 为显式环境路径、包资源与开发 cwd；没有自动 home `.minimax` fallback。显式环境路径属于用户主动配置，不能当隐式继承 |
+| `C:/DEV/develop/Talos-CLI/packages/local-runtime/src/skills/registry.ts:203-233` | registry 直接消费配置根并以根集合为缓存键，需用假 home 验证真实注册而非只断言字符串 |
+| `C:/DEV/develop/Talos-CLI/packages/local-runtime/src/permissions/facade.ts:984-1014` | read/glob/grep/list 的 sandboxAllowPaths 会同时信任 dataDir 和 home `.minimax` 技能目录；中立模式应去掉后者的隐式放行 |
+| `C:/DEV/develop/Talos-CLI/packages/agent-modules/permission/src/tools/fs-permission.ts:665-701,890-913` | private runtime 保护同时识别 dataDir 与旧 home `.minimax`，但把 skills、agent workspace、internal whitelist 等作为可读例外。中立模式必须保留旧树保护并取消例外；直接删旧保护根会弱化已有私密数据安全边界 |
+
+【实测】2026-09-30：Node 24.15.0 下 fake-home 技能/配置/数据目录与权限、TUI 五套件514通过、17平台跳过；类型、源码清单、构建通过。修复涉及 roots.ts:85、facade.ts:1002、fs-permission.ts:680-699；保留旧数据保护、显式批准与指定 dataDir，排除 home 父目录扫描的隐式导入。测试注册读取的技能与读权限均为合成夹具。
+
+【未验】真实用户技能、类 Unix 原生权限、所有数据路径与干净提交检出未验证；未请求真实模型或网络。
+
+### Talos 默认数据目录与旧 home 继承（2026-09-29）
+
+【源码】Talos-CLI fork HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 的工作树；以下路径相对 `C:\DEV\develop\Talos-CLI\`。本切片不改变 ACP 报文或 provider 凭据格式。
+
+| 源码位置 | 已核对的行为 | 本轮映射及未知项 |
+| --- | --- | --- |
+| 【源码】`packages/tui/src/runtime/data-dir.ts:1-58`、`packages/tui/src/index.ts:24-33` | `resolveDefaultTuiDataDir` 借用 config 的 `.minimax` 基名；CLI 入口先选路径，再交给 `configureTuiRuntimeEnvironment`。TUI、headless、ACP 共用 `prepareTuiDataDir` | 默认路径需改为 `.talos`，显式 `MINIMAX_DATA_DIR`/`MAVIS_DATA_DIR` 仍按原优先级使用；真实用户目录不用于测试 |
+| 【源码】`packages/tui/src/cli/environment.ts:40-74`、`packages/config/src/config.ts:1327-1359`、`:1489-1523` | 准备函数把选中路径写入两个公开环境变量；配置层优先读取显式目录 | 默认目录选择一旦改为 `.talos`，配置、凭据和会话均应由原有同一数据目录参数落盘；需用离线测试确认 |
+| 【源码】`packages/config/src/config.ts:1864-1900`、`packages/config/src/data-dir.ts:5-44`、`:287-392` | 非 managed 且缺 config 时，先调用带迁移/兼容链接副作用的 `resolveDataDir({ homeDir: os.homedir() })`，再可能复制该目录的 `config.yaml`；neutral 判断在其后 | neutral 非 managed 必须跳过这个旧 home 探测和复制；旧数据不迁移、不删除。非 Talos 路径维持原继承行为 |
+| 【实测，既有离线回归】`packages/config/test/builtin-model-fallback.test.ts:159-195` | managed+neutral 不继承 fake home；non-managed+neutral 会复制 fake home 的合成 custom provider | 将后者改为“不继承”回归，同时覆盖 Talos 默认路径、显式目录和新目录内保存/重读；尚未证明真实数据或跨版本迁移 |
+
+【实测，本轮离线回归】`packages/tui/src/runtime/data-dir.ts` 默认选择 home 下 `.talos`，profile 为 `.talos-<profile>`；显式 `MINIMAX_DATA_DIR` / `MAVIS_DATA_DIR` 仍按既有优先级覆盖。`packages/config/src/config.ts` 在 neutral 非 managed 缺配置时直接返回，不执行旧 home 的 `resolveDataDir` 与复制。假 home 中 `.minimax/config.yaml` 使用合成 key，测试确认新目录未继承、旧内容未改，随后在新目录写入合成 custom provider 并 reset/reload 成功；非 neutral 对照仍继承。显式 Node `v24.15.0` 下定向 Vitest 18/18、standalone TypeScript、源码清单 4277 files、`scripts/build.mjs`（`Built Talos CLI 0.5.7`）和 `git diff --check` 通过。未启动真实 TUI、未读真实用户数据、未请求模型；这不证明其他模块不存在间接旧数据读取。
+
+### TUI 欢迎字形与退出语源码复核（2026-09-29）
+
+【源码，Talos-CLI HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 的工作树】`packages/tui/src/tui/shell/welcome/design.ts:81-87` 原先的 compact arm 是五行实心块；`hero.ts:46-53` 将它放在 42 列字标右侧。主人在实际终端截图中确认图案缩小后不可辨，随后否决线条机械臂。现行工作树的 `design.ts` 保存 GUI 顶栏标识的六行 ASCII 三六边形和两行窄屏简版；`hero.ts` 在 64 列以上让它与六行字标并排。这是 TUI 图形取舍，不涉及 ACP 报文或模型行为，真实视觉结果仍待主人验收。
+
+本轮先读 Talos-CLI fork HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4`，未启动 TUI、未发送模型请求。以下路径均相对于 `C:\DEV\develop\Talos-CLI\`。
+
+先纠正一个对象边界：上一段记录的是当前 Talos 替换后的 5×5 `TALOS` 字形；主人截图中的巨大 `MINIMAX CODE` 横幅来自上游原始欢迎页，不能用当前 Talos 字形的结论代替。
+
+| 等级与源码位置 | 读到的事实 | 当前结论 / 未覆盖 |
+| --- | --- | --- |
+| 【源码】`packages/tui/src/tui/shell/welcome/design.ts:59-73`；【用户提供素材】`C:\DEV\develop\tmp\ANSI.txt` | `TALOS_TERMINAL_ASCII_WORDMARK` 现在直接保存 6 行、每行 42 列的 Unicode 块字符；构建时不读取外部文件 | 当前 Talos 字标属于 ANSI Shadow 风格的静态字形资产；运行时不加载字体包，也不依赖该临时文件 |
+| 【源码，历史基线】`git show 2aed5ca:packages/tui/src/tui/shell/welcome/design.ts:59-84`；对应源码提交 `2aed5ca703c3359dd028af51e6c4cbc6a5e15c46` | 上游原始欢迎页把 `MINIMAX_CODE_TERMINAL_WORDMARK`、`_MEDIUM_WORDMARK`、`_MICRO_WORDMARK` 直接写成 `███╗...`、`╚═╝...` 等 Unicode block/box-drawing 字符数组；没有字体文件或 figlet runtime import | 截图中的巨大横幅就是这组硬编码字符。它的外观接近常见的 ANSI Shadow/块字风格，但源码只能证明“硬编码 Unicode 字符数组”，不能证明作者调用了某个外部字体 |
+| 【源码，历史基线】原始 `hero.ts`（同一提交）及 `design.ts:51-55` | 原始阈值为 `fullMinWidth: 91`、`mediumMinWidth: 44`、`microMinWidth: 11`；`hero.ts` 使用 `wordmarkHighlight → brand → wordmarkShadow` 六行渐变渲染 | 截图是宽屏 full wordmark；其蓝色多层效果来自主题渐变，不是字体渲染器。提交 `107c9cf` 的 Talos 欢迎改造才把这组横幅换成机械臂和当前 Talos 字形 |
+| 【源码】`packages/tui/src/tui/shell/welcome/hero.ts:12-45` | 宽度 `>=42` 才渲染 6 行完整 wordmark；6 行按 `wordmarkHighlight → brand → wordmarkShadow` 渐变；`20-41` 只渲染单行 `TALOS`；`10-19` 只渲染微型机械臂；低于 `10` 回退为 `T` | 42 列阈值用于容纳新字标；渐变保留块字轮廓的可读性；窄屏仍有明确降级 |
+| 【源码】`packages/tui/src/tui/launcher.ts:71`、`:897-900` | 退出消息由单一常量拼入 `formatTuiExitMessage()`；会话提示（若有）先输出，结束语最后单独换行输出 | 本轮只替换可见结束语；会话继续提示仍沿用现有逻辑，未把内部命令入口改名混入本轮 |
+| 【实测】 | 退出语已改为 `-- 3NDM1N15T4T0R OFFL1NE --`；定向 Vitest **2/2** 锁定无会话与带会话两种格式。显式 Node `v24.15.0` 下 standalone typecheck、`pnpm build`、`pnpm check:source`（4277 files）和 `git diff --check` 均通过 | 仍需主人启动新构建并退出做可见验收；未做真实模型请求 |
+
 ### 真实 custom provider 文本实测（2026-09-28）
 
 【主人反馈】主人在 `/provider-setup.html` 中使用 provider origin `https://api.xiaomimimo.com`、模型 `mimo-v2.6-flash` 和 `openai-completions`，页面显示“连接成功，模型已返回 talos-custom-ok”。这是当时所运行路径的成功反馈。提交 `74df78b` 的 `src/service/ws-server.ts:132` 起使用进程退出码和整段 trace 子串判定成功，未对结构化 ACP 结果逐项验真；本次未重读原始 trace，不能升级为 fork 构建、隔离或完整独立运行证明。API key 不写入此文档。
