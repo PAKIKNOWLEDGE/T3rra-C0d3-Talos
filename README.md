@@ -381,3 +381,17 @@ pnpm check:source
 ```
 
 预期：smoke验证启动和默认数据隔离；BYOK必须完整运行到回复、历史继续和真实文件读取回传，未配置模型不能回退；工具输出验证真实宿主命令、输出完整性及退出码。外网禁止，公开目录只在测试内返回离线响应，厂商服务请求为零。平台跳过与当前结果只见status，不以这些检查替代审批、Windows取消或用户UI验收。
+
+## ACP审批取消与恢复的离线检查
+
+内部验证，不需要主人配置模型、改权限或发送消息。使用当前fork源码构建及受支持Node，在CLI仓库运行：
+
+```powershell
+cd C:/DEV/develop/Talos-CLI
+$env:PATH="C:/Program Files/nodejs;$env:PATH"
+pnpm test:byok
+pnpm typecheck
+pnpm check:source
+```
+
+完整BYOK文件包含原第三方对话闭环和新增真实SDK/stdio状态闭环；预期审批拒绝不写、引擎提供的临时批准实际写入合成内容，运行中/待审批取消得到权威终态，新进程load保持原cwd和单份历史并可继续。所有模型响应来自临时loopback假provider，外网被拦截，只清理测试自身进程/目录。POSIX信号专属用例在Windows明确跳过；异常崩溃及终端操作仍须另行验证，结果以status为准。

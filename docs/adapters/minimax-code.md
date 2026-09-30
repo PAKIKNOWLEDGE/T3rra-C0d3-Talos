@@ -634,3 +634,17 @@ BYOK实际执行结果：显式provider保存且重读，--use选中默认，Cod
 Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成输出；PowerShell用调用运算符和显式exit $LASTEXITCODE，因此可验证子程序输出与7退出码。其余原head/tail/完整落盘/中断信号检查保留；未修改生产shell语义，也没有模拟POSIX权限。
 
 【未验】无真实模型复验；审批、Windows运行中取消、进程异常恢复、UI目视、原生POSIX与npm安装均不因此通过。首次46失败除本轮相关工具输出外未重跑。
+
+### ACP真实状态边界验证依据（2026-10-01）
+
+【源码】CLI20f67d9、0.5.7；使用安装SDK稳定入口1.3.0。完整路径 C:/DEV/develop/Talos-CLI/packages/tui/src/acp/stdio.ts:19-31使用ndJsonStream和单连接Agent；acp/agent.ts:278-303 load从持久化session取原cwd并校验、:1246-1260 session/cancel中止本地controller并调用coordinator.abort，prompt:1204-1210按运行结果返回cancelled/end_turn。
+【源码】C:/DEV/develop/Talos-CLI/packages/tui/src/acp/interactions.ts权限响应映射到Runtime审批动作；现有test/unit/acp-agent.test.ts:2269起使用fake Runtime，仅证实桥接。C:/DEV/develop/Talos-CLI/packages/agent-tools/src/desktop/builtin-defs.ts:56-71 write接受path/content；permission/src/tools/fs-permission.ts对.env敏感文件保护先于临时目录/工作区放行。以合成.env写入验证默认审批，不修改真实规则。
+【未验】当前fork真实SDK到stdio的审批文件效果、Windows session/cancel与跨进程load尚待本轮实测；独立npm安装、UI目视、引擎异常中断恢复不在此证据范围。
+
+【实测】2026-10-01，Windows Node24.15.0，CLI6ae1e07（WIP6cac9c0）现有test/byok.test.mjs新增真实stdio集成，稳定SDK1.3.0；完整文件2个集成通过、2个POSIX SIGINT专属跳过，类型、源码清单4277文件通过。未改生产Runtime，不重新构建相同源码，不请求真实模型。
+
+默认权限审批：合成workspace/.env写入请求由真实引擎提供options；deny新会话拒绝，文件不存在；另一个新会话使用提供的allow_once optionId，实际文件等于合成内容，不使用全局永久批准。streaming输出真实agent_message_chunk后session/cancel返回cancelled；pending write审批出现后cancel同样返回cancelled，目标.env.cancelled不存在。
+
+正常进程恢复：关闭stdin使第一个引擎EOF退出码0；启动新引擎重新initialize，同一sessionId错误cwd的load被拒绝，正确原cwd成功；load响应无新sessionId，原用户指令回放一次，下一prompt向fake provider携带历史。另加载取消的待审批会话并发送新prompt，不补写被取消文件。厂商网络尝试零、未知外网被阻止，models.dev目录为本地503模拟。
+
+【未验】这是正常EOF重启、stdio客户端和Runtime的证据，不代表UI点击或浏览器刷新验收。未覆盖运行中引擎崩溃、终端SIGINT、工具子进程回收、所有迟到审批竞态和跨代次事件污染；SDK反向审批尚未授权重复/永久选项。历史中断结局不得由本轮外推。
