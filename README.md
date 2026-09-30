@@ -365,3 +365,19 @@ node dist/cli.js update
 ```
 
 预期：真实 CLI/TUI 只读入口被构建；旧更新安装链进入输入图时检查拒绝。最后的命令只输出更新来源未配置和不自动安装，不启动安装器。检查结果与剩余失败见 status。
+
+## 源码主流程离线回归
+
+这是执行者的内部检查，主人无需配置模型、提供凭据或查看JSON。前置：引擎当前源码已构建，使用受支持Node；测试只启动临时本地fake provider和合成工作区。
+
+```powershell
+cd C:/DEV/develop/Talos-CLI
+$env:PATH="C:/Program Files/nodejs;$env:PATH"
+pnpm exec vitest run --config vitest.oss.config.mjs --maxWorkers 1 packages/agent-tools/test/desktop/local-bash-output.test.ts
+pnpm test:smoke
+pnpm test:byok
+pnpm typecheck
+pnpm check:source
+```
+
+预期：smoke验证启动和默认数据隔离；BYOK必须完整运行到回复、历史继续和真实文件读取回传，未配置模型不能回退；工具输出验证真实宿主命令、输出完整性及退出码。外网禁止，公开目录只在测试内返回离线响应，厂商服务请求为零。平台跳过与当前结果只见status，不以这些检查替代审批、Windows取消或用户UI验收。

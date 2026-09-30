@@ -610,3 +610,27 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 本节记录已有证据，不设角色审批。开关接线、数据隔离和专属登录退役的当前执行范围见 [plan](../plan.md#历史方案cli-中立化)，进度与下一入口见 [status](../status.md)。
 
 【实测，源码落地】Talos-CLI 提交 `c677a6925f32bb79e962c85259ab7fd5d69d51c9` 在 `packages/tui/src/cli/environment.ts:67-74` 将 `TALOS_NEUTRAL_RUNTIME=1` 写入 TUI 启动目标环境；同一函数仍设置显式 data dir、区域、构建环境和 managed 标记。该切片只改变启动时的配置 profile 选择：managed 运行不再自动种入或恢复 MiniMax 默认 provider，用户已有显式 provider 仍由配置层读取。它没有改默认目录 `.minimax`、没有阻止显式 `MINIMAX_DATA_DIR`、没有迁移或删除旧 home，也没有证明真实 provider、网络出口、工具或审批链路。
+
+### 主流程离线修复依据（2026-10-01）
+
+【源码】C:/DEV/develop/Talos-CLI 基点cf2a6fb，版本0.5.7；本轮修改前工作树干净。
+
+| 完整路径与行号 | 已确认事实及修复边界 |
+| --- | --- |
+| C:/DEV/develop/Talos-CLI/packages/tui/src/cli/environment.ts:70-74；runtime/data-dir.ts:21-29 | 启动设置TALOS_NEUTRAL_RUNTIME；默认home/.talos，profile后缀仍有效；测试不得继续期待.minimax默认继承 |
+| C:/DEV/develop/Talos-CLI/packages/tui/src/provider/application.ts:36-70；cli/provider-command.ts:181-200 | neutral不列OAuth、未配置列表为空；显式custom provider仍进入快照，结构化JSON可证明配置状态 |
+| C:/DEV/develop/Talos-CLI/test/byok.test.mjs:244-247,281-298,445-448 | 旧断言要求OAuth、默认MiniMax、厂商catalog尝试和登录错误，导致neutral闭环提前退出；必须改成不默认选择、不触发厂商请求与未配置模型拒绝，保留显式配置/回复/恢复/read结果断言 |
+| C:/DEV/develop/Talos-CLI/third_party/pi-mono/packages/coding-agent/src/utils/shell.ts:114-127；core/tools/bash.ts:249-312；packages/agent-tools/src/desktop/local-pi-tools.ts:380-391 | 真正shell来自getShellConfig，Windows优先PowerShell；quoted executable需要PowerShell调用语法。测试改用临时Node脚本和实际shell的命令构造，不改生产shell/权限，不mockPOSIX |
+| C:/DEV/develop/Talos-CLI/test/network-deny.mjs:1-49 | 子进程拦截fetch及socket，只有指定loopback允许；原厂商尝试独立记managed日志。neutral需同时检查外网拒绝和厂商尝试为零，保留审计 |
+
+【未验】修正后是否有后续生产问题待实际离线运行确认；真实provider、审批/取消、原生POSIX及独立npm安装不在本轮通过声明范围。
+
+【源码复核】models.dev不是厂商服务：provider-presets.client.ts:37-49 neutral直连公开目录、service.ts:65-73启动后台刷新，这是已有2026-09-30决定。本轮测试将精确目录URL的离线503响应/尝试记为catalog，managed保持厂商请求零断言，未知地址及socket仍拒绝。不改生产刷新策略。
+
+【实测】2026-10-01，CLI本地提交20f67d9（前置WIP38d53f3）：Node24.15.0下本轮完整smoke为20通过/1macOS权限用例跳过；BYOK为1完整集成通过/2POSIX取消用例跳过；local-bash-output为7/7。类型、源码清单4277文件、三个JS夹具语法通过。测试使用当前源码产物、本地HTTP假provider、临时cwd/dataDir/fake home，无真实账号/API模型请求。
+
+BYOK实际执行结果：显式provider保存且重读，--use选中默认，Coding endpoint回复、图像/effort序列化、默认文本回复、--continue带原用户marker、真实read-fixture文件内容进入tool消息，最后未配置模型被拒绝且未发送provider请求。断言读取运行时DB确认退役索引未创建；厂商managed请求始终零、未知网络请求拒绝。models.dev背景刷新被精确URL的本地503模拟，未真正出网。
+
+Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成输出；PowerShell用调用运算符和显式exit $LASTEXITCODE，因此可验证子程序输出与7退出码。其余原head/tail/完整落盘/中断信号检查保留；未修改生产shell语义，也没有模拟POSIX权限。
+
+【未验】无真实模型复验；审批、Windows运行中取消、进程异常恢复、UI目视、原生POSIX与npm安装均不因此通过。首次46失败除本轮相关工具输出外未重跑。
