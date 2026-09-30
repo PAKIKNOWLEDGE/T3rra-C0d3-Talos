@@ -1,5 +1,7 @@
 # T3rra-C0d3-Talos
 
+**操作索引，不是待办清单。** 只运行status当前任务需要的命令；后文已完成探针不应逐项重跑。当前修复入口见 [plan](docs/plan.md#下一小轮主题与语言回归修复)，源码/安装/用户验收结果统一见status。
+
 Talos 由两个仓库组成：这里维护 GUI 和产品文档；相邻 `C:\DEV\develop\Talos-CLI` 维护 mcode fork 的引擎与终端界面。项目现状只看 [status](docs/status.md)，往后做什么看 [plan](docs/plan.md)。本页仅作操作手册，不是要依次执行的任务清单。
 
 接手先读 [AGENTS.md](AGENTS.md) → [status.md](docs/status.md)。开发与文档协作方式见 [workflow.md](docs/workflow.md)。
@@ -410,3 +412,15 @@ pnpm check:source
 ```
 
 预期：运行中旧prompt随进程退出拒绝，新进程将遗留回合记为失败并释放占用；原cwd加载历史单份，不自动重发中断指令，下一条新指令可以完成，旧失败记录保持不变。四项过滤单测证明关联竞态处理逻辑，其余未选中不计通过；工具进程树和终端信号未由此验证。恢复定位文件与SQLite检查均使用临时合成数据，不需要主人提供凭据。
+
+## 主题与语言失败组的定向回归
+
+仅用于status F1/F2。使用受支持Node，在CLI源码根运行既有六文件；保留现有超时与断言，不运行真实模型。初次确认当前失败后，修复再复跑同一组；不将这条命令扩成全库扫描。
+
+```powershell
+cd C:/DEV/develop/Talos-CLI
+$env:PATH="C:/Program Files/nodejs;$env:PATH"
+pnpm exec vitest run --config vitest.oss.config.mjs --maxWorkers 1 packages/tui/test/unit/tui/theme/custom-themes.test.ts packages/tui/test/unit/tui/theme/palettes.test.ts packages/tui/test/unit/tui/theme/runtime.test.ts packages/tui/test/unit/tui/features/settings/theme-picker.test.ts packages/tui/test/unit/tui-session-history-flow.test.ts packages/tui/test/unit/tui-session-mutation-panels.test.ts
+```
+
+预期验证实际默认/兼容/取消恢复与指定语言的历史操作；不接受单纯删除失败断言。语义与视觉要求见plan，真实结果只在status更新。

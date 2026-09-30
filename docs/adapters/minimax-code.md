@@ -355,7 +355,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 【既有报告，Astra 读取】r1 临时报告 `talos-permission-posix-targeted-r1.json` 仅用于说明未完成模拟：152个登记用例中8通过、1失败、143未选；失败在 POSIX off-mode 回收改写的 executionPlan.transforms 精确路径断言（当时测试行579）。r2 已撤销模拟 stat 和依赖用例；该报告不再作为当前通过证据。没有取得原生 Linux/macOS 测试；生产 facade/脚本未因本轮平台纠偏修改。
 
-【复核结论】r1 mock 不再扩展为 Windows 上的 POSIX 模拟层。Luna 已精确撤销 stat 接线和依赖其通过的 Windows 反向用例，保留独立 cwd 修正；后续Windows权限入口已保留真实chmod的原生坏脚本用例，其原生结果仍待验证。当前 Windows 失败清单需按平台归因，不能全部称产品缺陷或全部忽略；执行范围见 [plan](../plan.md#历史方案posix-回收脚本平台夹具)。
+【复核结论】r1 mock 不再扩展为 Windows 上的 POSIX 模拟层。Luna 已精确撤销 stat 接线和依赖其通过的 Windows 反向用例，保留独立 cwd 修正；后续Windows权限入口已保留真实chmod的原生坏脚本用例，其原生结果仍待验证。当前 Windows 失败清单需按平台归因，不能全部称产品缺陷或全部忽略；执行范围见 [plan](../archive/2026-10-01/plan-before-scope-reset.md#历史方案posix-回收脚本平台夹具)。
 
 【未验】主人另一台类 Unix 机器的 OS/架构、文件系统、Node 和原生测试结果未知；Linux 与 macOS 不互相替代验收。Git Bash 探针没有执行真实删除，不能证明回收站后端功能。
 
@@ -365,7 +365,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 【源码】`packages/agent-modules/permission/src/tools/fs-permission.ts:1024-1045,1076-1107` 精确写入目标允许；temp 便利仅作用于 READ_ONLY_TOOLS，普通写入仍查工作区/允许路径/用户规则。`tools/fs-checker.ts:46-73` 依据目标与上下文调用路径权限。修正应明确测试的会话 cwd，让 dataDir 路径真正位于 cwd 外；保留生产 fallback 和原 ask/allow 断言，不能用改生产权限迎合错误夹具。
 
-【源码与实测，离线】同一 HEAD 工作树，仅 `packages/local-runtime/test/unit/local-permission-facade.test.ts` 增加 sessionWorkspaceDir 测试注入：普通 dataDir 写入目标与选定 cwd 不重叠，default/auto 返回 ask；回合精确 plan.md 返回 allow，相邻 .bak 与撤销精确授权后的原目标返回 ask，不持久化规则。另设无 session/agent 工作区的 home 目标，固定原生产 fallback 及工作区允许行为；六项对照全部通过。完整套件逐名称确认仅删除原两项失败，没有新增或跳过；实际数字和剩余问题见 [status](../status.md#当前技术收口缺口权限-facade-13项剩余失败)。
+【源码与实测，离线】同一 HEAD 工作树，仅 `packages/local-runtime/test/unit/local-permission-facade.test.ts` 增加 sessionWorkspaceDir 测试注入：普通 dataDir 写入目标与选定 cwd 不重叠，default/auto 返回 ask；回合精确 plan.md 返回 allow，相邻 .bak 与撤销精确授权后的原目标返回 ask，不持久化规则。另设无 session/agent 工作区的 home 目标，固定原生产 fallback 及工作区允许行为；六项对照全部通过。完整套件逐名称确认仅删除原两项失败，没有新增或跳过；实际数字和剩余问题见 [status](../status.md#已知失败清单)。
 
 【未验】本轮未修改权限生产逻辑，没有执行合成写入命令；不代表完整权限套件、home 信任范围或数据隔离已收口。
 
@@ -384,7 +384,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 【源码与实测，离线】同 HEAD 的后续工作树，`packages/agent-modules/permission/src/classifier/cloud-classify-client.ts:62` neutral 不启用 cloud classifier；`src/http-cloud-gateway-client.ts:57-59` 直调在 request/context/token/fetch 前返回原 `kind:timeout`、`cloud:unavailable`，而非 allow。`packages/local-runtime/src/permissions/facade.ts:813-821` 仍走既有 baseAsk，不改变核心规则/审批；`packages/tui/src/tui/features/interaction/permission-mode-picker.ts:122-127` Auto 的 neutral 说明为 `Local checks; confirm uncertain actions`。
 
-【实测，离线】managed=true、neutral 下用 engine/core 两种 owner 检查合成 `npm publish`（不执行），假 gateway 即便会 allow 也未调用；本地显式 allow、deny 和危险根删除拒绝仍生效。直调分类器无 request 属性或 token 读取、无 fetch；非 neutral 仍按原协议解析 fake allow。完整权限 facade 新发现的既有失败已做仅撤回本轮改动的同环境对照，比较后原字节恢复；失败清单和检查结果只见 [status](../status.md#当前技术收口缺口权限-facade-13项剩余失败)，没有据此宣称权限全量通过。
+【实测，离线】managed=true、neutral 下用 engine/core 两种 owner 检查合成 `npm publish`（不执行），假 gateway 即便会 allow 也未调用；本地显式 allow、deny 和危险根删除拒绝仍生效。直调分类器无 request 属性或 token 读取、无 fetch；非 neutral 仍按原协议解析 fake allow。完整权限 facade 新发现的既有失败已做仅撤回本轮改动的同环境对照，比较后原字节恢复；失败清单和检查结果只见 [status](../status.md#已知失败清单)，没有据此宣称权限全量通过。
 
 【未验】未跑真实云分类或模型；Auto 新说明未做真实终端目视。尚未列完所有厂商出口，旧 home 技能信任路径及完整隔离另轮核对。
 
@@ -607,7 +607,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 | 【源码】 | `packages/tui/src/application/login-gate.ts:24-38`；`packages/tui/src/tui/features/provider/onboarding.ts:361,420,649,681` | BYOK/custom provider 可走原生 `/provider`，不要求 MiniMax 登录；managed MiniMax 模型仍有自己的登录门禁 | Talos 首版要隐藏、禁用还是保留 MiniMax 专属入口；第三方真实网络与完整 ACP 工具链 |
 | 【实测，继承上一轮记录】 | `provider-application` targeted Vitest `19/19`；配置离线回归 `7/7`；使用 `vitest.oss.config.mjs`、Node `v24.15.0` | 排序、根级 `custom_provider`、URL/合成 key/模型/defaultModel 重读，以及 managed+neutral 不复制 fake home 的行为已有可复跑离线证据 | non-managed+neutral 仍会继承 fake home；这是一项隔离缺口证据，不是隔离通过；未证明真实模型、审批、取消、load 或网络出口 |
 
-本节记录已有证据，不设角色审批。开关接线、数据隔离和专属登录退役的当前执行范围见 [plan](../plan.md#历史方案cli-中立化)，进度与下一入口见 [status](../status.md)。
+本节记录已有证据，不设角色审批。开关接线、数据隔离和专属登录退役的当前执行范围见 [plan](../archive/2026-10-01/plan-before-scope-reset.md#历史方案cli-中立化)，进度与下一入口见 [status](../status.md)。
 
 【实测，源码落地】Talos-CLI 提交 `c677a6925f32bb79e962c85259ab7fd5d69d51c9` 在 `packages/tui/src/cli/environment.ts:67-74` 将 `TALOS_NEUTRAL_RUNTIME=1` 写入 TUI 启动目标环境；同一函数仍设置显式 data dir、区域、构建环境和 managed 标记。该切片只改变启动时的配置 profile 选择：managed 运行不再自动种入或恢复 MiniMax 默认 provider，用户已有显式 provider 仍由配置层读取。它没有改默认目录 `.minimax`、没有阻止显式 `MINIMAX_DATA_DIR`、没有迁移或删除旧 home，也没有证明真实 provider、网络出口、工具或审批链路。
 
@@ -662,3 +662,11 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 实际状态集成1/1通过（名称过滤仅执行新增相关集成，未重复整个BYOK文件）；四项ACP假Runtime竞态通过，101项未选中不是平台跳过或已通过：迟到授权在连接关闭后拒绝、过期审批撤销、忽略取消交互的连接关闭、history读取挂起的load取消。类型和源码清单4277文件通过，未修改生产代码。
 
 【未验】强制终止发生于纯文本流式模型请求，未执行工具子进程；不能外推工具树回收、终端Ctrl+C、待审批崩溃、主机掉电或PID复用。DB failed是重启恢复分类，不是获取了崩溃前模型的最终stopReason。没有承诺跨进程不断流或自动重发。
+
+### 继承模块专项准入复核（2026-10-01）
+
+【源码/Git只读】CLI HEAD 19c9571，相对改造基点8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4，以下选定路径无diff：C:/DEV/develop/Talos-CLI/packages/agent-tools/src/desktop/local-pi-tools.ts、local-bash-timing.ts；packages/agent-core/src/bash-subprocess-env.ts；third_party/pi-mono/packages/coding-agent/src/core/tools/bash.ts、utils/shell.ts；packages/local-runtime/src/background-task目录。此结论限于列出的文件及基点，不是全仓无改动/无间接影响证明。
+
+【源码/Git只读】CLI20f67d9至19c9571仅向test/byok.test.mjs新增283行，没有生产文件变更。已保存审批/取消/恢复集成仍有回归价值，但缺少新故障或具体影响链时，不据“未覆盖工具回收”继续派生专项。已有local-bash-output失败已按真实宿主夹具修复；其它实际失败依status处理，不能据本项豁免。
+
+【未验】本轮没有新增运行验证，不证明工具生命周期所有场景正确；取消专项是执行优先级纠偏，正常既有适用回归与包安装验证继续保留。
