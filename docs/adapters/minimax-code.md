@@ -648,3 +648,17 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 正常进程恢复：关闭stdin使第一个引擎EOF退出码0；启动新引擎重新initialize，同一sessionId错误cwd的load被拒绝，正确原cwd成功；load响应无新sessionId，原用户指令回放一次，下一prompt向fake provider携带历史。另加载取消的待审批会话并发送新prompt，不补写被取消文件。厂商网络尝试零、未知外网被阻止，models.dev目录为本地503模拟。
 
 【未验】这是正常EOF重启、stdio客户端和Runtime的证据，不代表UI点击或浏览器刷新验收。未覆盖运行中引擎崩溃、终端SIGINT、工具子进程回收、所有迟到审批竞态和跨代次事件污染；SDK反向审批尚未授权重复/永久选项。历史中断结局不得由本轮外推。
+
+### 引擎异常退出恢复依据（2026-10-01）
+
+【源码】C:/DEV/develop/Talos-CLI 基点6ae1e07，0.5.7。turn-system/initialize.ts:328-417的恢复协调器调用repository.recoverProcessRestart，随后执行session recovery；persistence/turn-lease-recovery.ts:110-161依据lease owner存活判定，旧owner已死释放会话锁，:170-185产生outcome failed、reason process-restart。:261-286将旧accepted ingress更新failed/completedAtMs。infra/db/schema/turn.ts:20-49记录accepted/completed/failed/aborted，不存在推断成功。
+【源码】C:/DEV/develop/Talos-CLI/packages/tui/src/acp/agent.ts:1702-1722 load从持久化会话获取原cwd，错误cwd拒绝。既有packages/tui/test/unit/acp-agent.test.ts:2466起保护关闭后迟到授权；:5643起撤销过期审批，:5692起关闭忽略取消的交互，:6116起load历史挂起时取消立即失败。上述使用fake Runtime，不替代真实进程重启证据。
+【未验】本轮尚未实际强制结束引擎；仅会操作夹具自己的child PID，不批量杀进程、无工具子进程。不能以SDK连接错误确定崩溃前模型回合原始结局；新进程failed是恢复分类。
+
+【实测】2026-10-01，CLI19c9571（WIP95ee1d1），Windows Node24.15.0。本轮扩展既有test/byok.test.mjs真实SDK/stdio/fake-provider场景：收到实际stream chunk并确认DB turn为accepted后，仅对夹具自己child执行SIGKILL；旧ACP prompt以连接错误拒绝，没有end_turn响应。
+
+启动新引擎后同一个turn_id记录变failed且completed_at_ms非空，会话占用锁为零；load使用原cwd，旧用户指令只回放一份。重启/load不自动发送中断prompt；新prompt成功，DB保持原failed回合并新增不同turn_id的completed回合。已关闭旧客户端不收到新进程事件。原拒绝/批准/正常取消/load场景一并复验通过。
+
+实际状态集成1/1通过（名称过滤仅执行新增相关集成，未重复整个BYOK文件）；四项ACP假Runtime竞态通过，101项未选中不是平台跳过或已通过：迟到授权在连接关闭后拒绝、过期审批撤销、忽略取消交互的连接关闭、history读取挂起的load取消。类型和源码清单4277文件通过，未修改生产代码。
+
+【未验】强制终止发生于纯文本流式模型请求，未执行工具子进程；不能外推工具树回收、终端Ctrl+C、待审批崩溃、主机掉电或PID复用。DB failed是重启恢复分类，不是获取了崩溃前模型的最终stopReason。没有承诺跨进程不断流或自动重发。

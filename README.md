@@ -395,3 +395,18 @@ pnpm check:source
 ```
 
 完整BYOK文件包含原第三方对话闭环和新增真实SDK/stdio状态闭环；预期审批拒绝不写、引擎提供的临时批准实际写入合成内容，运行中/待审批取消得到权威终态，新进程load保持原cwd和单份历史并可继续。所有模型响应来自临时loopback假provider，外网被拦截，只清理测试自身进程/目录。POSIX信号专属用例在Windows明确跳过；异常崩溃及终端操作仍须另行验证，结果以status为准。
+
+## 引擎异常退出与恢复的定向检查
+
+内部检查，仅强制结束测试自己创建的引擎进程；不操作用户服务。使用已构建的当前CLI源码产物及Node24：
+
+```powershell
+cd C:/DEV/develop/Talos-CLI
+$env:PATH="C:/Program Files/nodejs;$env:PATH"
+node --test --test-name-pattern="ACP real Runtime" test/byok.test.mjs
+pnpm exec vitest run --config vitest.oss.config.mjs --maxWorkers 1 packages/tui/test/unit/acp-agent.test.ts -t "fails a pending permission closed|cancels a stale ACP permission|closes the connection when terminated Client|fails a cancelled load immediately"
+pnpm typecheck
+pnpm check:source
+```
+
+预期：运行中旧prompt随进程退出拒绝，新进程将遗留回合记为失败并释放占用；原cwd加载历史单份，不自动重发中断指令，下一条新指令可以完成，旧失败记录保持不变。四项过滤单测证明关联竞态处理逻辑，其余未选中不计通过；工具进程树和终端信号未由此验证。恢复定位文件与SQLite检查均使用临时合成数据，不需要主人提供凭据。
