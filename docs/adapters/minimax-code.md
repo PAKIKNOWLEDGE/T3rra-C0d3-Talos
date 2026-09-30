@@ -355,7 +355,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 【既有报告，Astra 读取】r1 临时报告 `talos-permission-posix-targeted-r1.json` 仅用于说明未完成模拟：152个登记用例中8通过、1失败、143未选；失败在 POSIX off-mode 回收改写的 executionPlan.transforms 精确路径断言（当时测试行579）。r2 已撤销模拟 stat 和依赖用例；该报告不再作为当前通过证据。没有取得原生 Linux/macOS 测试；生产 facade/脚本未因本轮平台纠偏修改。
 
-【复核结论】r1 mock 不再扩展为 Windows 上的 POSIX 模拟层。Luna 已精确撤销 stat 接线和依赖其通过的 Windows 反向用例，保留独立 cwd 修正；后续Windows权限入口已保留真实chmod的原生坏脚本用例，其原生结果仍待验证。当前 Windows 失败清单需按平台归因，不能全部称产品缺陷或全部忽略；执行范围见 [plan](../plan.md#当前小轮posix-回收脚本平台夹具)。
+【复核结论】r1 mock 不再扩展为 Windows 上的 POSIX 模拟层。Luna 已精确撤销 stat 接线和依赖其通过的 Windows 反向用例，保留独立 cwd 修正；后续Windows权限入口已保留真实chmod的原生坏脚本用例，其原生结果仍待验证。当前 Windows 失败清单需按平台归因，不能全部称产品缺陷或全部忽略；执行范围见 [plan](../plan.md#历史方案posix-回收脚本平台夹具)。
 
 【未验】主人另一台类 Unix 机器的 OS/架构、文件系统、Node 和原生测试结果未知；Linux 与 macOS 不互相替代验收。Git Bash 探针没有执行真实删除，不能证明回收站后端功能。
 
@@ -572,6 +572,23 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 保留该成功反馈，不要求主人重测。它不覆盖 fork 工具执行、取消、load/继续、审批及网络出口隔离；已安装 CLI 的第 2 轮 ACP 证据仍按前文范围有效。
 
+### CLI发行完成度复核（2026-10-01）
+
+【源码】复核基点 C:/DEV/develop/Talos-CLI HEAD cf2a6fb，版本0.5.7。此轮只读，不运行模型、registry、安装或全库测试。
+
+| 完整路径与行号 | 能证明的事实 |
+| --- | --- |
+| C:/DEV/develop/Talos-CLI/test/byok.test.mjs:244-247 | 配置add/list之后硬性断言minimax-oauth存在；neutral产品已删除该入口，已有失败日志在这里停止，不能据此判定后续模型或恢复失败 |
+| C:/DEV/develop/Talos-CLI/test/smoke.test.mjs:69-103,177-195 | 默认目录断言仍为.minimax，provider输出检查仍期待minimax；与既定neutral默认冲突 |
+| C:/DEV/develop/Talos-CLI/packages/agent-tools/test/desktop/local-bash-output.test.ts:31-58 | 测试使用printf和POSIX式quoted executable命令；已有Windows日志为PowerShell ParserError。须用真实宿主夹具核对，不足以认定输出截断算法损坏 |
+| C:/DEV/develop/Talos-CLI/scripts/package-cli-release.mjs:55-71 | 发行manifest仍为@minimax-ai/code、private:true、MiniMax仓库地址；talos bin正确，但不足以构成自己的npm发布包 |
+| C:/DEV/develop/Talos-CLI/scripts/build.mjs:83-84,129-131 | 构建仍生成mcode-tools/matrix-mcp入口并复制工具资源；运行阻断不等于发行资源审查完成 |
+| C:/DEV/develop/Talos-CLI/scripts/verify-cli-release.mjs:14,40-49；scripts/lib/cli-release.mjs:30-32 | 包验证只接受Linux/macOS，并用旧包安装目录/POSIX启动器；Windows安装证据欠缺 |
+| C:/DEV/develop/Talos-CLI/scripts/publish-cli-release.mjs:29-61 | 旧发布脚本生成上游包名/共享数据/内置更新文案并调用GitHub release；不能当作已经具备自己的npm发布流水线 |
+
+【既有日志，非本轮实测】2026-10-01 capability的46失败按首个失败症状归类：品牌文案10、语言预期14、主题契约14、路径/shell/WSL8；这是故障定位线索，不证明修改断言后一定通过，也不是46个生产缺陷。smoke/BYOK在旧契约处提前退出；Windows旧更新器测试与当前产品方向不符，卷探测根因未核实。实际最新结果只在status记录。
+
+【未验】自己的npm候选包、安装升级卸载、新版检测、全部主流程与原生POSIX；本轮未新增任何通过结果。
 ## 记录格式与纪律
 
 每项包含：源码 commit + path:line → 请求/响应或通知形状 → 内部事件/字段映射 → 缺失与有损处理 → 可重跑脚本和脱敏 trace → 仍未覆盖的边界。先写源码依据，再测行为；只见报文不足以推导所有语义。
@@ -590,6 +607,6 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 | 【源码】 | `packages/tui/src/application/login-gate.ts:24-38`；`packages/tui/src/tui/features/provider/onboarding.ts:361,420,649,681` | BYOK/custom provider 可走原生 `/provider`，不要求 MiniMax 登录；managed MiniMax 模型仍有自己的登录门禁 | Talos 首版要隐藏、禁用还是保留 MiniMax 专属入口；第三方真实网络与完整 ACP 工具链 |
 | 【实测，继承上一轮记录】 | `provider-application` targeted Vitest `19/19`；配置离线回归 `7/7`；使用 `vitest.oss.config.mjs`、Node `v24.15.0` | 排序、根级 `custom_provider`、URL/合成 key/模型/defaultModel 重读，以及 managed+neutral 不复制 fake home 的行为已有可复跑离线证据 | non-managed+neutral 仍会继承 fake home；这是一项隔离缺口证据，不是隔离通过；未证明真实模型、审批、取消、load 或网络出口 |
 
-本节记录已有证据，不设角色审批。开关接线、数据隔离和专属登录退役的当前执行范围见 [plan](../plan.md#当前小轮cli-中立化)，进度与下一入口见 [status](../status.md)。
+本节记录已有证据，不设角色审批。开关接线、数据隔离和专属登录退役的当前执行范围见 [plan](../plan.md#历史方案cli-中立化)，进度与下一入口见 [status](../status.md)。
 
 【实测，源码落地】Talos-CLI 提交 `c677a6925f32bb79e962c85259ab7fd5d69d51c9` 在 `packages/tui/src/cli/environment.ts:67-74` 将 `TALOS_NEUTRAL_RUNTIME=1` 写入 TUI 启动目标环境；同一函数仍设置显式 data dir、区域、构建环境和 managed 标记。该切片只改变启动时的配置 profile 选择：managed 运行不再自动种入或恢复 MiniMax 默认 provider，用户已有显式 provider 仍由配置层读取。它没有改默认目录 `.minimax`、没有阻止显式 `MINIMAX_DATA_DIR`、没有迁移或删除旧 home，也没有证明真实 provider、网络出口、工具或审批链路。

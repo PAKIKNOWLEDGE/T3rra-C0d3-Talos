@@ -2,6 +2,26 @@
 
 本页只讲往哪里走和本轮如何做；实际进度、验收与授权以 [status](status.md) 为准。先保存现有源码的本地 WIP 恢复点，再核验和修复；测试失败不阻止保存。当前小轮以 status 为准，不开展路线表的新功能。未来路线不自动生成执行任务，完成一个小轮后停在对应验收点。
 
+## 当前发行路线（Astra复核）
+
+2026-10-01收紧：目标仍是Talos CLI预览版，保留已验收TUI，GUI暂停。源码运行、源码验收与npm发行是不同里程碑；不再把测试失败数当剩余功能数，也不按一个断言拆一轮。下方历史方案仅供追溯，status与本节是当前入口。
+
+| 交付块 | 必须拿到的结果 | 范围与停止点 |
+| --- | --- | --- |
+| A. 可验收的CLI源码基线 | fake provider配置、回复、工具结果与历史恢复的实际证据；默认数据隔离和权限保证保留 | 先完成下一小轮。随后将旧品牌/语言/主题及宿主夹具按契约集中校准；已退役更新器不修活。发现生产缺陷按真实因果定位，不扩大为重做TUI或实现替代云功能 |
+| B. Talos自己的可安装候选包 | 单一包身份/版本/bin；厂商资源与依赖许可清单；受支持Windows临时prefix安装、启动、离线对话、升级和卸载；自己的只读新版提醒 | 复用现有构建/打包工程，纠正上游manifest和平台假设；包名/版本向主人确认，不能推断npm scope。网络依赖获取如有需要单独说明，模型调用不是安装验证前提。保留类Unix原生权限另机验证，不安装WSL |
+| C. 发布候选验收 | 同一候选源码/包的适用检查结论、文档与限制说明、主人看到明确可用的CLI体验 | 集中跑发行适用检查，解决剩余阻塞后由主人发布；不以预览版豁免权限/隔离/许可/安装。未验证平台不宣传支持，平台范围变化须主人确认 |
+
+A/B/C是交付块而非承诺只需三轮或预估工期。不得为了检查全绿重建MiniMax登录、默认provider、旧安装器或云工具；也不得把真实核心/平台失败全部叫作旧测试。源码改动前保留本地Git基点，失败也WIP保存。搜索后置、GUI/Tauri暂停、手动npm升级等已有决定不变。
+
+## 下一小轮：源码主流程离线验收
+
+任务 cli-core-acceptance/r1。替换上一入口的“单独修主题测试”。Luna自主执行，无需Astra再写实现计划。
+
+- 复用现有 test/smoke.test.mjs、test/byok.test.mjs 及本地假provider/网络隔离夹具。先读源码确认 neutral 默认无MiniMax OAuth、空provider列表、.talos默认目录；将旧默认身份断言替换为对应正反例，保留显式custom provider、凭据隔离和禁止外网断言。
+- BYOK必须实际执行到配置读取、模型响应、工具结果和恢复断言；在OAuth断言前退出不算验证。Windows命令夹具按真实宿主构造，不mock出POSIX权限，也不要求用户安装WSL。
+- 本轮只跑受影响smoke/BYOK与必要类型/边界检查；若暴露生产故障，修第一条与该闭环有关的因果链，不能顺手清全库。不得只批量改字符串让测试变绿。
+- 验收交付是“哪些完整流程已实际验证、剩余失败在哪”，技术由Luna判断，保存本地提交即停；不让主人看JSON、不调用真实模型、不发布。未跑到的工具/恢复/取消明确保留未验。
 ## 已交付小轮：只读更新构建契约
 
 任务 cli-update-build-boundary/r1。复用已退役更新器的产品行为，只修构建检查与回归。修改前使用现有干净本地提交作为恢复点。
@@ -88,7 +108,7 @@ Talos 不走上游内置安装器。后续版本通过独立 npm 包发布；客
 
 执行范围：`Talos-CLI/package.json`、`scripts/build.mjs`、`scripts/package-cli-release.mjs`、发行验证脚本及对应离线测试。验收是构建产物和发行 manifest 只有 `talos` bin，版本命令可由 `talos` 启动；内部 MiniMax 包名与许可证暂不在本轮改写。完成后进入主人可见的 CLI 命令验收，再决定下一轮数据/provider 边界。
 
-## 当前小轮：CLI 中立化
+## 历史方案：CLI 中立化
 
 任务 `cli-provider-data-audit/r2`。Luna 按已确定的“第三方 provider 平级、移除可用的 MiniMax 专属登录与意外回退、Talos 数据与原版隔离”目标，复用已有证据，补必要源码并自行拆一个最小代码轮；不重复完整调查或真实模型请求。下一次主人要求继续时，可在同一轮更新局部方案并实施，无需再经过 Astra 的取证审批。
 
@@ -103,7 +123,7 @@ Luna 需要落实的局部问题：
 
 验收与停止：本切片验收只确认 Talos 启动会设置中立开关，不能把它称为完全中立化或数据隔离完成。主人可用现有 Talos 启动入口观察 provider 初始状态；完成本切片后停。只有实施必然要求改变数据格式/恢复保证、协议或安全契约时才按 workflow 升级；目录命名、开关接线、普通回归问题无需 Astra。
 
-## 当前小轮：provider 入口与构建身份
+## 历史方案：provider 入口与构建身份
 
 任务 `cli-provider-neutral-ui/r3`。目标是修复空配置时 `/provider` 看起来像 MiniMax 独占，以及本地构建仍把自己称为 MiniMax Code 的可见问题。第三方预设和 Custom provider 已存在于原生 onboarding，本轮把入口接回 provider 管理页，不重写 provider 协议或凭据逻辑。
 
@@ -115,7 +135,7 @@ Luna 需要落实的局部问题：
 | 主人验收 | 从 `C:\DEV\develop\Talos-CLI` 用支持的 Node 24 执行 `pnpm build`；启动 `pnpm talos`，输入 `/provider`；首行应见 `+ Add provider`，按 Enter 或 `a` 后应见官方预设列表和 `Custom provider`。MiniMax 可作为一个 provider 行存在，但不能再是唯一配置入口 |
 | 停止 | 通过后停；下一轮再处理默认数据目录、专属登录门禁或发行 manifest，不把本轮入口修复称为完全去 MiniMax 化 |
 
-## 当前小轮：provider catalog parity
+## 历史方案：provider catalog parity
 
 任务 `cli-provider-catalog-parity/r5`。目标是让 `/provider` 首屏真正呈现中立目录：MiniMax 作为一个正常 preset 与 DeepSeek、Z.AI 等其他厂商同层，Custom provider 作为同一目录中的开放式兜底入口保留；已配置连接从目录内的明确入口进入。
 
@@ -151,13 +171,13 @@ Luna 需要落实的局部问题：
 | 主人验收 | 这是内部隔离闸，由 Luna 用假 home 自验并报告实际路径与测试结果；不要求主人查看配置 JSON 或消耗真实 provider 请求 |
 | 停止 | 证明“默认目录独立 + 非 managed 不继承 + 显式覆盖和重读仍可用”后停；专属登录退役、网络出口与 npm 发行另开小轮 |
 
-## 当前小轮：MiniMax 专属账号入口退役
+## 历史方案：MiniMax 专属账号入口退役
 
 任务 `cli-neutral-auth-entry/r1`。MiniMax 保留为可选的普通 API Key provider；Talos 不提供 MiniMax 账号 OAuth、Token Plan 和依赖该账号的签到入口。第三方 provider 的认证方式保持可用。
 
 本轮依据见 [接驳证据](adapters/minimax-code.md#talos-专属登录入口2026-09-29)。CLI `login` / `acp login`、TUI `/login`、provider 管理页的 OAuth 行、`provider use token-plan` 与 `/checkin` 必须退出可用入口；旧命令需明确告知改走 `/provider`，不能误发模型或打开授权页。用离线回归验证入口和普通 provider 仍可用，再跑类型、构建和源码清单。用户可见行为交给主人审批后停；网络出口、底层模块清理及发行另开轮次。
 
-## 当前小轮：provider 预设目录出口中立化
+## 历史方案：provider 预设目录出口中立化
 
 任务 `cli-neutral-preset-egress/r1`。依据见 [接驳证据](adapters/minimax-code.md#talos-预设目录网络出口2026-09-30)。Talos 中立运行时，CN/EN 官方预设刷新均直接访问 `models.dev`，不访问 MiniMax descriptor/镜像；排序用本地区域默认值，不请求 MiniMax `common_config`。离线缓存继续可用；旧镜像图标地址和跨来源 ETag 不传给直连路径。非 neutral 兼容路径不变。
 
@@ -194,7 +214,7 @@ Luna 需要落实的局部问题：
 - 用既有 privacy 测试注入 fetch：验证配置全开、排队后变为 neutral、旧待发送诊断不上传、本地诊断仍存在；保留非 neutral 原有测试，证明不靠删除功能让检查通过。
 - 相关单测、类型、源码清单、构建及文档检查已完成，结果见 [status](status.md)。此轮到此停；反馈、云工具/插件、权限分类服务等不属于本切片，不做真实网络、模型或数据迁移。
 
-## 当前小轮：上游反馈上传退役
+## 历史方案：上游反馈上传退役
 
 任务 `cli-neutral-feedback-egress/r1`。原生反馈绑定上游账号、feedback ticket 与日志 presign/PUT，本轮在 neutral 模式关闭这条链，保留本地诊断；没有自己的反馈服务时不假造“已发送”或新后端。
 
@@ -242,7 +262,7 @@ Luna 需要落实的局部问题：
 - 普通 dataDir 写入与精确计划目标边界分别测试 default/auto：外部普通目标 ask，显式精确目标 allow，相邻 .bak ask，不写入长期规则。对照无会话配置的 home fallback，固定平台前提，不盲调 tmpdir 路径或放宽断言。
 - 两项修正与正反对照通过，并完整重跑 facade，逐名称确认仅减少指定失败；类型、源码清单、diff与文档检查通过。本轮到此停，剩余失败及下一入口只见 [status](status.md#当前技术收口缺口权限-facade-13项剩余失败)，不扩大为全权限通过。
 
-## 当前小轮：POSIX 回收脚本平台夹具
+## 历史方案：POSIX 回收脚本平台夹具
 
 任务 `cli-permission-posix-fixtures/r2`，Astra 于 2026-09-30 按主人环境条件纠偏。Windows 主机继续承担 Windows 开发；主人另有一台类 Unix 机器，不要求安装 WSL。该机具体 OS、架构、Node 版本与接入方式尚未核对，不能预先称它可验证 Linux/macOS 全部平台。
 
