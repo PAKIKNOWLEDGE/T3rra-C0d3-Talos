@@ -92,4 +92,4 @@ origin为自有Talos仓库，upstream为只读官方公开来源。上游PR遵�
 
 ## 本次已批准上游修复
 
-主人批准#199、#388、#410的用户字面文本部分。按现有[选择性接收工作流](workflow.md#选择性接收上游-pr)实施并收main；不引入#410 stale-run机制、不升级上游版本、不发npm。剩余候选仅记在status待复看，具体证据在adapter。
+主人批准#199、#388、#410的用户字面文本部分。已按现有[选择性接收工作流](workflow.md#选择性接收上游-pr)实施并收main，准确结果见status；不引入#410 stale-run机制、不升级上游版本、不发npm。剩余候选仅记在status待复看，具体证据在adapter。

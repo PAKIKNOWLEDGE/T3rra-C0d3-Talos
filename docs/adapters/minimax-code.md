@@ -774,4 +774,6 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 
 建议本次批准范围若主人认可：#199、#388、#410文字部分；不是执行授权，不合任何代码。#381大范围后台stop、#379终端队列与#376hook正文暂不追加本轮范围；纯版本PR与已撤回滚动补丁不接。
 
-【本轮实施依据，2026-10-02】Talos c7adea2，主人批准#199/bf3916f、#388/67a5c2a、#410/5683465的literal-text、view、panel与文字回归。采用官方PR逐文件补丁；#410 runtime-event-flow、observability和stale-run测试不纳入。保留供应商账本，新增HTTP/字面文本回归登记现有capability清单；不改变extraction.sourceRevision。实测结果待本轮完成填写。
+【本轮实施依据，2026-10-02】Talos c7adea2，主人批准#199/bf3916f、#388/67a5c2a、#410/5683465的literal-text、view、panel与文字回归。采用官方PR逐文件补丁；#410 runtime-event-flow、observability和stale-run测试不纳入。保留供应商账本，新增HTTP/字面文本回归登记现有capability清单；不改变extraction.sourceRevision。实测结果如下。
+
+【实测，2026-10-02，953cb94】已批准补丁应用后，6个受影响测试文件513通过，包括7个本机HTTP/SDK compaction检查、错误清理边界、原样用户文字/面板/待发送消息回归。现有full15Windows适用闸PASS：capability5026通过/61跳过，Windows4/4、权限147通过/15POSIX跳过、status11/11、smoke20通过/1macOS跳过、BYOK2通过/2POSIX跳过；source4285。原作者DanielWalnut经官方commits API核对，移植commit coauthor和PR SHA保留。main/origin均953cb94，临时分支清理；未运行真实provider/Unix或发布新npm。用户注册表Path前后一致，模拟终端测试不等于主人目视验收。

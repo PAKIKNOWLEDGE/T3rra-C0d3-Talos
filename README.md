@@ -566,3 +566,19 @@ talos
 ```
 
 本机npm11.12.1实测不识别--allow-scripts，不能将它作为安装前提；保留ignore-scripts=false和include=optional。prebuild-install弃用警告不是本次致命错误；失败后cleanup EPERM是回滚警告，实际npm重装成功，无手动删除目录。
+
+
+### 本轮源码体验：选择性上游修复
+
+CLI main953cb94包含三项已批准修复；npm0.1.0尚不含这些变更。本机源码已由本轮full检查构建，无需重复build即可打开：
+
+```powershell
+cd C:/DEV/develop/Talos-CLI
+pnpm start
+```
+
+1. 打开源码TUI → 沿用已验收欢迎构图和现有provider；不重新配置模型。
+2. 可选在正常工作时发送包含__文件名__、星号或>符号的文字 → 用户消息保持字面，不被当Markdown改写；发送真实请求会按现有provider计费，本轮不要求额外付费验收。
+3. 打开/transcript → 同一用户文字也按字面显示。若正常工作中遇到失败并重试成功，旧回合临时错误不再残留；无需人为制造失败。
+
+压缩请求不含空tools及错误清理边界已由离线技术检查核验，不交给主人看JSON。启动命令沿用源工程pnpm；真实provider兼容性与手动文字体验未冒称通过。
