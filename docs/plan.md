@@ -39,13 +39,13 @@
 
 ## 待主人确认及平台验收
 
-无人值守独立工作已完成至本地可安装候选。环境纠偏完成后，发行仍待以下事项：包名已确认@pakiknowledge/tal0s-code；独立首发版本/标签、另一类Unix主机信息和可见提醒验收尚待主人。不得为了继续循环猜值、发布演练包或新增继承模块专项。
+无人值守独立工作已完成至本地可安装候选。环境纠偏完成后，发行仍待以下事项：包名已确认@pakiknowledge/tal0s-code；独立首发版本/标签和另一类Unix主机信息尚待主人；普通启动与可见提醒均已通过。不得为了继续循环猜值、发布演练包或新增继承模块专项。
 
 身份确认后，以实际名字/版本统一root/TUI版本、发行manifest和更新目标，重新生成准确候选与同版源码；不重做P3检测器或已修F1–F6。执行已存在的适用候选检查，网络/npm升级由主人在外部终端手动，发布由主人批准。
 
 Windows实际安装工程已支持独立prefix/fake home，真实启动器、原生SQLite/ripgrep、安装后核心流程、同版重装和显式第二包升级/数据保持/卸载；现有package profile已包含Windows。类Unix平台按其原生适用闸取得证据，不能用Windows模拟或跳过声明通过。平台范围变更需主人确认。
 
-发布前目视验证只读提醒，假registry可控预览不访问真实测试scope；源码private无默认查询、ACP/headless无背景提醒。命令与步骤见README。当前本地测试名即使manifest private:false也绝无发布授权。
+只读提醒目视验收已通过；既有假registry可控预览不访问真实测试scope；源码private无默认查询、ACP/headless无背景提醒。命令与步骤见README。当前本地测试名即使manifest private:false也绝无发布授权。
 ## 已交付切片
 
 F1–F6已关闭；Windows卷检测实际缺陷、scoped包启动与验证器传参/DLL锁问题已修，Windows全闸和候选包安装/升级/卸载及只读提醒已有证据，准确基点/结果仅见status。盲审小问题已收口：F5不等待P2，交接允许workflow-only与无下一轮，完成卡与下一任务分开。旧六文件操作保留在README作已完成回归入口，不再作为待办。
