@@ -88,4 +88,4 @@ cli-tool-process-boundary/r1（工具生命周期与环境专项）取消，不�
 
 CLI仅main为长期产品线。新功能/修复/文档从main创建短期分支，验收交付要求合回main并核对远端默认首页，随后清理已被包含的工作分支；恢复用提交和标签，不保留多条并行产品主线。
 
-origin为自有Talos仓库，upstream为只读官方公开来源。上游PR先选择和评审依赖，再单独短期移植分支处理；与内部公开源码导出契约分开，不能随便推进sourceRevision。具体规则写在CLI docs/source-sync.md，本轮只完成分支整理、不开始上游同步。旧远端main由备份标签保留，0.1.0准确源码由发行标签保留。
+origin为自有Talos仓库，upstream为只读官方公开来源。上游PR遵循[看PR→讨论→确认后合入](workflow.md#选择性接收上游-pr)，不自动选定实施范围；与内部公开源码导出契约分开，不能随便推进sourceRevision。具体规则写在CLI docs/source-sync.md，本轮只完成分支整理、不开始上游同步。旧远端main由备份标签保留，0.1.0准确源码由发行标签保留。

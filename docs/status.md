@@ -6,16 +6,16 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | cli-repository-identity / r1 |
-| 阶段 | 已完成；GitHub展示已核对 |
-| 本轮角色 / 来源 | Astra；主人要求仓库改名Talos-Code-CLI、移除旧下载站及多余许可证显示 |
-| 触发依据 | GitHub About仍指向旧下载站，许可说明被识别为第二个License文件 |
-| 目标 / 方案入口 | 仓库展示与身份引用收口；[工作流](workflow.md) |
-| 允许范围 | GitHub仓库配置、remote及README链接、许可说明文件名、发行manifest引用和文档 |
-| 禁止范围 | 不改实际许可证/版权、不重发npm、不合上游、不改本地源码目录 |
-| 验收 / 停止点 | 新名称/空homepage/侧栏仅MIT、main推送、引用及打包检查通过、临时分支清理 |
-| 完成证据 | c7adea2已推送main；仓库PAKIKNOWLEDGE/Talos-Code-CLI，homepage为空，GitHub页面Resources仅MIT license；LICENSE-STATUS.md原文100%迁为LEGAL.md，所有引用及发行manifest一致；source4281、tsconfig128 exports、release-tools67通过/2跳过；工作树干净 |
-| 下一接手 / 就绪性 | 无新执行任务；npm包名仍@pakiknowledge/tal0s-code，已发0.1.0不重写，未来包使用新repository地址 |
+| 任务标识 / 修订 | upstream-discussion-workflow / r1 |
+| 阶段 | 已完成（基本工作流约定，尚未实践合入） |
+| 本轮角色 / 来源 | Astra；主人澄清只建立看PR、共同讨论、确认后合入的工作流 |
+| 触发依据 | 需要可控的选择性上游同步，不能把流程设计误作自动挑选PR实施 |
+| 目标 / 方案入口 | 简单讨论先行规则；[工作流](workflow.md#选择性接收上游-pr) |
+| 允许范围 | GUI仓库workflow/plan/status；上游差异仅只读 |
+| 禁止范围 | 不预选/排序实施PR、不改CLI代码、不合上游、不push、不发布、不新增复杂流水线 |
+| 验收 / 停止点 | 基本三步规则写入现有workflow；具体技术步骤待实践再细化 |
+| 完成证据 | 已写明看PR→和主人讨论→主人确认后合入；Luna日常处理、架构冲突才升级；保留5个上游提交不构成授权待办。本轮只读看过局部差异，不代表完成PR审查 |
+| 下一接手 / 就绪性 | 无就绪合入任务；主人要求看PR后再提供讨论材料，不自动启动候选实施 |
 
 ## 现在是什么状态
 
