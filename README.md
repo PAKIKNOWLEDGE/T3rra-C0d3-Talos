@@ -550,3 +550,19 @@ talos
 3. 在希望工作的目录执行talos，预期欢迎页/provider入口可用，不要求付费对话验收。
 
 若NixOS报原生库或可执行文件加载错误，提供原始错误，按实际失败处理。若暂时404，稍后只重试安装，不重复发布。后续升级命令为npm install --global @pakiknowledge/tal0s-code@latest。
+
+
+### Windows旧终端导致安装脚本不可发现
+
+2026-10-01本机Node24.15.0/npm11.12.1，SQLite安装脚本已执行，失败是找不到prebuild-install/node-gyp。旧应用进程PATH10167字符，已修复用户PATH946字符；刷新安装进程环境后同一已发布包全局安装成功。无需升级npm、重装Node、安装编译器或改变系统权限。
+
+完全退出旧Windows Terminal/PowerShell宿主后重开；若要直接刷新当前PowerShell，只修改当前进程，不写注册表：
+
+```powershell
+$env:Path = 'C:\Program Files\nodejs;' + [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
+npm install -g @pakiknowledge/tal0s-code@0.1.0 --registry=https://registry.npmjs.org/ --ignore-scripts=false --include=optional
+talos --version
+talos
+```
+
+本机npm11.12.1实测不识别--allow-scripts，不能将它作为安装前提；保留ignore-scripts=false和include=optional。prebuild-install弃用警告不是本次致命错误；失败后cleanup EPERM是回滚警告，实际npm重装成功，无手动删除目录。

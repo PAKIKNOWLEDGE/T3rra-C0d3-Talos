@@ -6,16 +6,16 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | cli-npm-publication / r1 |
-| 阶段 | 已完成；发布请求成功，主人收到确认邮件 |
-| 本轮角色 / 来源 | Luna；主人明确要求现在发布npm，NixOS改为发布后安装验证 |
-| 触发依据 | 已验收0.1.0候选，主人授权执行正式发布 |
-| 目标 / 方案入口 | 发布同一@pakiknowledge/tal0s-code 0.1.0候选；[发行安排](plan.md#待主人确认及平台验收) |
-| 允许范围 | npm账号/版本核对、候选校验、明确发布、注册表核实及文档 |
-| 禁止范围 | 不push、不改候选源码或包、不声明NixOS已通过、不调用付费模型 |
-| 验收 / 停止点 | 官方npm记录版本与已验收包身份/内容匹配；给安装操作后停 |
-| 完成证据 | 官方whoami为pakiknowledge；同一候选0.1.0发布PUT200、npm退出0，主人确认收到邮件并要求停止查询。元数据读回暂404，未验证读回integrity |
-| 下一接手 / 就绪性 | 发布完成后待主人NixOS安装反馈；不重复Windows检查 |
+| 任务标识 / 修订 | cli-global-install-repair / r1 |
+| 阶段 | 已完成 |
+| 本轮角色 / 来源 | Luna；主人授权外出期间自行解决实际npm全局安装失败 |
+| 触发依据 | 真实0.1.0安装better-sqlite3阶段无法发现prebuild-install/node-gyp |
+| 目标 / 方案入口 | 同一已发布包全局安装恢复；[本轮方案](plan.md#实际全局安装修复) |
+| 允许范围 | 当前安装进程环境刷新、正常全局安装、actual native/离线smoke、文档 |
+| 禁止范围 | 不重发包、不改npm全局策略、不删用户数据、不写注册表PATH、不付费模型、不全库重跑 |
+| 验收 / 停止点 | 真实全局安装、talos版本、SQLite/ripgrep及smoke通过；用户PATH不变；保存后停 |
+| 完成证据 | Node24.15.0/npm11.12.1；应用旧PATH10167字符而用户946。当前安装进程刷新后npm退出0，global list与真正talos.cmd均0.1.0，SQLite select42与ripgrep15通过，现有global smoke20通过/1平台跳过，用户PATH前后不变。allow-scripts被当前npm报未知，不作为安装前提 |
+| 下一接手 / 就绪性 | 无就绪下一任务；仅待NixOS实际安装反馈，不重复发行/全库检查 |
 
 ## 现在是什么状态
 
@@ -87,3 +87,7 @@
 ## npm发布结果
 
 2026-10-01：@pakiknowledge/tal0s-code@0.1.0，public，latest，官方registry。发布同一63bd98e候选，npm PUT200、退出0；主人确认收到邮件并要求停止查询。回执为候选目录npm-publish-result.json。首次元数据读回暂404，未验证读回内容完整性，不重复发布。下一入口只接NixOS安装反馈，操作命令只在README；未推送Git。
+
+## 真实全局安装修复结果
+
+安装到C:/Users/pachu77/AppData/Roaming/npm/node_modules/@pakiknowledge/tal0s-code，命令由正常全局npm shim提供，无需再使用项目验收入口。首次日志中SQLite安装脚本实际运行，问题不是ignore-scripts；刷新当前安装进程有效PATH后同一已发布版本成功，没有修改注册表或重新发布。现有离线smoke对真正全局cli执行，20通过/1macOS跳过，原生SQLite/ripgrep实际加载通过；用户数据未读/改，不发付费模型。当前已打开的其他终端仍可能持有旧环境，应完全退出宿主后重开；操作命令只在README。证据日志global-install-smoke.log保存在忽略候选目录。
