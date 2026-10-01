@@ -6,16 +6,16 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | cli-readme-publication / r1 |
-| 阶段 | 已完成；分支已推送并核对远端 |
-| 本轮角色 / 来源 | Luna；主人要求使用两张截图写README并自主处理分支、push |
-| 触发依据 | CLI已发行，但仓库首页仍为上游品牌与安装说明 |
-| 目标 / 方案入口 | 中英README与截图、文档检查和分支推送；[工作流](workflow.md) |
-| 允许范围 | CLI README.md/README_ZH.md、用户截图及源码清单、分支与push |
-| 禁止范围 | 不改生产代码、不强推main、不重新发npm、不绕过自动审批拒绝 |
-| 验收 / 停止点 | README双语与图片链接有效、docs四闸通过、远端分支同步 |
-| 完成证据 | CLI分支codex/readme-cli，截图恢复点1513cb4，README提交b6688d7；docs四闸PASS，工作树干净。图片移至docs/assets，source清单4281。此前push审批拒绝；主人知情授权后已推送全部41提交，ls-remote核对b6688d76959a6cb506ae3e6207fa755ecb2ed61f一致 |
-| 下一接手 / 就绪性 | 本轮完成；origin/codex/readme-cli与本地一致，未改main，无新执行任务 |
+| 任务标识 / 修订 | cli-branch-cleanup / r1 |
+| 阶段 | 已完成；文档四闸通过 |
+| 本轮角色 / 来源 | Luna；主人批准单主线方案，明确本轮只整理分支、不合上游PR |
+| 触发依据 | 工作成果停在分支，远端默认main仍为上游README，多个旧本地工作分支未收口 |
+| 目标 / 方案入口 | Talos唯一main、恢复标签与旧分支清理；[分支边界](plan.md#git主线与上游边界) |
+| 允许范围 | CLI分支/标签/默认分支、远端配置、现有同步规则文档与状态 |
+| 禁止范围 | 不合上游PR、不merge/cherry-pick上游、不强推、不改产品代码或重发npm |
+| 验收 / 停止点 | 本地/远端仅main，同HEAD，GitHub默认首页README与本地一致；旧主线备份及0.1.0准确标签存在 |
+| 完成证据 | main/origin/main=3c1cb07，GitHub默认main，README blob一致。旧本地main/entrypoint/recovery和远端工作/临时分支已清理；backup/upstream-main-20261001保留c593d3d旧上游历史，v0.1.0指向63bd98e。生产文件相对README基点未变，仅同步说明新增；5个上游提交仍未合入，docs四闸PASS |
+| 下一接手 / 就绪性 | 无就绪下一任务；上游PR选择性移植为另行授权工作，本轮不启动 |
 
 ## 现在是什么状态
 
@@ -91,3 +91,9 @@
 ## 真实全局安装修复结果
 
 安装到C:/Users/pachu77/AppData/Roaming/npm/node_modules/@pakiknowledge/tal0s-code，命令由正常全局npm shim提供，无需再使用项目验收入口。首次日志中SQLite安装脚本实际运行，问题不是ignore-scripts；刷新当前安装进程有效PATH后同一已发布版本成功，没有修改注册表或重新发布。现有离线smoke对真正全局cli执行，20通过/1macOS跳过，原生SQLite/ripgrep实际加载通过；用户数据未读/改，不发付费模型。当前已打开的其他终端仍可能持有旧环境，应完全退出宿主后重开；操作命令只在README。证据日志global-install-smoke.log保存在忽略候选目录。
+
+## Git主线现状
+
+CLI只保留本地main及远端origin/main，GitHub首页已核对为Talos README。此前41个提交完整保留在main历史；不是squash或强推。旧远端主线改名后由backup/upstream-main-20261001标签永久定位，临时archive/bootstrap-main已删除。0.1.0发布标签对应原始源码提交63bd98e，没有移动到新文档提交。
+
+origin恢复普通全分支fetch映射，防止新工作分支不显示；upstream仅作为官方公开仓库的读取来源，禁止推送，没有执行fetch/merge/cherry-pick上游。本轮明确排除PR #381/#380/#379/#378/#376，未将其标已合并；保留于备份标签供后续单独评审。独立产品main采用已验收Talos树，未接收上游树差异。
