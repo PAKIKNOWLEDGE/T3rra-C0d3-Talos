@@ -7,15 +7,15 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 任务标识 / 修订 | cli-readme-publication / r1 |
-| 阶段 | 文档完成；推送等待明确授权 |
+| 阶段 | 已完成；分支已推送并核对远端 |
 | 本轮角色 / 来源 | Luna；主人要求使用两张截图写README并自主处理分支、push |
 | 触发依据 | CLI已发行，但仓库首页仍为上游品牌与安装说明 |
 | 目标 / 方案入口 | 中英README与截图、文档检查和分支推送；[工作流](workflow.md) |
 | 允许范围 | CLI README.md/README_ZH.md、用户截图及源码清单、分支与push |
 | 禁止范围 | 不改生产代码、不强推main、不重新发npm、不绕过自动审批拒绝 |
 | 验收 / 停止点 | README双语与图片链接有效、docs四闸通过、远端分支同步 |
-| 完成证据 | CLI分支codex/readme-cli，截图恢复点1513cb4，README提交b6688d7；docs四闸PASS，工作树干净。图片移至docs/assets，source清单4281。push自动审批拒绝，未上传 |
-| 下一接手 / 就绪性 | 待主人知情批准当前分支同时包含39个已有开发提交及2个本轮提交的推送；不尝试绕过 |
+| 完成证据 | CLI分支codex/readme-cli，截图恢复点1513cb4，README提交b6688d7；docs四闸PASS，工作树干净。图片移至docs/assets，source清单4281。此前push审批拒绝；主人知情授权后已推送全部41提交，ls-remote核对b6688d76959a6cb506ae3e6207fa755ecb2ed61f一致 |
+| 下一接手 / 就绪性 | 本轮完成；origin/codex/readme-cli与本地一致，未改main，无新执行任务 |
 
 ## 现在是什么状态
 
