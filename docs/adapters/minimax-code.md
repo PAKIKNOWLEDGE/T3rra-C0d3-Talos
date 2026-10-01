@@ -687,3 +687,8 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 【实测基线】五文件10失败/201通过，错误diff定位上述显示字段；实际neutral入口证据由既有离线集成保留，不用本轮假Runtime的旧模式测试冒称全入口中立验收。
 
 【实测】2026-10-01，CLI d7ab82b（提交时WIP、之后实际复验）：五文件211通过/0失败/0跳过；类型与五文件eslint通过。基线十失败只涉及显示文案，校正14条旧品牌/提示预期后完整运行原测试；没有删状态、返回、能力、拒绝或操作断言。agentInfo.name、authMethod id、扩展namespace等协议身份不变，合法provider/model和传入通知文本未盲改。没有修改生产实现，没有构建、真实模型或全库检查。
+
+### F4平台路径归因（2026-10-01）
+
+【源码】CLI d7ab82b：observability/local-observability.ts使用node:path.join生成本地路径，测试两处硬编码POSIX分隔符；生产路径正确。host/wsl-path.ts:13-25依据os.platform与WSL信号识别；composer/attachments.ts:57-64在~展开后转换。wsl-attachment-paths夹具默认mock为linux/WSL，却在Windows真实临时目录下展开home，导致Windows绝对路径被当WSL输入。应按实际宿主构造native-resolution夹具；现有真实WSL转换用例在Windows原有跳过继续明确，不伪装Linux实测。
+【实测基线】两文件3失败/23通过/11已有平台跳过，固定Node24；本轮尚未修改生产代码。
