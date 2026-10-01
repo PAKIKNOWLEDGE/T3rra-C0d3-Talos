@@ -743,3 +743,7 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 【实测】两个简单cmd入口均固定当前C:/Program Files/nodejs Node，普通模式通过call npm生成talos.cmd输出0.5.7。离线预览只为精确自身registry latest URL提供本地0.5.8响应，update输出npm install --global @pakiknowledge/tal0s-code@latest和不自动安装说明；模型未调用。程序文件与生产代码不改，前段TEMP Python cmd引号调用失败不当作引擎故障，也不以直接cli.js版本替代真实shim验证。
 
 【未验】TUI真实终端渲染/用户实际对话由主人验收；普通入口沿用既有.talos设置，预览隔离，无隐式凭据复制。首发版本/类Unix结果/npm发布均未决定或未完成。
+
+【本轮实现依据，2026-10-01】CLI3055bc5的host.ts:532同时调用进程PATH注入与持久化集成；ensure-bin-in-path.ts:19独立保留模型工具发现能力。npm安装已提供talos命令。修复将持久化集成改为显式TALOS_ENABLE_SHELL_PATH_INTEGRATION=1才执行，默认启动不写注册表或shell配置；保留进程内注入和原有显式集成实现。这是Astra本轮对环境副作用的边界决定，不删权限检查或工具。
+
+【实测，2026-10-01，CLI4e9f1ba】回归Runtime startup leaves host shell PATH integration disabled by default：1通过，宿主文件/注册表函数替换为报错桩，验证默认及0均无调用；source inventory4279通过；release-tag构建成功；具名0.5.7包真实npm独立prefix安装成功。修复环境下同一候选bash工具实际发现Git2.42.0、Python3.13.3、Windows PowerShell；单独顶层rm合成文件通过受信launcher移入回收站，宿主文件检查确认原位置不存在。用户Path启动前后一致。最初裸mavis-trash复合命令被硬策略拒绝，未绕过策略，改用引擎要求的顶层rm路径后才通过。新PowerShell入口及真实npm cmd shim分别输出0.5.7；未调用付费模型，未删除用户文件，未跑新候选全套回归。

@@ -1,14 +1,5 @@
 @echo off
-setlocal
-set "PATH=C:\Program Files\nodejs;%PATH%"
-set "NODE_OPTIONS="
-set "NODE_PATH="
-echo [LOCAL ACCEPTANCE] @pakiknowledge/tal0s-code 0.5.7 - NOT PUBLISHED
-echo Uses your existing .talos profile. Credentials are not copied.
-set "MINIMAX_DATA_DIR=%USERPROFILE%\.talos"
-set "MAVIS_DATA_DIR=%MINIMAX_DATA_DIR%"
-cd /d "%~dp0workspace"
-call "%~dp0prefix\talos.cmd" %*
-set "TALOS_EXIT=%ERRORLEVEL%"
-if not "%TALOS_EXIT%"=="0" pause
-exit /b %TALOS_EXIT%
+echo This old entry is retired because cmd lost the long PATH.
+echo Open a NEW PowerShell terminal and run:
+echo ^& "C:/DEV/develop/T3rra-C0d3-Talos/.talos/acceptance/pakiknowledge-4e9f1ba/01-launch-talos.ps1"
+exit /b 1

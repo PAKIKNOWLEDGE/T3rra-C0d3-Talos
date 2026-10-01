@@ -485,23 +485,26 @@ pnpm verify --profile package
 
 ## 当前具名CLI验收
 
-已准备@pakiknowledge/tal0s-code本地安装候选，当前验收版本0.5.7，**尚未发布，不代表首发版本决定**。无需重装系统mcode、重填已有.talos配置或手工准备环境。启动入口固定Node24，实际调用独立prefix里npm生成的talos.cmd。
+修复候选为@pakiknowledge/tal0s-code 0.5.7，源码4e9f1ba；尚未发布，不代表首发版本决定。使用现有.talos配置，不复制密钥。普通入口直接运行已安装包，保留调用终端cwd与PATH，不经过旧cmd包装。启动默认不修改用户PATH或shell配置；模型工具目录只加到当前进程。
+
+先完全关闭旧终端窗口，再从开始菜单重新打开PowerShell；若仍继承旧环境，完全退出Windows Terminal或其宿主应用后重开。不要在旧终端仅开新标签页。
+
 
 ```powershell
-& "C:/DEV/develop/T3rra-C0d3-Talos/.talos/acceptance/pakiknowledge-3055bc5/01-launch-talos.cmd"
+cd C:/DEV/develop/T3rra-C0d3-Talos
+& "C:/DEV/develop/T3rra-C0d3-Talos/.talos/acceptance/pakiknowledge-4e9f1ba/01-launch-talos.ps1"
 ```
 
-也可以在资源管理器双击该文件。这是正常体验：使用现有home/.talos配置，密钥不复制；保存provider/设置仍会更新现有配置。自动进入本候选的可丢弃workspace，真实请求只在你主动发送时发生。
+1. 在新终端先运行git --version和python --version → 两个命令均可发现；技术侧已检查，不需要购买模型请求复核。
+2. 切换到你希望Talos工作的目录，再执行普通入口 → 欢迎页及现有provider可用，工作目录就是调用时的目录。
+3. 打开/provider查看后Esc返回，再正常退出 → 不要求重新保存模型配置，不自动发送消息。保存provider仍会影响已有.talos配置。
 
-1. 启动普通入口，打开/provider查看后按Esc返回 → Talos构图和已有模型配置可用；不要为了验收重新保存配置。
-2. 如愿意用已有模型，发送“请创建acceptance-note.txt，内容仅为acceptance-ok，不修改其他文件” → 回复/工具过程可读，工作区中有正确文件；是否审批以你现有规则为准，不为制造审批改规则。
-3. 退出，再启动普通入口，用已有会话继续入口打开刚才会话 → 目录/历史正确，可继续；不要求执行已通过的底层日志检查。
-4. 退出后双击02-preview-update.cmd，或执行下面命令 → 明确显示OFFLINE PREVIEW，0.5.8为假新版，欢迎页后出现更新提示；输入/update查看完整包名/手动命令，缩窄终端后仍可打开详情，不安装/重启。此模式无凭据，不发模型消息。
+旧01-launch-talos.cmd已退役，会提示新入口；旧测试文件_conn_test.txt仍保留。假新版0.5.8提示已获主人验收通过，不重复验收，也不要执行预览中的npm升级命令。
 
-```powershell
-& "C:/DEV/develop/T3rra-C0d3-Talos/.talos/acceptance/pakiknowledge-3055bc5/02-preview-update.cmd"
-```
+入口缺失时，在GUI仓库运行python tools/prepare-cli-acceptance.py重新生成；不会安装包或复制密钥。
 
-**不要执行预览中的npm升级命令：该包尚未发布。** 预览只检查提示，不用于对话。技术独立安装与22项回归由执行者完成，你只需报告上述实际体验是否通过。界面问题给截图或具体动作即可，不需要JSON。
+### 系统 PATH 修复与恢复
 
-若本地启动文件意外缺失，在本GUI仓库运行python tools/prepare-cli-acceptance.py可从已提交模板重新生成（不会安装或复制密钥）。候选文件、依赖、数据和日志默认忽略，模板与命令入Git。
+备份及清单位于忽略目录.talos/environment-recovery。恢复命令为python tools/recover-test-path.py --restore，只在当前PATH与修复结果一致时执行，避免覆盖后来设置。恢复会重新加入旧污染条目，不是普通验收步骤。
+
+清理预览使用python tools/recover-test-path.py，实际写入需--apply；仅匹配已识别的测试目录，不删除文件。引擎默认不再持久化shell PATH；仅明确设置TALOS_ENABLE_SHELL_PATH_INTEGRATION=1才启用原有集成。npm的talos命令与进程内工具目录不依赖该设置。

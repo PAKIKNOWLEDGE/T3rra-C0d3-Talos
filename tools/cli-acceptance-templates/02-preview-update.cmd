@@ -12,7 +12,7 @@ set "HTTP_PROXY="
 set "HTTPS_PROXY="
 set "ALL_PROXY="
 set "NO_PROXY="
-set "NODE_OPTIONS=--import=file:///C:/DEV/develop/T3rra-C0d3-Talos/.talos/acceptance/pakiknowledge-3055bc5/preview-registry.mjs"
+set "NODE_OPTIONS=--import=file:///C:/DEV/develop/T3rra-C0d3-Talos/.talos/acceptance/pakiknowledge-4e9f1ba/preview-registry.mjs"
 cd /d "%~dp0preview-workspace"
 call "%~dp0prefix\talos.cmd" %*
 set "TALOS_EXIT=%ERRORLEVEL%"
