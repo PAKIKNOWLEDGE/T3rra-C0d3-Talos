@@ -6,16 +6,16 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | cli-readme-editorial / r1 |
-| 阶段 | 已完成；main已推送并核对GitHub两份README |
-| 本轮角色 / 来源 | Astra；主人要求重写中英文README并push |
-| 触发依据 | 原首页将本机PATH事故当通用排障，品牌介绍反复强调上游，偏离中立产品定位 |
-| 目标 / 方案入口 | 面向用户的Talos首页；[工作流](workflow.md) |
-| 允许范围 | CLI README.md/README_ZH.md、短期分支/main快进与push、交接文档 |
-| 禁止范围 | 不改产品代码、不重发npm、不合上游、不删除许可证署名 |
-| 验收 / 停止点 | 两份README重写、docs四闸通过、远端main正文与本地blob一致、短期分支清理 |
-| 完成证据 | fecf328仅改两份README；删除PATH操作/本机npm事故/非必要上游品牌叙述，保留末尾一次致谢。docs四闸PASS；main已推送，GitHub中英README blob分别91d45cc/18742ff与本地一致；临时分支已删除，工作树干净 |
-| 下一接手 / 就绪性 | 无新执行任务；首页已交付，不重做文档/产品检查 |
+| 任务标识 / 修订 | cli-repository-identity / r1 |
+| 阶段 | 已完成；GitHub展示已核对 |
+| 本轮角色 / 来源 | Astra；主人要求仓库改名Talos-Code-CLI、移除旧下载站及多余许可证显示 |
+| 触发依据 | GitHub About仍指向旧下载站，许可说明被识别为第二个License文件 |
+| 目标 / 方案入口 | 仓库展示与身份引用收口；[工作流](workflow.md) |
+| 允许范围 | GitHub仓库配置、remote及README链接、许可说明文件名、发行manifest引用和文档 |
+| 禁止范围 | 不改实际许可证/版权、不重发npm、不合上游、不改本地源码目录 |
+| 验收 / 停止点 | 新名称/空homepage/侧栏仅MIT、main推送、引用及打包检查通过、临时分支清理 |
+| 完成证据 | c7adea2已推送main；仓库PAKIKNOWLEDGE/Talos-Code-CLI，homepage为空，GitHub页面Resources仅MIT license；LICENSE-STATUS.md原文100%迁为LEGAL.md，所有引用及发行manifest一致；source4281、tsconfig128 exports、release-tools67通过/2跳过；工作树干净 |
+| 下一接手 / 就绪性 | 无新执行任务；npm包名仍@pakiknowledge/tal0s-code，已发0.1.0不重写，未来包使用新repository地址 |
 
 ## 现在是什么状态
 
@@ -97,3 +97,5 @@
 CLI只保留本地main及远端origin/main，GitHub首页已核对为Talos README。此前41个提交完整保留在main历史；不是squash或强推。旧远端主线改名后由backup/upstream-main-20261001标签永久定位，临时archive/bootstrap-main已删除。0.1.0发布标签对应原始源码提交63bd98e，没有移动到新文档提交。
 
 origin恢复普通全分支fetch映射，防止新工作分支不显示；upstream仅作为官方公开仓库的读取来源，禁止推送，没有执行fetch/merge/cherry-pick上游。本轮明确排除PR #381/#380/#379/#378/#376，未将其标已合并；保留于备份标签供后续单独评审。独立产品main采用已验收Talos树，未接收上游树差异。
+
+仓库现名PAKIKNOWLEDGE/Talos-Code-CLI，origin已更新，本地目录仍C:/DEV/develop/Talos-CLI。GitHub旧下载站homepage已清空。真实MIT/第三方版权文本未改；许可状态说明仅更名LEGAL.md并保留打包。当前main为c7adea2；未重新发布npm。
