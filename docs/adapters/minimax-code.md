@@ -773,3 +773,5 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 | #307/#319（开放） | YAML别名/凭据/脱敏写入，或多个SQLite Turn写入重试 | 暂缓：涉及配置/秘密和持久化语义，不随小修顺手合 |
 
 建议本次批准范围若主人认可：#199、#388、#410文字部分；不是执行授权，不合任何代码。#381大范围后台stop、#379终端队列与#376hook正文暂不追加本轮范围；纯版本PR与已撤回滚动补丁不接。
+
+【本轮实施依据，2026-10-02】Talos c7adea2，主人批准#199/bf3916f、#388/67a5c2a、#410/5683465的literal-text、view、panel与文字回归。采用官方PR逐文件补丁；#410 runtime-event-flow、observability和stale-run测试不纳入。保留供应商账本，新增HTTP/字面文本回归登记现有capability清单；不改变extraction.sourceRevision。实测结果待本轮完成填写。
