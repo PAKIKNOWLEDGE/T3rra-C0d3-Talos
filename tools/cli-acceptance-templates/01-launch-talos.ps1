@@ -11,7 +11,8 @@ try {
     $env:TALOS_ENABLE_SHELL_PATH_INTEGRATION = $null
     $env:MINIMAX_DATA_DIR = Join-Path $env:USERPROFILE '.talos'
     $env:MAVIS_DATA_DIR = $env:MINIMAX_DATA_DIR
-    Write-Host '[LOCAL ACCEPTANCE] @pakiknowledge/tal0s-code 0.5.7 - NOT PUBLISHED'
+    $manifest = Get-Content -LiteralPath (Join-Path (Split-Path $cli) 'package.json') -Raw | ConvertFrom-Json
+    Write-Host ('[LOCAL CANDIDATE] ' + $manifest.name + ' ' + $manifest.version + ' - NOT PUBLISHED')
     & 'C:\Program Files\nodejs\node.exe' $cli @TalosArgs
     if ($LASTEXITCODE -ne 0) { throw "Talos exited with code $LASTEXITCODE" }
 } finally {

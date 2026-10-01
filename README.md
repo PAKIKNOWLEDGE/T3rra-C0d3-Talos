@@ -485,14 +485,14 @@ pnpm verify --profile package
 
 ## 当前具名CLI验收
 
-修复候选为@pakiknowledge/tal0s-code 0.5.7，源码4e9f1ba；尚未发布，不代表首发版本决定。使用现有.talos配置，不复制密钥。普通入口直接运行已安装包，保留调用终端cwd与PATH，不经过旧cmd包装。启动默认不修改用户PATH或shell配置；模型工具目录只加到当前进程。
+首发候选为@pakiknowledge/tal0s-code 0.1.0，源码63bd98e；版本已确定，尚未发布。使用现有.talos配置，不复制密钥。普通入口直接运行已安装包，保留调用终端cwd与PATH，不经过旧cmd包装。启动默认不修改用户PATH或shell配置；模型工具目录只加到当前进程。
 
 先完全关闭旧终端窗口，再从开始菜单重新打开PowerShell；若仍继承旧环境，完全退出Windows Terminal或其宿主应用后重开。不要在旧终端仅开新标签页。
 
 
 ```powershell
 cd C:/DEV/develop/T3rra-C0d3-Talos
-& "C:/DEV/develop/T3rra-C0d3-Talos/.talos/acceptance/pakiknowledge-4e9f1ba/01-launch-talos.ps1"
+& "C:/DEV/develop/T3rra-C0d3-Talos/.talos/release-candidates/0.1.0-63bd98e/01-launch-talos.ps1"
 ```
 
 1. 在新终端先运行git --version和python --version → 两个命令均可发现；技术侧已检查，不需要购买模型请求复核。
@@ -501,10 +501,34 @@ cd C:/DEV/develop/T3rra-C0d3-Talos
 
 旧01-launch-talos.cmd已退役，会提示新入口；旧测试文件_conn_test.txt仍保留。假新版0.5.8提示已获主人验收通过，不重复验收，也不要执行预览中的npm升级命令。
 
-入口缺失时，在GUI仓库运行python tools/prepare-cli-acceptance.py重新生成；不会安装包或复制密钥。
+入口缺失时，在GUI仓库运行python tools/prepare-cli-acceptance.py --directory .talos/release-candidates/0.1.0-63bd98e --ordinary-only重新生成；不会安装包或复制密钥。
 
 ### 系统 PATH 修复与恢复
 
 备份及清单位于忽略目录.talos/environment-recovery。恢复命令为python tools/recover-test-path.py --restore，只在当前PATH与修复结果一致时执行，避免覆盖后来设置。恢复会重新加入旧污染条目，不是普通验收步骤。
 
 清理预览使用python tools/recover-test-path.py，实际写入需--apply；仅匹配已识别的测试目录，不删除文件。引擎默认不再持久化shell PATH；仅明确设置TALOS_ENABLE_SHELL_PATH_INTEGRATION=1才启用原有集成。npm的talos命令与进程内工具目录不依赖该设置。
+
+
+### 0.1.0 候选材料与检查
+
+源码包、npm安装包、SHA256与机读报告在.talos/release-candidates/0.1.0-63bd98e，准确结果见docs/status.md；二者对应同一提交，未创建Git发行标签。0.1.0为CLI预览版：GUI/Tauri未交付，默认联网搜索后置，自配MCP搜索未实测。
+
+以下命令仅在相关修改或失败触发时用于现有检查，不是每轮待办。在CLI仓库使用有效系统PATH，明确关闭持久化集成：
+
+```powershell
+$env:Path = 'C:\Program Files\nodejs;' + [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
+$env:TALOS_ENABLE_SHELL_PATH_INTEGRATION = '0'
+$env:MCODE_RELEASE_TAG = 'v0.1.0'
+$env:TALOS_NPM_PACKAGE_NAME = '@pakiknowledge/tal0s-code'
+pnpm verify --profile full
+```
+
+package配置使用同提交安装包，沿现有验证器完成临时安装/核心使用/重装/卸载：
+
+```powershell
+$env:MCODE_RELEASE_ARCHIVE = 'C:/DEV/develop/T3rra-C0d3-Talos/.talos/release-candidates/0.1.0-63bd98e/pakiknowledge-tal0s-code-0.1.0.tar.gz'
+pnpm verify --profile package
+```
+
+本轮不创建合成升级包，已有跨版本升级证据保留。上面是检查命令，不含npm发布授权；正式发布需主人另行批准。

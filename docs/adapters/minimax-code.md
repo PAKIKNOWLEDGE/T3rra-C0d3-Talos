@@ -747,3 +747,5 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 【本轮实现依据，2026-10-01】CLI3055bc5的host.ts:532同时调用进程PATH注入与持久化集成；ensure-bin-in-path.ts:19独立保留模型工具发现能力。npm安装已提供talos命令。修复将持久化集成改为显式TALOS_ENABLE_SHELL_PATH_INTEGRATION=1才执行，默认启动不写注册表或shell配置；保留进程内注入和原有显式集成实现。这是Astra本轮对环境副作用的边界决定，不删权限检查或工具。
 
 【实测，2026-10-01，CLI4e9f1ba】回归Runtime startup leaves host shell PATH integration disabled by default：1通过，宿主文件/注册表函数替换为报错桩，验证默认及0均无调用；source inventory4279通过；release-tag构建成功；具名0.5.7包真实npm独立prefix安装成功。修复环境下同一候选bash工具实际发现Git2.42.0、Python3.13.3、Windows PowerShell；单独顶层rm合成文件通过受信launcher移入回收站，宿主文件检查确认原位置不存在。用户Path启动前后一致。最初裸mavis-trash复合命令被硬策略拒绝，未绕过策略，改用引擎要求的顶层rm路径后才通过。新PowerShell入口及真实npm cmd shim分别输出0.5.7；未调用付费模型，未删除用户文件，未跑新候选全套回归。
+
+【本轮版本实现依据，2026-10-01，CLI0a7e13f】C:/DEV/develop/Talos-CLI/scripts/lib/cli-release.mjs:14根与packages/tui版本一致性；scripts/build.mjs:145生成版本manifest及release-tag的gitHead；scripts/package-cli-release.mjs:85-102核对tag/version/HEAD并生成显式npm身份；packages/tui/src/build-info.ts:15读取安装manifest版本。首发0.1.0仅修改root/package.json:3和packages/tui/package.json:3，无ACP/权限/模型协议变化。
