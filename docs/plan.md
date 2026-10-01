@@ -18,13 +18,13 @@
 
 以上不是工期或固定轮数承诺。功能范围有限不等于质量可以打折；已知失败不忽略，未知概念不无限展开。包身份、安装和平台支持属于真实发行差异，不能因上游能用就跳过。已建成功能的旧探针不重做。
 
-## 下一小轮：本地安装候选包
+## 下一小轮：只读npm提醒
 
-无人值守P1/P2准备。显式传入packageName，缺失/上游名拒绝，开发根private不变；生成默认private测试候选，正式scope/版本仍待主人集中确认。不发布测试占位身份。
+无人值守P3实现。唯一包身份来自实际安装包manifest；源码/默认private包不查registry、不把占位名当官方。明确可发布包TUI启动后异步查一次，/update和CLI主动查可去重；ACP/headless不自动查。稳定版本比较、新/同/旧、错误身份、404/离线/超时结果均由假fetch验证。
 
-沿用打包脚本与现有source-sync回归，在stage排除已退役mcode-tools/matrix入口、internal-bin/embedded工具，保留许可/runtime/native资源；阻止旧GitHub发布脚本直接发布。补验证Windows安装目录与实际talos.cmd，独立prefix/fake home，安装后SQLite/ripgrep以及原smoke/BYOK全闭环，同版重装与卸载。跨版本升级另需真实两个候选，不将重装当升级。
+只提供由同一身份生成的手动npm安装命令，不调用npm安装或重启。保留已有TuiUpdateNotice展示和/update详情；晚结果在stop后不显示。新文件遵守suite登记和source inventory，再跑新检测器、受影响CLI/TUI回归、类型/lint、构建及源码未配置命令检查。正式名字不确定不妨碍实现，但实际registry/目视界面和正式发行仍待主人确认。
 
-正式身份不确定时先用明确私有本地测试名演练，不请求npm账号、不猜owner scope、不发布。可用依赖获取若网络需要按工具审批；测试模型仍只loopback。实际安装遇到缺项就修，不以开发node_modules遮掩失败。
+允许修改新只读模块及main/update-flow/launcher最小接线，旧installer禁入保持；不扩展P1/P2未知审计。Git先保存，相关检查不过就修，完成之后保存继续现有发行欠账。
 ## 已交付切片
 
 主题与语言F1/F2已关闭，F3五文件的旧显示文案预期已更正并完整复验，生产代码、协议身份和已验收外观不变；实际结果见status。盲审小问题已收口：F5不等待P2，交接允许workflow-only与无下一轮，完成卡与下一任务分开。旧六文件操作保留在README作已完成回归入口，不再作为待办。

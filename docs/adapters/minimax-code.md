@@ -702,3 +702,12 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 【源码】scripts/package-cli-release.mjs:55-71此前硬编码@minimax-ai/code/private/upstream repo；verify-cli-release.mjs:14,40-49仅Linux/macOS，安装目录lib/node_modules固定上游名。仅打包脚本能生成独立manifest，开发根private保持；正式包名由主人确认，准备显式参数且缺失/上游身份拒绝，测试使用@fixture/talos-cli。
 【范围】package stage排除退役mcode-tools.js、matrix-mcp-stdio.js、internal-bin、embedded/mcode-tools，保留LICENSE/NOTICE/runtime资源。允许本地私有测试包、明确private保护，未确认正式身份不发布。Windows安装用自身Node运行npm-cli.js和实际npm生成talos.cmd，独立prefix/fake home；同版重装与卸载实测可独立完成，跨版本升级不能冒称通过。旧GitHub发布脚本入口退役，不再自动发布上游品牌资产。
 【未验】尚待修改和实际安装；完整本轮源码verifier正在独立基点d3f7e6c运行，不能把后续package改动算进其结果。
+
+【实测安装故障】私有@talos-local-fixture/cli在临时prefix安装成功，95公开依赖取得；真实talos.cmd启动失败定位build-info.ts:19-25硬编码上游/dev包名。按实际manifest bin.talos=cli.js识别owner选定包的版本，保留不相关祖先manifest拒绝；需要build-mode回归与安装闭环复验，不以源码版本成功掩盖发行故障。
+
+【实测安装复验】CLI7fb7ef5候选：真实talos.cmd/SQLite/ripgrep通过，安装后smoke+BYOK22通过/3原平台跳过；同版重装后卸载报EBUSY，因为verify-cli-release父进程require了better-sqlite3.node，db.close不能卸载Windows DLL。修验证器把SQLite实测移到退出的子进程，不改生产进程回收；此故障不应隐藏为Windows随机错误，重装/卸载需重验。
+
+### npm只读提醒接线依据（2026-10-01）
+
+【源码】CLI7223dca：cli/main.ts:152-155旧update只返回未配置文案；TUI update-flow.ts:18-23同样固定文案。app-composition.ts:398-412已有checkForUpdate异步hook，TuiUpdateNotice shell/chrome.ts:23-54已有非阻塞提示和/update详情入口；launcher不再提供旧installer callback。新检测使用实际包manifest name/version/private/bin.talos，默认源码private无查询，配置一致时请求registry latest。旧update/application/service/prefix模块禁入不变。
+【实测包基线】私有候选7223dca安装后22核心通过/3原平台跳过、真实launcher/SQLite/ripgrep、同版重装/卸载成功；sha256 62f5020becb6674f580d77e08489ab83641455c36800fcae5849acc482e25c49。P3改动不在此包中，不能借用此结果说提醒已验。
