@@ -4,6 +4,18 @@
 
 按问题选读：[原生 TUI](#原生-tui-与-gui-边界复核2026-09-29)、[配置隔离缺口](#配置离线回归实测2026-09-28)、[原生 provider](#原生-provider-与重复探针复核2026-09-28)、[ACP 契约](#单会话链路源码证据)、[真实 ACP 探针](#第-2-轮真实探针实测)。现状只见 [status](../status.md)。
 
+## 验收PATH归因（2026-10-01）
+
+版本：CLI 3055bc596bee33d675450fe822708e3cf37ccd7c；具名安装候选@pakiknowledge/tal0s-code 0.5.7；GUI准备脚本基点e6c1d3b；Node v24.15.0。
+
+- 【实测】同一已安装cli.js、隔离合成provider、固定只读bash调用：继承宿主完整PATH时Get-Command找到Git（Program Files/Git/cmd/git.exe）、Python（Python313/python.exe）、Windows PowerShell；人为仅传入用户报告四项时三者均找不到。实际Runtime执行，模型为loopback合成响应，无付费调用。此对照是exec路径，不声称重现原TUI会话。
+- 【实测】父进程PATH长度10137，含Git/Python；使用与验收cmd相同的setlocal和Node前缀语句，经cmd后子Node PATH长度24，仅剩Node，不含Git/Python。真实验收wrapper与npm shim均未另写精简PATH。可解释报告的四项：Node加运行时bin、pi bin和PowerShell自身目录；原失败会话入口处未留快照，故链路归因为强证据推断，不伪造原会话trace。
+- 【实测】用户注册表Path长度9641，128项匹配已知临时smoke/byok/acp-state/env-repro目录。只读取Path并统计，未清理；不把所有Temp项视为可删项。
+- 【源码】C:/DEV/develop/Talos-CLI/packages/local-runtime/src/api/host.ts:532 启动调用ensurePathIntegration；同仓packages/local-runtime/src/infra/ensure-path-integration.ts:57-103读取并前置dataDir/bin到HKCU/Environment的Path。此Windows路径不由HOME/USERPROFILE隔离。测试临时目录积累有此机制支持；不宣称逐条追溯了128项写入进程。
+- 【源码】C:/DEV/develop/Talos-CLI/third_party/pi-mono/packages/coding-agent/src/utils/shell.ts:174及packages/agent-core/src/bash-subprocess-env.ts:231保留传入PATH并前置bin，不支持“沙箱固定只留四条”的解释。
+- 【源码/未验】C:/DEV/develop/Talos-CLI/packages/local-runtime/src/infra/trash-script-win.ts:123按名称启动powershell.exe；:266起检查失败可转为不可核验，:528起拒绝文案含reparse point。短PATH下缺powershell.exe与回收报错存在合理关联，尚未用真实回收确认，不能断言用户目录是junction。
+- 【纠正】最初临时对照退出0，但工具结果为HOST_CAPABILITY_UNAVAILABLE，不能证明执行。修正结果收集后，在独立合成配置中显式允许固定只读命令才取得上述结果。未修改用户权限。临时HOME未隔离注册表，本轮诊断也不能标完全无宿主副作用。
+
 ## provider 入口与构建身份复核（2026-09-28）
 
 【源码】相邻引擎工作树 `C:\DEV\develop\Talos-CLI` 已落地本轮提交 `e5e797dff4ab26400cbb233c242cf10e59536b1c`，本轮未改变 ACP、凭据协议或真实数据。以下是本轮实现依赖的源码映射：
