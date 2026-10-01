@@ -6,16 +6,16 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | cli-branch-cleanup / r1 |
-| 阶段 | 已完成；文档四闸通过 |
-| 本轮角色 / 来源 | Luna；主人批准单主线方案，明确本轮只整理分支、不合上游PR |
-| 触发依据 | 工作成果停在分支，远端默认main仍为上游README，多个旧本地工作分支未收口 |
-| 目标 / 方案入口 | Talos唯一main、恢复标签与旧分支清理；[分支边界](plan.md#git主线与上游边界) |
-| 允许范围 | CLI分支/标签/默认分支、远端配置、现有同步规则文档与状态 |
-| 禁止范围 | 不合上游PR、不merge/cherry-pick上游、不强推、不改产品代码或重发npm |
-| 验收 / 停止点 | 本地/远端仅main，同HEAD，GitHub默认首页README与本地一致；旧主线备份及0.1.0准确标签存在 |
-| 完成证据 | main/origin/main=3c1cb07，GitHub默认main，README blob一致。旧本地main/entrypoint/recovery和远端工作/临时分支已清理；backup/upstream-main-20261001保留c593d3d旧上游历史，v0.1.0指向63bd98e。生产文件相对README基点未变，仅同步说明新增；5个上游提交仍未合入，docs四闸PASS |
-| 下一接手 / 就绪性 | 无就绪下一任务；上游PR选择性移植为另行授权工作，本轮不启动 |
+| 任务标识 / 修订 | cli-readme-editorial / r1 |
+| 阶段 | 已完成；main已推送并核对GitHub两份README |
+| 本轮角色 / 来源 | Astra；主人要求重写中英文README并push |
+| 触发依据 | 原首页将本机PATH事故当通用排障，品牌介绍反复强调上游，偏离中立产品定位 |
+| 目标 / 方案入口 | 面向用户的Talos首页；[工作流](workflow.md) |
+| 允许范围 | CLI README.md/README_ZH.md、短期分支/main快进与push、交接文档 |
+| 禁止范围 | 不改产品代码、不重发npm、不合上游、不删除许可证署名 |
+| 验收 / 停止点 | 两份README重写、docs四闸通过、远端main正文与本地blob一致、短期分支清理 |
+| 完成证据 | fecf328仅改两份README；删除PATH操作/本机npm事故/非必要上游品牌叙述，保留末尾一次致谢。docs四闸PASS；main已推送，GitHub中英README blob分别91d45cc/18742ff与本地一致；临时分支已删除，工作树干净 |
+| 下一接手 / 就绪性 | 无新执行任务；首页已交付，不重做文档/产品检查 |
 
 ## 现在是什么状态
 
