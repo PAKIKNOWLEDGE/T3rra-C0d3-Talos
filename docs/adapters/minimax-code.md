@@ -751,3 +751,25 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 【本轮版本实现依据，2026-10-01，CLI0a7e13f】C:/DEV/develop/Talos-CLI/scripts/lib/cli-release.mjs:14根与packages/tui版本一致性；scripts/build.mjs:145生成版本manifest及release-tag的gitHead；scripts/package-cli-release.mjs:85-102核对tag/version/HEAD并生成显式npm身份；packages/tui/src/build-info.ts:15读取安装manifest版本。首发0.1.0仅修改root/package.json:3和packages/tui/package.json:3，无ACP/权限/模型协议变化。
 
 【实测，2026-10-01，CLI63bd98e/0.1.0】根与TUI版本0.1.0；Windows x64 Node24.15.0现有full15适用闸PASS（capability5003通过/61跳过），独立package闸PASS（实际npm安装、SQLite/ripgrep、安装后smoke/BYOK22通过/3平台跳过、同版重装和卸载）。安装manifest及既有合成registry检查@pakiknowledge/tal0s-code@latest手动更新目标；源码与安装包同HEAD并核对SHA256。full/package前后用户Path均完全一致；无付费模型、无发布、无Unix运行。本轮未重复跨版本合成升级或已验收视觉，不能把平台跳过声明通过。
+
+
+## 上游PR审查（2026-10-02）
+
+【源码/API】Talos基点c7adea2。官方PR文件补丁、精确head/merge SHA及正文保存于忽略目录.talos/upstream-review-20261002；未执行上游测试、未试合。10月2日查询最近PR仍最高#422，最新发行v0.6.1（2026-10-01T14:22:09Z），与上一轮概览无新合并。风险等级是此次静态审查判断，不等于兼容性通过。
+
+| 候选 | 静态判断与Talos证据 | 建议 / 剩余边界 |
+| --- | --- | --- |
+| #199 | 真正生产改动删除hasToolHistory与历史触发tools=[]；本地third_party/pi-mono/packages/ai/src/providers/openai-completions.ts:48、:548-550仍有该逻辑 | 值得合，低至中风险：第三方协议输出变化；保留非空工具定义及历史，只去空数组。原测试声明部分代理可能有其他要求，不能泛称所有服务通过；配套HTTP测试需按当前SDK进口名适配 |
+| #388 | 生产仅在beginTurn移除旧turnId的ephemeral error，保留本回合/无turnId/持久错误。本地packages/tui/src/tui/controller/projection/turn-projection.ts:59起只清shell与duration | 值得合，低风险：按旧错误边界和历史刷新回归核验，不改配色/欢迎构图 |
+| #410文字部分 | wrapLiteralUserText保留用户下划线/星号，去终端控制串并按theme.text着色；本地transcript/view.ts仍用Markdown呈现用户输入 | 值得单独移植，中低风险：同时覆盖主栏、pending steer、transcript面板，窄宽度及中文；不连带新watchdog |
+| #410运行恢复 | 新5秒计时器、两次settled探测、generation与ownership判定；不只改提示文字 | 暂缓整组，中高风险：误判可能清掉仍运行/待审批/队列状态。以后如接收须独立边界审查与针对性竞态回归 |
+| #413 | 生产thinking_start建立TPS首token边界；上游使用observedAtMs，本地bridge.ts没有该参数，仍用this.now | 可后置，中风险适配：不能直接搬一小hunk称完成；缺少前置事件观测计时变化，要界定原始时间来源。非核心修错阻塞 |
+| #416 | 涉及live区域、stable rows、Markdown引擎、历史trim；本地已改engine/components/markdown.ts，存在fork重叠 | 暂缓，中高风险及体验取舍：活动内容超过一屏暂不可滚到早期行，窗口重建只保留近期行；不是纯小修。不拿已撤回#389/#390 |
+| #398 | 70文件；混合任务数量/上下文限额/性能/官方catalog/worktree fetch/提示与厂商通道 | 不整包合，拆出明确需求后再评；新默认fetch行为及退役服务内容不能夹带 |
+| #421 | goal最终回复guard/提示、provider refusal分类、TLS小范围重试、压缩reminder定位、侧聊retry，加官方默认模型和版本 | 只考虑后续拆分：refusal减少重复计费值得；goal行为值得讨论但改生命周期。保留refusal识别的provider+retry两侧依赖，不能只改一行。禁止带回官方默认模型及上游版本号 |
+| #422 | 两个side命令+版本；本地SIDE_MODE_READ_ONLY_COMMANDS尚无#421的retry，feedback在neutral runtime已internal | doctor可后置；feedback不接、版本不接，不整PR搬；上游来源说明不代表Talos反馈服务可用 |
+| #364（开放） | 改XDG目录、ensure-path-integration和ARM64 CI；与Talos.talos和默认不写宿主PATH直接重叠 | 暂缓，不为NixOS先改数据路径；本次未获得原生兼容证据 |
+| #186/#317（开放） | provider URL query保留、启动模型在new后延续 | 有价值但非已发布修复；当前无用户报错，先观察；以后可独立评审，不以开放为唯一否决理由 |
+| #307/#319（开放） | YAML别名/凭据/脱敏写入，或多个SQLite Turn写入重试 | 暂缓：涉及配置/秘密和持久化语义，不随小修顺手合 |
+
+建议本次批准范围若主人认可：#199、#388、#410文字部分；不是执行授权，不合任何代码。#381大范围后台stop、#379终端队列与#376hook正文暂不追加本轮范围；纯版本PR与已撤回滚动补丁不接。
