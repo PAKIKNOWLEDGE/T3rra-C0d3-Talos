@@ -485,7 +485,7 @@ pnpm verify --profile package
 
 ## 当前具名CLI验收
 
-首发候选为@pakiknowledge/tal0s-code 0.1.0，源码63bd98e；版本已确定，尚未发布。使用现有.talos配置，不复制密钥。普通入口直接运行已安装包，保留调用终端cwd与PATH，不经过旧cmd包装。启动默认不修改用户PATH或shell配置；模型工具目录只加到当前进程。
+首发候选为@pakiknowledge/tal0s-code 0.1.0，源码63bd98e；版本已确定，已授权执行公开npm发布。使用现有.talos配置，不复制密钥。普通入口直接运行已安装包，保留调用终端cwd与PATH，不经过旧cmd包装。启动默认不修改用户PATH或shell配置；模型工具目录只加到当前进程。
 
 先完全关闭旧终端窗口，再从开始菜单重新打开PowerShell；若仍继承旧环境，完全退出Windows Terminal或其宿主应用后重开。不要在旧终端仅开新标签页。
 
@@ -532,3 +532,21 @@ pnpm verify --profile package
 ```
 
 本轮不创建合成升级包，已有跨版本升级证据保留。上面是检查命令，不含npm发布授权；正式发布需主人另行批准。
+
+
+### npm 0.1.0 与 NixOS 安装
+
+@pakiknowledge/tal0s-code@0.1.0已执行公开发布。NixOS按主人决定改为发布后安装测试，尚未声明兼容。使用包要求支持的Node：>=22.19 <23或>=24.2 <27。
+
+```sh
+node --version
+npm install --global @pakiknowledge/tal0s-code@0.1.0 --registry=https://registry.npmjs.org
+talos --version
+talos
+```
+
+1. 查看Node版本后安装；安装失败保留最后错误，不盲目改系统。
+2. talos --version预期0.1.0。
+3. 在希望工作的目录执行talos，预期欢迎页/provider入口可用，不要求付费对话验收。
+
+若NixOS报原生库或可执行文件加载错误，提供原始错误，按实际失败处理。若暂时404，稍后只重试安装，不重复发布。后续升级命令为npm install --global @pakiknowledge/tal0s-code@latest。
