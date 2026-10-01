@@ -7,13 +7,13 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 任务标识 / 修订 | cli-user-acceptance / r1 |
-| 阶段 | 执行中 |
+| 阶段 | 待主人验收 |
 | 本轮角色 / 来源 | Luna；主人已确认包名@pakiknowledge/tal0s-code，本轮要求准备验收候选 |
-| 目标 / 方案入口 | 真实包名本地安装与两个验收启动入口；[本轮方案](plan.md#下一小轮本地用户验收准备) |
+| 目标 / 方案入口 | 真实包名本地安装与两个验收启动入口；[验收方案](plan.md#本地用户验收候选) |
 | 允许范围 | 现有干净CLI3055bc5构建/本地打包安装、验收启动脚本、fake新版预览及文档，不改引擎行为 |
 | 禁止范围 | 不发布/push、不替换全局mcode、不读取/复制token、不自动发模型请求，不决定首发版本 |
 | 验收 / 停止点 | 独立prefix实际安装、真实包名/launcher及安装后核心回归；可直接启动普通体验与假新版预览，交给主人后停 |
-| 完成证据 | 修改前两仓库干净；采用既有0.5.7作验收版本，不代表首发版本决定；本轮安装待补 |
+| 完成证据 | CLI3055bc5未改；@pakiknowledge/tal0s-code 0.5.7已独立prefix安装，普通cmd wrapper经实际npm talos.cmd输出0.5.7，离线preview update输出假0.5.8和准确手动命令。安装后smoke/BYOK22通过/3原平台跳过，无真实模型请求。Node当前PATH已为24.15.0；此前失败来自准备脚本调用，不是生产故障；本轮未重装/全库 |
 | 下一接手 / 就绪性 | 无就绪下一任务；本轮完成后待主人体验反馈与正式版本/平台结果 |
 
 ## 现在是什么状态
@@ -67,7 +67,7 @@
 
 ## 当前待主人事项
 
-1. 正式npm scope/包名和首个Talos独立版本/标签。@talos-local-fixture/cli及0.5.8都是本地演练值，不可以直接发布。
+1. npm包名已确认@pakiknowledge/tal0s-code；首个Talos独立版本/标签仍待确认。当前具名验收包暂为0.5.7，原@talos-local-fixture/cli及合成0.5.8均不发布。
 2. 另一台类Unix主机的OS/架构、受支持Node/pnpm与原生运行结果；现有源码快照准备好，没有擅自连接主机。
 3. 对当前CLI与受控假新版提示做目视确认；技术安装/JSON不交给主人兜底。GUI仍暂停，不让GUI旧失败混进CLI验收。
 
@@ -80,3 +80,11 @@
 ## 阅读入口
 
 只读本页→[plan待确认事项](plan.md#待主人确认及平台验收)→必要源码证据。操作命令在[README](../README.md)，已有探针不是任务清单。旧地图保留在archive供追溯，不作下一入口。
+
+## 本轮用户验收入口
+
+独立安装目录 C:/DEV/develop/T3rra-C0d3-Talos/.talos/acceptance/pakiknowledge-3055bc5，安装回执acceptance-install.json，候选archive及校验在同目录；生成模板在tools/cli-acceptance-templates入库，数据/依赖/原始日志不入库。普通和预览操作命令、步骤只在README，见“当前具名CLI验收”。
+
+正常体验入口使用现有home/.talos配置（不是复制密钥）：用户保存provider/设置会影响该既有配置；测试cwd为可丢弃workspace。离线预览使用独立preview-data/preview-home，不需要key，不用于真实对话；假0.5.8未发布，禁止执行示例升级命令。普通模式不自动发模型prompt，用户主动使用才可能消费API额度。
+
+本轮曾在TEMP脚本两次错误调用cmd导致失败；Astra直接核对npm shim可用，原PATHNode22遗留后已由主人修为24.15.0。只修准备入口，不修改npm生成shim或绕过它充当成功；普通wrapper经call实际shim已验证。源码/安装前证据仍按准确基点保留，目视验收未做。

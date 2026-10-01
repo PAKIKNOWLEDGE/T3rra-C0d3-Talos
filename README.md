@@ -482,3 +482,26 @@ pnpm verify --profile package
 5. 退出 → 进程按原行为结束；源码版不自动检查占位包。真实registry与正式npm安装在主人发布后另验，不把假新版当已发布证明。
 
 步骤3的具体预览启动命令必须随正式候选身份给出，目前没有要求主人操作未准备的预览。当前未发布占位包，也未声称新增提醒已目视验收。
+
+## 当前具名CLI验收
+
+已准备@pakiknowledge/tal0s-code本地安装候选，当前验收版本0.5.7，**尚未发布，不代表首发版本决定**。无需重装系统mcode、重填已有.talos配置或手工准备环境。启动入口固定Node24，实际调用独立prefix里npm生成的talos.cmd。
+
+```powershell
+& "C:/DEV/develop/T3rra-C0d3-Talos/.talos/acceptance/pakiknowledge-3055bc5/01-launch-talos.cmd"
+```
+
+也可以在资源管理器双击该文件。这是正常体验：使用现有home/.talos配置，密钥不复制；保存provider/设置仍会更新现有配置。自动进入本候选的可丢弃workspace，真实请求只在你主动发送时发生。
+
+1. 启动普通入口，打开/provider查看后按Esc返回 → Talos构图和已有模型配置可用；不要为了验收重新保存配置。
+2. 如愿意用已有模型，发送“请创建acceptance-note.txt，内容仅为acceptance-ok，不修改其他文件” → 回复/工具过程可读，工作区中有正确文件；是否审批以你现有规则为准，不为制造审批改规则。
+3. 退出，再启动普通入口，用已有会话继续入口打开刚才会话 → 目录/历史正确，可继续；不要求执行已通过的底层日志检查。
+4. 退出后双击02-preview-update.cmd，或执行下面命令 → 明确显示OFFLINE PREVIEW，0.5.8为假新版，欢迎页后出现更新提示；输入/update查看完整包名/手动命令，缩窄终端后仍可打开详情，不安装/重启。此模式无凭据，不发模型消息。
+
+```powershell
+& "C:/DEV/develop/T3rra-C0d3-Talos/.talos/acceptance/pakiknowledge-3055bc5/02-preview-update.cmd"
+```
+
+**不要执行预览中的npm升级命令：该包尚未发布。** 预览只检查提示，不用于对话。技术独立安装与22项回归由执行者完成，你只需报告上述实际体验是否通过。界面问题给截图或具体动作即可，不需要JSON。
+
+若本地启动文件意外缺失，在本GUI仓库运行python tools/prepare-cli-acceptance.py可从已提交模板重新生成（不会安装或复制密钥）。候选文件、依赖、数据和日志默认忽略，模板与命令入Git。

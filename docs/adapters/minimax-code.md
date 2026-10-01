@@ -723,3 +723,11 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 【实测】安装包CLI update由精确测试URL的本地假fetch返回0.5.8，生成npm install --global @talos-local-fixture/cli@latest，明确不自动安装；记录的请求仅该URL，未真正查询registry测试scope。TUI/CLI现有回归351通过，初轮假registry15分支通过，追加4身份负例纳入最终能力回归。实际registry与目视提醒未验。
 
 【范围】正式包名/版本与其他主机原生结果仍待主人，不能发布这个测试包。完整回执/包校验在忽略候选目录，源码导出不含Git历史/依赖。无真实模型token、账号操作、远程主机或push/npm publish。
+
+### 具名本地验收候选（2026-10-01）
+
+【实测】CLI3055bc5，包名由主人确认@pakiknowledge/tal0s-code，保留0.5.7仅作当前验收版本，未决定首发版本。独立prefix安装到GUI仓库忽略目录，未修改系统mcode或npm配置。Node24.15.0下安装后现有smoke+BYOK22通过/3原平台跳过，包含真实Runtime/假模型的配置、工具、审批/取消/异常load证据。
+
+【实测】两个简单cmd入口均固定当前C:/Program Files/nodejs Node，普通模式通过call npm生成talos.cmd输出0.5.7。离线预览只为精确自身registry latest URL提供本地0.5.8响应，update输出npm install --global @pakiknowledge/tal0s-code@latest和不自动安装说明；模型未调用。程序文件与生产代码不改，前段TEMP Python cmd引号调用失败不当作引擎故障，也不以直接cli.js版本替代真实shim验证。
+
+【未验】TUI真实终端渲染/用户实际对话由主人验收；普通入口沿用既有.talos设置，预览隔离，无隐式凭据复制。首发版本/类Unix结果/npm发布均未决定或未完成。
