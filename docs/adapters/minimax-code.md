@@ -711,3 +711,15 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 
 【源码】CLI7223dca：cli/main.ts:152-155旧update只返回未配置文案；TUI update-flow.ts:18-23同样固定文案。app-composition.ts:398-412已有checkForUpdate异步hook，TuiUpdateNotice shell/chrome.ts:23-54已有非阻塞提示和/update详情入口；launcher不再提供旧installer callback。新检测使用实际包manifest name/version/private/bin.talos，默认源码private无查询，配置一致时请求registry latest。旧update/application/service/prefix模块禁入不变。
 【实测包基线】私有候选7223dca安装后22核心通过/3原平台跳过、真实launcher/SQLite/ripgrep、同版重装/卸载成功；sha256 62f5020becb6674f580d77e08489ab83641455c36800fcae5849acc482e25c49。P3改动不在此包中，不能借用此结果说提醒已验。
+
+### 无人值守源码及候选包验收（2026-10-01）
+
+【实测】干净生产基点763566c：Node24.15.0/Windows x64完整full verifier15适用闸PASS，capability5003通过/61既有跳过。生产P3检测纳入此构建；POSIX/macOS及无archive包闸跳过如实保留。随后3055bc5只新增Windows package profile登记，release-tools66通过/2跳过，source4279通过，生产Runtime未改变。
+
+【实测】763566c候选包约12.65MB、896文件、134许可文件；manifest显式测试名@talos-local-fixture/cli、talos-only，保留许可证与需要的native/runtime资源，stage无退役mcode-tools/matrix入口或embedded目录，无workspace隐私/node_modules。公开依赖通过独立npm缓存安装，未改变系统全局CLI。
+
+【实测】Windows真实launcher/SQLite/ripgrep、安装后smoke+BYOK22通过/3原平台跳过、同版重装及卸载PASS；独立0.5.8合成第二包安装覆盖、launcher版本改变、原合成配置字节不变、升级后完整BYOK再次通过、卸载完成。第二包是同代码版本元数据变化，仅证明安装机制，不冒称发布或跨版本应用数据格式迁移。
+
+【实测】安装包CLI update由精确测试URL的本地假fetch返回0.5.8，生成npm install --global @talos-local-fixture/cli@latest，明确不自动安装；记录的请求仅该URL，未真正查询registry测试scope。TUI/CLI现有回归351通过，初轮假registry15分支通过，追加4身份负例纳入最终能力回归。实际registry与目视提醒未验。
+
+【范围】正式包名/版本与其他主机原生结果仍待主人，不能发布这个测试包。完整回执/包校验在忽略候选目录，源码导出不含Git历史/依赖。无真实模型token、账号操作、远程主机或push/npm publish。

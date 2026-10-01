@@ -1,6 +1,6 @@
 # T3rra-C0d3-Talos
 
-**操作索引，不是待办清单。** 只运行status当前任务需要的命令；后文已完成探针不应逐项重跑。当前修复入口见 [plan](docs/plan.md#下一小轮平台路径回归修复)，源码/安装/用户验收结果统一见status。
+**操作索引，不是待办清单。** 只运行status当前任务需要的命令；后文已完成探针不应逐项重跑。当前修复入口见 [plan](docs/plan.md#待主人确认及平台验收)，源码/安装/用户验收结果统一见status。
 
 Talos 由两个仓库组成：这里维护 GUI 和产品文档；相邻 `C:\DEV\develop\Talos-CLI` 维护 mcode fork 的引擎与终端界面。项目现状只看 [status](docs/status.md)，往后做什么看 [plan](docs/plan.md)。本页仅作操作手册，不是要依次执行的任务清单。
 
@@ -448,3 +448,37 @@ pnpm exec vitest run --config vitest.oss.config.mjs --maxWorkers 1 packages/tui/
 ```
 
 期望按对应平台的真实路径/调用语义校准，保留WSL转换失败与无多余子进程检查。无需主人安装WSL。当前结果只记status，不能把Windows上的夹具验证说成Linux实测。
+
+## 本地候选准备与包验证（未发布）
+
+正式name/scope及版本先由主人确认。当前保留的@talos-local-fixture/cli包仅用于演练，**禁止发布**；root开发workspace private保护不变。以下命令是准备/验证入口，不包含npm publish或Git推送：
+
+```powershell
+cd C:/DEV/develop/Talos-CLI
+$env:PATH="C:/Program Files/nodejs;$env:PATH"
+$env:TALOS_NPM_PACKAGE_NAME="<主人确认的实际包名>"
+$env:MCODE_RELEASE_TAG="v<与root及TUI一致的确认版本>"
+pnpm build
+node scripts/package-cli-release.mjs $env:MCODE_RELEASE_TAG "<仓库外候选目录>" --publishable
+$env:MCODE_RELEASE_ARCHIVE="<生成的归档绝对路径>"
+$env:MCODE_VERIFY_REPORT_DIR="<仓库外检查回执目录>"
+pnpm verify --profile package
+```
+
+不传--publishable时manifest默认private，不能发npm且不自动查询更新；传入该flag也只是准备产物，不是发布授权。候选stage保留许可并排除已退役cloud入口资源。package profile使用隔离前缀和fake home，实际安装/launcher/native/核心回归、重装、卸载；Windows已登记到该profile。网络仅用于公开依赖下载，模型响应始终来自loopback夹具。
+
+可选两版本验证设置TALOS_VERIFY_UPGRADE_ARCHIVE及TALOS_VERIFY_UPGRADE_VERSION，必须有对应.sha256；不得把同版重装说成升级。TALOS_VERIFY_UPDATE_PRELOAD只供执行者使用受控假registry验证安装后的只读更新命令，不用它伪造线上结果。当前演练材料和README存放在忽略目录 .talos/release-candidates/763566c，实际提交/覆盖见status。
+
+另一类Unix主机：先确认uname -srm、node -v、pnpm -v，复制同版源码及checksum，在新目录准备其本机依赖，运行现有适用verify/policy和候选包验证；不复制Windows node_modules/dist、不需要WSL。当前源码快照是763566c，后续正式版本应重新导出准确基点。
+
+## 最后用户验收的动作与预期
+
+前置：正式包身份已确认，安装/技术检查由执行者完成；新增可见提醒需提供准确当前候选与受控假新版来源，不要求主人重新填API key。
+
+1. 从当前CLI仓库用pnpm build和pnpm talos启动源码版 → 已验收的Talos主题、字标和入口应保持。
+2. 输入/update → 源码或private候选说明未配置发行更新来源，不开始安装、不退出TUI。
+3. 在执行者准备的发行候选假新版预览中启动 → 提醒异步显示，可继续输入、不抢焦点；这是受控预览而不是线上新版。
+4. 输入/update → 显示精确包名、版本及手动npm命令；提示本身不下载安装或重启。缩窄终端后详情仍可通过/update查看。
+5. 退出 → 进程按原行为结束；源码版不自动检查占位包。真实registry与正式npm安装在主人发布后另验，不把假新版当已发布证明。
+
+步骤3的具体预览启动命令必须随正式候选身份给出，目前没有要求主人操作未准备的预览。当前未发布占位包，也未声称新增提醒已目视验收。
