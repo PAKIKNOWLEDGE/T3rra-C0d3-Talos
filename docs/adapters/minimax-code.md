@@ -692,3 +692,13 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 
 【源码】CLI d7ab82b：observability/local-observability.ts使用node:path.join生成本地路径，测试两处硬编码POSIX分隔符；生产路径正确。host/wsl-path.ts:13-25依据os.platform与WSL信号识别；composer/attachments.ts:57-64在~展开后转换。wsl-attachment-paths夹具默认mock为linux/WSL，却在Windows真实临时目录下展开home，导致Windows绝对路径被当WSL输入。应按实际宿主构造native-resolution夹具；现有真实WSL转换用例在Windows原有跳过继续明确，不伪装Linux实测。
 【实测基线】两文件3失败/23通过/11已有平台跳过，固定Node24；本轮尚未修改生产代码。
+
+### Windows source-contract与退役更新器（2026-10-01）
+
+【源码】CLI5287f4c：scripts/check-windows-source-location.mjs:35-57用fsutil输出字符串确认fixed/NTFS；test/windows-contract.test.mjs:34-114仍安装上游managed update，即使生产已禁止其进入build。实际普通fsutil volumeinfo访问拒绝，drivetype为C: - Fixed Drive；只读CIM Win32_LogicalDisk在正常宿主返回DeviceID C:、DriveType3、FileSystem NTFS。增加仅在fsutil失败/无法解析时回退的结构化查询，错误/远程/exFAT继续拒绝。旧installer安装回归以真实构建禁入、update命令只读且前缀无变化替代，实际Talos包安装另归P2。
+
+### 本地候选包身份与Windows验证准备（2026-10-01）
+
+【源码】scripts/package-cli-release.mjs:55-71此前硬编码@minimax-ai/code/private/upstream repo；verify-cli-release.mjs:14,40-49仅Linux/macOS，安装目录lib/node_modules固定上游名。仅打包脚本能生成独立manifest，开发根private保持；正式包名由主人确认，准备显式参数且缺失/上游身份拒绝，测试使用@fixture/talos-cli。
+【范围】package stage排除退役mcode-tools.js、matrix-mcp-stdio.js、internal-bin、embedded/mcode-tools，保留LICENSE/NOTICE/runtime资源。允许本地私有测试包、明确private保护，未确认正式身份不发布。Windows安装用自身Node运行npm-cli.js和实际npm生成talos.cmd，独立prefix/fake home；同版重装与卸载实测可独立完成，跨版本升级不能冒称通过。旧GitHub发布脚本入口退役，不再自动发布上游品牌资产。
+【未验】尚待修改和实际安装；完整本轮源码verifier正在独立基点d3f7e6c运行，不能把后续package改动算进其结果。

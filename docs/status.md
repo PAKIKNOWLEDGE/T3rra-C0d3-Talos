@@ -6,14 +6,14 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | cli-windows-contract-repair / r1 |
+| 任务标识 / 修订 | cli-package-preparation / r1 |
 | 阶段 | 执行中 |
 | 本轮角色 / 来源 | Luna；主人授权无人值守连续推进已列失败修复/发行准备，内部完成后无需逐轮等待继续 |
-| 目标 / 方案入口 | 处理F5卷/退役安装器与F6已有lint；[本轮方案](plan.md#下一小轮windows检查收口) |
+| 目标 / 方案入口 | P1/P2显式包身份与Windows本地安装候选；[本轮方案](plan.md#下一小轮本地安装候选包) |
 | 允许范围 | 按现存F4→F5/F6→候选验证与发行欠账连续推进，每组源码/证据/Git收口 |
 | 禁止范围 | 不推送/发布、不改真实账号/数据、不付费请求、不重复无依据专项；正式包名未确认不猜scope |
 | 验收 / 停止点 | 各组内部复验后提交、继续剩余授权工作；真实架构/包身份决策阻塞时完成独立工作并说明；所有失败也WIP保存 |
-| 完成证据 | 修改前文档7320ddd、CLI5287f4c已保存F4，26通过/11原平台跳过，目标lint通过；继续F5/F6 |
+| 完成证据 | F4已通过保存5287f4c；F5 d3f7e6c定向通过（4/4、release-tools65/2跳过）；F6全量TUI lint通过。干净CLI d3f7e6c完整full verifier 15个Windows适用闸全通过，报告TEMP/talos-night-verify-report；POSIX/macOS及实际包闸跳过不算通过。现在推进P1/P2，不把后续改动冒充此基点全绿 |
 | 下一接手 / 就绪性 | 无就绪下一任务；当前无人值守执行中，不生成竞争待办 |
 
 ## 现在是什么状态
@@ -24,7 +24,7 @@
 | --- | --- |
 | CLI/TUI | provider平级、talos命令、.talos目录、Talos主题/字标/三六边形已落地；专属登录与部分厂商通道退役。可见验收仅适用于主人实际通过的切片 |
 | 核心使用 | 源码构建已通过本地假provider的配置/回复/read工具/历史继续；真实SDK+Runtime的审批文件结果、取消、正常与强制退出后的load验证已记录 |
-| 工程保护 | CLI当前5287f4c；WIP30d23b8、38d53f3、6cac9c0、95ee1d1及后续修复提交保留。保存不受测试结果阻挡；不重写历史、不push |
+| 工程保护 | CLI当前d3f7e6c；WIP30d23b8、38d53f3、6cac9c0、95ee1d1及后续修复提交保留。保存不受测试结果阻挡；不重写历史、不push |
 | npm | 尚未发行。打包仍有上游身份/private，Windows候选包安装证据与自己的新版检测欠缺 |
 | GUI/桌面 | GUI暂停：已有demo正本，产品回复不可见/样张残留与刷新恢复问题未解决。Tauri 2路线保留，不影响当前CLI修复顺序 |
 
@@ -38,8 +38,8 @@
 | F2 语言14项 | tui-session-history-flow 1、tui-session-mutation-panels 13；中文输出与英文预期冲突 | **已关闭**。对应两文件固定en-US默认夹具，中文显式locale用例保留，历史动作/回退/布局断言未删除；与F1同组通过 |
 | F3 文案10项 | acp-agent 5、headless-runner 2、tui-terminal-presentation 1、chrome-flow 1、feature-flow 1 | **已关闭**。五文件211/211通过，类型/target lint通过；显示品牌/提示更正，协议身份、认证拒绝、能力、状态序列保持。未恢复旧登录 |
 | F4 平台3项 | observability 2路径分隔符；wsl-attachment-paths 1转换失败 | **已关闭**。CLI5287f4c，26通过/11原有平台跳过，target lint通过；真实宿主路径夹具修正，生产实现未改 |
-| F5 Windows source-contract 4项 | 卷探测1；旧managed updater安装3 | 卷检查保留且查根因；旧安装器退役按实际契约替换覆盖，不修活旧更新器；候选包实际安装统一归P2，F5关闭不以P2完成为前置 |
-| F6 lint 2项待复验 | plugin/application变量遮蔽和tui-app对象构造已局部修补 | 先复跑既有lint；未复跑不记通过，不为此另造测试 |
+| F5 Windows source-contract 4项 | 卷探测1；旧managed updater安装3 | **已关闭**。CLI d3f7e6c：实际Windows 4/4、release-tools65通过/2平台跳过，source通过；fsutil失败回退只读CIM且fixed/NTFS仍严格，旧安装器改真实禁入/零安装覆盖。P2包安装未因此完成 |
+| F6 lint 2项待复验 | plugin/application变量遮蔽和tui-app对象构造已局部修补 | **已关闭**。本轮lint:tui全量通过，已有两项补丁无需新修改 |
 
 有效失败必须有根因、处置和复验证据才能关闭。不得静默删掉、skip、降低阈值或用“上游本来如此”搪塞；退役/平台不适用须有具体依据和仍适用的覆盖。新失败或可证实的回归风险可追加，只有“未验”不得追加。具体任务准入见workflow。
 
