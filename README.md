@@ -582,3 +582,16 @@ pnpm start
 3. 打开/transcript → 同一用户文字也按字面显示。若正常工作中遇到失败并重试成功，旧回合临时错误不再残留；无需人为制造失败。
 
 压缩请求不含空tools及错误清理边界已由离线技术检查核验，不交给主人看JSON。启动命令沿用源工程pnpm；真实provider兼容性与手动文字体验未冒称通过。
+
+
+### 0.1.1补丁版升级
+
+本次包含#199、#388及#410文字修复。先前手动验收由主人免除；源码和安装包技术检查通过。npm处理同步完成后使用：
+
+```sh
+npm install -g @pakiknowledge/tal0s-code@0.1.1 --registry=https://registry.npmjs.org/ --ignore-scripts=false --include=optional
+talos --version
+talos
+```
+
+预期版本0.1.1，沿用已有.talos模型配置和欢迎界面。若npm暂报无此版本，只等待注册表同步，不反复发布；正式读回结果看status。无需为了验收再发付费请求。

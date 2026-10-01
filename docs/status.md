@@ -6,16 +6,16 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | upstream-selected-fixes / r1 |
-| 阶段 | 已完成；main已合入并推送 |
-| 本轮角色 / 来源 | Luna；主人批准#199/#388/#410文字部分，其他记为待复看 |
-| 触发依据 | 主人已批准接收静态审查后的三项限定修复 |
-| 目标 / 方案入口 | 批准修复的源码主线交付；[工作流](workflow.md#选择性接收上游-pr) |
-| 允许范围 | CLI批准补丁/回归/登记/来源说明，GUI工作流与状态；允许main收口推送 |
-| 禁止范围 | 不合其他PR、不引入#410运行watchdog、不改版本/模型/权限、不发布npm、不付费模型 |
-| 验收 / 停止点 | 批准范围检查通过、来源可追溯、main收口推送；工作流经验更新后停 |
-| 完成证据 | CLI953cb94已合回main并push，ls-remote一致，短期分支已删除；6个定向文件513通过，full15Windows适用闸PASS，capability5026通过/61已有跳过，source4285；用户Path前后一致。来源PR/SHA/原作者已登记，#410 watchdog未入库；未发布npm |
-| 下一接手 / 就绪性 | 其余候选在本页待复看，不自动启动；可选源码体验，不要求付费请求；新npm版本须另行授权 |
+| 任务标识 / 修订 | cli-release-0.1.1 / r1 |
+| 阶段 | Git/GitHub发布完成；npm已接受、处理同步中 |
+| 本轮角色 / 来源 | Luna；主人免除本轮手动验收，要求发布说明、npm发布及push |
+| 触发依据 | 已批准三项修复已通过源码完整检查，需要发行给用户 |
+| 目标 / 方案入口 | 0.1.1补丁说明、同提交包与源码、npm及GitHub发布；[工作流](workflow.md) |
+| 允许范围 | 两处版本/README/发行说明、现有构建和package闸、main/版本标签push、npm/GitHub发布 |
+| 禁止范围 | 不添加其他上游改动、不付费模型、不改用户配置/宿主PATH、不声明手动/Unix验证通过 |
+| 验收 / 停止点 | 包安装闸、同版本身份与提交核对、npm发布和读回、main/标签/发布说明一致；保存后停 |
+| 完成证据 | d395b6d已push main及v0.1.1；GitHub Release已公开，发布说明及安装包/源码/SHA256齐备。0.1.1 package闸PASS、22安装后核心通过/3平台跳过、native/重装/卸载通过；复用953cb94 full15闸，用户Path不变。npm publish退出0并提示处理中，当前注册表仍latest0.1.0，不能称新版本读回已通过 |
+| 下一接手 / 就绪性 | 等待npm正常处理后只读确认0.1.1/latest/完整性，不重复发布；其他上游候选仅待复看 |
 
 ## 现在是什么状态
 
@@ -113,3 +113,11 @@ origin恢复普通全分支fetch映射，防止新工作分支不显示；upstre
 批准范围已合入main953cb94：#199、#388、#410字面文本呈现。来源与具体排除项在CLI docs/source-sync.md及提交正文；GUI adapter保存契约/实测证据。未变Talos版本、默认模型、权限、数据目录、欢迎视觉；未引入其他上游代码或#410运行watchdog。已发布npm0.1.0保持原样，本轮不是发行。
 
 技术检查六文件513通过；完整Windows15闸PASS、5026 capability通过/61已有跳过，native Unix及真实provider没有运行。完整报告保存在忽略目录.talos/upstream-review-20261002/full-verification，目标953cb94。主人可见字面文本尚未手动验收，启动/步骤只在README；此前已验收视觉不重新设计。首次实践经验已并入workflow，其他候选仅待复看。
+
+## 0.1.1发行
+
+版本提交d395b6d724bbc7a476ae9e8430c03874b57b1cb4：root/TUI0.1.1、发布说明及README版本/链接、inventory，生产代码沿953cb94。main/tag已push，短期分支清理，GitHub Release公开，四个产物（npm包/source包及各自SHA256）。准确回执和npm原始结果位于忽略目录.talos/release-candidates/0.1.1。
+
+主人明确免手动验收并授权发布，不等于目视/Unix已通过。新包安装闸通过，复用实际代码上一轮full结果，不宣称版本提交重新跑full。旧CLI release自动上传工作流已disabled_manually，其他CI未变，避免标签触发退役上传路径。
+
+npm发布命令成功退出，明确提示package is being processed；当前读回尚无0.1.1。只等待/查询，不重复publish，不把异步处理中说成安装已可用。公开发布说明已写CLI docs/releases/0.1.1.md；正常升级命令在README。

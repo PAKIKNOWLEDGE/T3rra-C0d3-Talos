@@ -777,3 +777,5 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 【本轮实施依据，2026-10-02】Talos c7adea2，主人批准#199/bf3916f、#388/67a5c2a、#410/5683465的literal-text、view、panel与文字回归。采用官方PR逐文件补丁；#410 runtime-event-flow、observability和stale-run测试不纳入。保留供应商账本，新增HTTP/字面文本回归登记现有capability清单；不改变extraction.sourceRevision。实测结果如下。
 
 【实测，2026-10-02，953cb94】已批准补丁应用后，6个受影响测试文件513通过，包括7个本机HTTP/SDK compaction检查、错误清理边界、原样用户文字/面板/待发送消息回归。现有full15Windows适用闸PASS：capability5026通过/61跳过，Windows4/4、权限147通过/15POSIX跳过、status11/11、smoke20通过/1macOS跳过、BYOK2通过/2POSIX跳过；source4285。原作者DanielWalnut经官方commits API核对，移植commit coauthor和PR SHA保留。main/origin均953cb94，临时分支清理；未运行真实provider/Unix或发布新npm。用户注册表Path前后一致，模拟终端测试不等于主人目视验收。
+
+【发行版本依据，2026-10-02】953cb94代码full15闸PASS保留；d395b6d只变root/TUI版本0.1.1、README版本/发布链接、docs/releases/0.1.1.md及source inventory。使用scripts/build.mjs生成0.1.1/gitHead与scripts/package-cli-release.mjs精确HEAD校验，LEGAL.md与新repository地址保留。运行package安装闸，不重复未变代码全套。主人免人工验收不等于目视/Unix已通过。
