@@ -7,25 +7,25 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 任务标识 / 修订 | cli-first-release-candidate / r1 |
-| 阶段 | 执行中 |
-| 本轮角色 / 来源 | Luna；主人授权先做版本确认与最终发行候选两项 |
-| 触发依据 | npm首发交付尚缺独立版本及包含最后PATH修复的最终候选检查 |
-| 目标 / 方案入口 | 首发0.1.0、准确源码/安装包与现有Windows发行闸；[本轮方案](plan.md#首发候选收口) |
-| 允许范围 | CLI根及TUI版本、必要发行配置/检查修复、候选产物、文档；沿现有验证器 |
-| 禁止范围 | 不发布/push、不连接Unix主机、不改视觉/provider、不付费模型请求、不启用持久化PATH集成 |
-| 验收 / 停止点 | 同提交同版本包/源码、Windows适用full闸与package闸、包身份/手动更新目标一致；保存结果后停 |
-| 完成证据 | 继承已验收体验及环境修复；本轮新版本/新候选尚未完成 |
-| 下一接手 / 就绪性 | 本轮完成后仅待类Unix原生验证与发布授权，不派生新专项 |
+| 阶段 | 已完成（本轮1、2项） |
+| 本轮角色 / 来源 | Luna；主人授权确认0.1.0与制作最终发行候选 |
+| 触发依据 | npm首发欠独立版本及包含PATH修复的精确候选发行检查 |
+| 目标 / 方案入口 | 0.1.0同提交源码/安装包及Windows适用发行闸；[本轮方案](plan.md#首发候选收口) |
+| 允许范围 | 两处版本、现有构建/打包/检查、独立prefix候选入口与文档 |
+| 禁止范围 | 不发布/push、不创建发行Git标签、不执行Unix第三项、不改视觉/provider、不付费模型、不持久化PATH集成 |
+| 验收 / 停止点 | 版本、同提交包/源码、full和package闸、准确身份及手动更新目标通过；保存结果后停 |
+| 完成证据 | CLI63bd98e：root/TUI0.1.0；Windows x64 Node24.15.0 full15适用闸PASS（5003能力通过/61已有跳过），package闸PASS，安装后smoke/BYOK22通过/3平台跳过、SQLite/ripgrep、重装/卸载通过；实际安装manifest/手动更新包身份正确，源码/安装包同HEAD及校验一致。两个检查前后用户Path均不变 |
+| 下一接手 / 就绪性 | 无就绪下一任务；第三项待主人提供Unix主机OS/架构与执行安排，发布需单独批准；不重复Windows已通过检查 |
 
 ## 现在是什么状态
 
-**原F1–F6已关闭，Windows源码适用总闸全绿，并已产生真实可安装的本地Talos候选；正式npm尚未发布。** 独立包身份接线、退役资源排除、只读新版提醒和Windows安装/重装/合成跨版本升级/卸载已落地。包名及普通启动/新版提示体验已确认；剩下独立版本确认、最终提交的发行检查和类Unix原生证据，不能冒称全平台发布批准。
+**原F1–F6已关闭，Windows源码适用总闸全绿，并已产生真实可安装的本地Talos候选；正式npm尚未发布。** 独立包身份接线、退役资源排除、只读新版提醒和Windows安装/重装/合成跨版本升级/卸载已落地。包名及普通启动/新版提示体验已确认；独立版本0.1.0与最终Windows发行检查已完成；仅剩类Unix原生证据和正式发布批准。
 
 | 工作线 | 当前事实 |
 | --- | --- |
 | CLI/TUI | provider平级、talos命令、.talos目录、Talos主题/字标/三六边形已落地；专属登录与部分厂商通道退役。可见验收仅适用于主人实际通过的切片 |
 | 核心使用 | 源码构建已通过本地假provider的配置/回复/read工具/历史继续；真实SDK+Runtime的审批文件结果、取消、正常与强制退出后的load验证已记录 |
-| 工程保护 | CLI当前0a7e13f；安装候选生产基点4e9f1ba；WIP30d23b8、38d53f3、6cac9c0、95ee1d1及后续修复提交保留。保存不受测试结果阻挡；不重写历史、不push |
+| 工程保护 | CLI当前63bd98e，源码和安装候选均对应此提交；WIP30d23b8、38d53f3、6cac9c0、95ee1d1及后续修复提交保留。保存不受测试结果阻挡；不重写历史、不push |
 | npm | 正式npm未发行；显式自有包身份、候选stage资源、Windows安装升级卸载、只读提醒已验证，演练身份不是正式名字 |
 | GUI/桌面 | GUI暂停：已有demo正本，产品回复不可见/样张残留与刷新恢复问题未解决。Tauri 2路线保留，不影响当前CLI修复顺序 |
 
@@ -46,31 +46,27 @@
 
 ## 发布欠账
 
-| ID | 明确依据与待交付 |
+| ID | 当前事实与剩余事项 |
 | --- | --- |
-| P1 包身份与内容 | 工程完成：显式name，缺失/上游身份拒绝、默认private，正式prepare须明确--publishable；独立repo/talos-only入口，stage排除退役cloud入口/embedded资源。实际候选896文件、约12.65MB、134许可文件，无node_modules/.talos/Git数据。正式name/version待主人确认 |
-| P2 安装与支持平台 | Windows763566c候选真实npm安装/talos.cmd/SQLite/ripgrep/22核心通过、同版重装、0.5.7→合成0.5.8替换/配置保持/升级后BYOK/卸载PASS。两个包代码相同，用于安装机制演练，不是两个已发布版。类Unix原生policy/安装仍待本人另一机；不装WSL、不擅自减少支持平台 |
-| P3 只读新版提醒 | 已实现并纳入最终full：实际manifest读取、private源码不查、发行TUI异步一次、/update及CLI查询、请求去重、稳定版本比较、离线/错误/超时明确未确认。安装包CLI用假registry验证正确name/手动命令，无安装调用。实际npm元数据与TUI目视提醒仍待正式身份/主人 |
-| P4 候选验收 | 763566c生产基点15Windows适用full闸PASS（5003能力通过/61已有跳过）；后续3055bc5仅增加Windows package profile，工具回归66/2跳过、source4279通过。未宣称Linux/macOS、远程发布或目视通过；不能将工具改动借用为另一次full结果 |
-
-正式npm包名/scope、独立版本策略在P1集中确认；现在不要求主人提供账号或重填模型。GUI/Tauri和已同意后置的搜索不插进CLI首发任务。
+| P1 包身份与内容 | 已完成：@pakiknowledge/tal0s-code 0.1.0、命令仅talos；开发workspace仍private，发行manifest为显式身份；许可保留、退役工具资源排除，源码/包/安装版本同提交。未创建Git发行标签 |
+| P2 安装与支持平台 | 本轮Windows实际npm安装、native SQLite/ripgrep、22安装后核心通过/3平台跳过、同版重装/卸载PASS。此前763566c的合成跨版本替换/配置保持证据保留，本轮未重复。类Unix原生仍待主人另一机；不装WSL、不擅自缩减支持范围 |
+| P3 只读新版提醒 | 源码适用回归通过；0.1.0安装包使用既有假registry检查准确@pakiknowledge/tal0s-code@latest手动命令，无内联安装。可见提示主人已验收。真实npm元数据只能发布后验证，不因此新增发行前请求 |
+| P4 候选验收 | 63bd98e最终Windows full15闸与package闸PASS；此前普通TUI入口/假新版主人验收保留。本轮只改版本和候选入口显示，不重复视觉验收。不声明Unix通过或已批准发布 |
 
 ## 最新证据与可用材料
 
-- **d3f7e6c**：F5真实卷检查及退役安装器替代覆盖通过，F6全量lint通过；此提交完整15Windows闸首次全绿。原F1–F6计数为历史症状，现不再猜测剩余失败。
-- **763566c**：包含安装版本识别修复和只读更新生产接线；最终full15闸PASS，capability5003通过/61跳过，Windows source-contract4/4、policy147通过/15POSIX跳过、status11/11、smoke20通过/1macOS跳过、BYOK2集成/2POSIX跳过。生产使用的是真实Runtime，本地fake provider，不花付费token。
-- **3055bc5**：仅将已支持的真实Windows安装闸登记进现有package profile；--list输出test:release-package、release-tools66通过/2跳过、source4279通过，不新增生产功能。
-- 实际候选763566c的安装回执为PASS，SHA256 a744d8a89cd28e9d757af484fd37acd731ae3186d670902821a002065ca5c164；合成升级包SHA256 6b2fe57e6f2fc1abd7fee8c0e2ab7c9d1207c8477f3b052ec5e636110615f6f9。运行安装后原有smoke/BYOK22通过/3跳过，升级后BYOK再次通过，同版重装和卸载真实完成。
-- 材料保存在忽略目录 C:/DEV/develop/T3rra-C0d3-Talos/.talos/release-candidates/763566c：两个测试包及校验、同版源码及SHA256、source-verification/verification.json、install-report/package-install.json、package-audit.json和禁止直接发布说明。原始日志仍在TEMP，不入Git。
-- 源码快照763566c SHA256 3551186e86c937716bae430f6f57087b69761d8068e8b533ac9cd7806ad3eefe，导出不含Git历史、依赖和用户数据，供另一主机原生检查。它不包含随后仅工具平台登记的3055bc5差异，平台候选最终确认时需同步准确源码，不混用提交。
-- 新版检测初轮15假fetch分支、TUI/CLI两文件351通过；新增4身份负例随后纳入完整capability通过。生产没有下载/执行安装器，旧安装链构建禁入保留。TUI外观未改，新增提醒未声称主人目视已验。
-- 更早配置/审批/取消/正常与异常load回归保留，详见adapter；不再重复专项。Windows跳过的POSIX信号与macOS权限仍不是通过，用户另一类Unix平台未测。
+- 候选根目录：C:/DEV/develop/T3rra-C0d3-Talos/.talos/release-candidates/0.1.0-63bd98e；精确源码提交63bd98ee0d7500f9c172718fb65c125e54e35014。保存源码包、具名npm包、各自SHA256、source-verification、install-verification、package-audit.json、release-candidate.json及发行范围说明；原始日志默认忽略。
+- full：15适用闸PASS，release-tools67通过/2跳过、capability5003通过/61跳过、Windows4/4、policy147通过/15POSIX跳过、status11/11、smoke20通过/1macOS跳过、BYOK2通过/2POSIX跳过。耗时625.3秒；原生Unix policy/sandbox不适用Windows，不当作通过。
+- package：现有闸PASS，实际npm安装后的SQLite/ripgrep、smoke/BYOK22通过/3平台跳过、同版重装及卸载完成。此次未提供合成升级包，报告crossVersionUpgrade=false；旧跨版本证据不冒充本轮结果。
+- 包SHA256 cfe95d726dd268e3217261933f0c655887a977de2f51851e47fd17768363e6f2；源码SHA256 44b21c417aaea16d81a5292a4169f7bc6377ed66d388780452967096d7a9920d。源码仅提交文件、不含Git历史/依赖/私人会话。
+- 普通入口01-launch-talos.ps1已从实际npm安装包输出@pakiknowledge/tal0s-code 0.1.0及0.1.0；保留调用cwd和既有.talos配置。入口版本展示读取manifest，避免再次硬编码旧版本。启动和检查命令只在README。
+- 本轮修改前两仓库干净：CLI0a7e13f/GUI3a854a5；版本保存63bd98e，GUI准备WIP8b03df3。不push、不发布、不操作真实模型配置。full与package分别核对用户注册表Path前后完全一致。
 
 ## 当前待主人事项
 
-1. npm包名已确认@pakiknowledge/tal0s-code；首个Talos独立版本已获本轮授权为0.1.0；候选使用v0.1.0字符串，暂不创建发行Git标签。当前具名验收包暂为0.5.7，原@talos-local-fixture/cli及合成0.5.8均不发布。
-2. 另一台类Unix主机的OS/架构、受支持Node/pnpm与原生运行结果；现有源码快照准备好，没有擅自连接主机。
-3. 假新版提示主人已确认通过；修复后的普通入口体验主人也已确认通过；环境问题技术验收已完成，技术安装/JSON不交给主人兜底。GUI仍暂停。
+1. 本轮1、2项已完成，技术检查由Luna验收，不要求主人读JSON或购买请求。正式包名和0.1.0已确认。
+2. 第三项类Unix主机：OS/架构及后续执行安排尚未提供；准确同版源码已准备。本轮没有连接该主机或声明它通过。
+3. 平台证据齐备后，正式npm发布需主人单独授权。Git发行标签也未创建，不用会自动推送/创建PR的release:cli脚本。
 
 ## 纠偏决定与永久边界
 
@@ -80,18 +76,10 @@
 
 ## 阅读入口
 
-只读本页→[验收环境纠偏](plan.md#下一小轮验收环境纠偏)→必要源码证据。操作命令在[README](../README.md)，已有探针不是任务清单。旧地图保留在archive供追溯，不作下一入口。
+本页→[待确认的平台事项](plan.md#待主人确认及平台验收)；本轮方案见[首发候选收口](plan.md#首发候选收口)，精确行为证据按需看adapter。操作命令只在README。无新授权不重跑已通过检查、不恢复暂停GUI。
 
 ## 本轮用户验收入口
 
-新候选位于忽略目录C:/DEV/develop/T3rra-C0d3-Talos/.talos/acceptance/pakiknowledge-4e9f1ba，源码4e9f1ba；安装回执仅记录本轮定向结果，不继承3055bc5全套计数为新候选结果。正常入口为01-launch-talos.ps1，保留调用者cwd/PATH和现有.talos配置。命令、前提、步骤只看README。
+0.1.0独立安装已保留在候选根目录prefix，普通入口为01-launch-talos.ps1。已验收外观/provider/主题无修改，本轮不要求重复视觉或付费验收；可选查看版本或正常打开，步骤和预期见README。
 
-130条清理名单、注册表原值/类型与修复后值保存在.talos/environment-recovery；恢复脚本带后续修改冲突保护。没有删除目录、其他软件路径、正常.talos/bin或主人_conn_test.txt。引擎已有显式数据目录accept-neutral路径保留，未混进临时路径删除名单。
-
-机器技术验收已完成，不要求主人付费复核。主人已在本轮确认普通入口体验通过；已打开应用/终端仍可能持有旧PATH，本轮不能改其他进程环境。主人新入口体验已通过；新候选完整回归和类Unix原生未验证；原候选完整通过证据保留，不重跑全库。npm缓存初次缺索引，联网补取后仍因本应用旧长PATH导致安装脚本命令不可发现，换当前检查进程为修复后的系统PATH后npm真实安装成功。
-
-新增工作流约束见workflow宿主环境防损；已退役旧普通cmd入口。假新版提示已验收，不再新增预览任务。
-
-CLI另有测试收紧提交0a7e13f：仅增强同一回归对被捕获异常的宿主操作计数，1通过；不改变4e9f1ba安装候选生产代码。
-
-主人验收：2026-10-01明确“可以，通过了”；环境纠偏关闭，不再派生技术验收轮。下一目标是首发候选收口：先确认独立版本，再统一版本、构建精确候选/源码并运行现有适用发行检查；类Unix沿已约定的真实主机检查。发布仍需单独授权。
+环境恢复备份继续保存在.talos/environment-recovery，旧_conn_test.txt未动。默认启动不再写宿主PATH，工作流宿主环境防损规则继续适用。本轮未验证类Unix、真实npm新版本元数据或发布后安装，未执行npm发布。
