@@ -6,16 +6,16 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 任务标识 / 修订 | cli-global-install-repair / r1 |
-| 阶段 | 已完成 |
-| 本轮角色 / 来源 | Luna；主人授权外出期间自行解决实际npm全局安装失败 |
-| 触发依据 | 真实0.1.0安装better-sqlite3阶段无法发现prebuild-install/node-gyp |
-| 目标 / 方案入口 | 同一已发布包全局安装恢复；[本轮方案](plan.md#实际全局安装修复) |
-| 允许范围 | 当前安装进程环境刷新、正常全局安装、actual native/离线smoke、文档 |
-| 禁止范围 | 不重发包、不改npm全局策略、不删用户数据、不写注册表PATH、不付费模型、不全库重跑 |
-| 验收 / 停止点 | 真实全局安装、talos版本、SQLite/ripgrep及smoke通过；用户PATH不变；保存后停 |
-| 完成证据 | Node24.15.0/npm11.12.1；应用旧PATH10167字符而用户946。当前安装进程刷新后npm退出0，global list与真正talos.cmd均0.1.0，SQLite select42与ripgrep15通过，现有global smoke20通过/1平台跳过，用户PATH前后不变。allow-scripts被当前npm报未知，不作为安装前提 |
-| 下一接手 / 就绪性 | 无就绪下一任务；仅待NixOS实际安装反馈，不重复发行/全库检查 |
+| 任务标识 / 修订 | cli-readme-publication / r1 |
+| 阶段 | 文档完成；推送等待明确授权 |
+| 本轮角色 / 来源 | Luna；主人要求使用两张截图写README并自主处理分支、push |
+| 触发依据 | CLI已发行，但仓库首页仍为上游品牌与安装说明 |
+| 目标 / 方案入口 | 中英README与截图、文档检查和分支推送；[工作流](workflow.md) |
+| 允许范围 | CLI README.md/README_ZH.md、用户截图及源码清单、分支与push |
+| 禁止范围 | 不改生产代码、不强推main、不重新发npm、不绕过自动审批拒绝 |
+| 验收 / 停止点 | README双语与图片链接有效、docs四闸通过、远端分支同步 |
+| 完成证据 | CLI分支codex/readme-cli，截图恢复点1513cb4，README提交b6688d7；docs四闸PASS，工作树干净。图片移至docs/assets，source清单4281。push自动审批拒绝，未上传 |
+| 下一接手 / 就绪性 | 待主人知情批准当前分支同时包含39个已有开发提交及2个本轮提交的推送；不尝试绕过 |
 
 ## 现在是什么状态
 
