@@ -32,33 +32,52 @@ for document in documents:
             if not (document.parent / path).is_file():
                 errors.append(f'Broken link: {document.relative_to(root)} -> {target}')
 
-def check_current_handoff(status_text, plan_text):
+def check_current_handoff(status_text, plan_text, workflow_text=""):
     """Validate the active handoff only; archived plans are not execution inputs."""
     issues = []
     if status_text.count('## 当前交接卡') != 1:
         issues.append('status must contain exactly one active handoff card')
     next_headings = [line[3:] for line in plan_text.splitlines() if line.startswith('## 下一小轮：')]
-    if len(next_headings) != 1:
-        issues.append('plan must contain exactly one next-round section')
+    if len(next_headings) > 1:
+        issues.append('plan must contain at most one next-round section')
     card = status_text.split('## 当前交接卡', 1)[-1].split(chr(10) + '## ', 1)[0]
     for field in ['任务标识 / 修订', '阶段', '本轮角色 / 来源', '目标 / 方案入口', '允许范围', '禁止范围', '验收 / 停止点', '完成证据', '下一接手 / 就绪性']:
         if card.count('| ' + field + ' |') != 1:
             issues.append('missing or duplicate handoff field: ' + field)
     def heading_anchor(heading):
         return ''.join(char for char in heading.lower() if char.isalnum() or char in '_- ').replace(' ', '-')
-    anchors = {heading_anchor(line[3:]) for line in plan_text.splitlines() if line.startswith('## ')}
-    targets = re.findall(r'plan[.]md#([^ )]+)', card)
-    if not targets:
-        issues.append('handoff must link to the current plan section')
-    for target in targets:
-        if target not in anchors:
-            issues.append('broken active plan anchor: ' + target)
+    anchors = {heading_anchor(line.lstrip("# ")) for line in plan_text.splitlines() if line.startswith("#")}
+    workflow_anchors = {heading_anchor(line.lstrip("# ")) for line in workflow_text.splitlines() if line.startswith("#")}
+    rows = {}
+    for line in card.splitlines():
+        if line.startswith("| "):
+            parts = [part.strip() for part in line.split("|")[1:-1]]
+            if len(parts) == 2:
+                rows[parts[0]] = parts[1]
+    target_row = rows.get("目标 / 方案入口", "")
+    target_links = re.findall(r"(?:plan|workflow)[.]md(?:#[^ )]+)?", target_row)
+    if not target_links:
+        issues.append("handoff must link its current target to plan or workflow")
+    for target in re.findall(r"(?:plan|workflow)[.]md#[^ )]+", card):
+        filename, anchor = target.split("#", 1)
+        available = workflow_anchors if filename == "workflow.md" else anchors
+        if anchor not in available:
+            issues.append("broken active target anchor: " + target)
+    next_row = rows.get("下一接手 / 就绪性", "")
+    ready = next_row.startswith("已就绪：")
+    if ready and (len(next_headings) != 1 or not re.search(r"plan[.]md#[^ )]+", next_row)):
+        issues.append("ready next task must link to the unique next-round section")
+    if ready and len(next_headings) == 1:
+        expected = "plan.md#" + heading_anchor(next_headings[0])
+        if expected not in next_row:
+            issues.append("ready next task points outside the next-round section")
     return issues
 
 if (root / 'docs/status.md').is_file() and (root / 'docs/plan.md').is_file():
     errors.extend(check_current_handoff(
         (root / 'docs/status.md').read_text(encoding='utf-8'),
         (root / 'docs/plan.md').read_text(encoding='utf-8'),
+        (root / 'docs/workflow.md').read_text(encoding='utf-8'),
     ))
 manifest = root / 'demo/baseline.sha256.json'
 if not manifest.is_file():

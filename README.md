@@ -1,6 +1,6 @@
 # T3rra-C0d3-Talos
 
-**操作索引，不是待办清单。** 只运行status当前任务需要的命令；后文已完成探针不应逐项重跑。当前修复入口见 [plan](docs/plan.md#下一小轮主题与语言回归修复)，源码/安装/用户验收结果统一见status。
+**操作索引，不是待办清单。** 只运行status当前任务需要的命令；后文已完成探针不应逐项重跑。当前修复入口见 [plan](docs/plan.md#下一小轮文案回归修复)，源码/安装/用户验收结果统一见status。
 
 Talos 由两个仓库组成：这里维护 GUI 和产品文档；相邻 `C:\DEV\develop\Talos-CLI` 维护 mcode fork 的引擎与终端界面。项目现状只看 [status](docs/status.md)，往后做什么看 [plan](docs/plan.md)。本页仅作操作手册，不是要依次执行的任务清单。
 
@@ -424,3 +424,15 @@ pnpm exec vitest run --config vitest.oss.config.mjs --maxWorkers 1 packages/tui/
 ```
 
 预期验证实际默认/兼容/取消恢复与指定语言的历史操作；不接受单纯删除失败断言。语义与视觉要求见plan，真实结果只在status更新。
+
+## 文案失败组的定向回归
+
+用于status F3，先核对实际行为再修断言。
+
+```powershell
+cd C:/DEV/develop/Talos-CLI
+$env:PATH="C:/Program Files/nodejs;$env:PATH"
+pnpm exec vitest run --config vitest.oss.config.mjs --maxWorkers 1 packages/tui/test/unit/acp-agent.test.ts packages/tui/test/unit/headless-runner.test.ts packages/tui/test/unit/tui-terminal-presentation.test.ts packages/tui/test/unit/tui/controller/product/chrome-flow.test.ts packages/tui/test/unit/tui/controller/product/feature-flow.test.ts
+```
+
+保留能力、错误返回、状态序列和安全拒绝强度，不恢复旧登录、不盲改协议标识。实际结果只记status；纯测试修改不例行构建或重跑已完成探针。

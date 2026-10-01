@@ -670,3 +670,12 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 【源码/Git只读】CLI20f67d9至19c9571仅向test/byok.test.mjs新增283行，没有生产文件变更。已保存审批/取消/恢复集成仍有回归价值，但缺少新故障或具体影响链时，不据“未覆盖工具回收”继续派生专项。已有local-bash-output失败已按真实宿主夹具修复；其它实际失败依status处理，不能据本项豁免。
 
 【未验】本轮没有新增运行验证，不证明工具生命周期所有场景正确；取消专项是执行优先级纠偏，正常既有适用回归与包安装验证继续保留。
+
+### 主题与语言失败组依据（2026-10-01）
+
+【源码】CLI19c9571，0.5.7。packages/tui/src/tui/theme/palettes.ts:455-478实际默认为talos，MINIMAX_CODE_DARK/LIGHT_THEME旧调色板仍保留；custom-themes.ts:192根据实际BUILT_IN_THEMES拒绝自定义同名覆盖；registry.ts:35-38按实际列表查找，没有将minimax注册为内置主题。packages/tui/src/host/tui-settings.ts:61-76只在读取保存设置时将旧minimax及其appearance映射为talos，不改保存文件。
+【源码】theme/controller.ts:75-96通过registry实际默认取色；runtime测试仍期待旧默认色，picker夹具仍给不存在的minimax当前id。不能将旧调色板本身改成Talos来迎合断言，应该分别保留旧色资产断言和当前默认行为断言。
+【源码】packages/tui/src/tui/features/session-mutation/copy.ts:13-17默认读取Intl locale；对应两文件英文字面预期未固定locale。中文显式locale断言已存在，修夹具需固定英文默认并保留中文用例。
+【实测基线】本轮固定Node24，六文件28失败/87通过；与status F1/F2对应。尚不据基线认定全部只是测试问题，修正后复验再判断。
+
+【实测】2026-10-01，CLI75c46db（WIP9f5ffdf）：六文件118通过/0失败/0跳过；Node24.15.0下类型和六文件eslint通过。新增3个旧保存设置映射用例证明minimax及appearance映射Talos、原文件不重写。旧palette逐值/对比度、当前默认/picker取消/不保存、英文默认及显式中文历史操作/布局断言保留。只改六个测试，未改生产视觉或重建产物；未重复模型/审批/恢复探针，不推算全库当前失败数。
