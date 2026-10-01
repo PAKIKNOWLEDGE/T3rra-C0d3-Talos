@@ -679,3 +679,11 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 【实测基线】本轮固定Node24，六文件28失败/87通过；与status F1/F2对应。尚不据基线认定全部只是测试问题，修正后复验再判断。
 
 【实测】2026-10-01，CLI75c46db（WIP9f5ffdf）：六文件118通过/0失败/0跳过；Node24.15.0下类型和六文件eslint通过。新增3个旧保存设置映射用例证明minimax及appearance映射Talos、原文件不重写。旧palette逐值/对比度、当前默认/picker取消/不保存、英文默认及显式中文历史操作/布局断言保留。只改六个测试，未改生产视觉或重建产物；未重复模型/审批/恢复探针，不推算全库当前失败数。
+
+### F3文案回归依据（2026-10-01）
+
+【源码】CLI75c46db，0.5.7。acp/agent.ts:465,473只修改显示名称，协议agentInfo.name/minimax-code-login等身份保留；:1699拒绝额外目录、:2115认证失败使用talos提示，处理契约未据此变更。headless/runner.ts:402,469输出talos exec failed；application/login-gate.ts:11-17区分普通登录提示与neutral provider提示，旧模式测试仍应拒绝缺token且不得创建session/send。
+【源码】tui/platform/terminal-title.ts:40 app-name为Talos；controller/product/feature-flow.ts:1132报告标题Talos status。chrome-flow用同一标题格式，语义序列与会话切换逻辑不改。其它MiniMax provider/model和通知传入文本是夹具数据，不盲改。
+【实测基线】五文件10失败/201通过，错误diff定位上述显示字段；实际neutral入口证据由既有离线集成保留，不用本轮假Runtime的旧模式测试冒称全入口中立验收。
+
+【实测】2026-10-01，CLI d7ab82b（提交时WIP、之后实际复验）：五文件211通过/0失败/0跳过；类型与五文件eslint通过。基线十失败只涉及显示文案，校正14条旧品牌/提示预期后完整运行原测试；没有删状态、返回、能力、拒绝或操作断言。agentInfo.name、authMethod id、扩展namespace等协议身份不变，合法provider/model和传入通知文本未盲改。没有修改生产实现，没有构建、真实模型或全库检查。

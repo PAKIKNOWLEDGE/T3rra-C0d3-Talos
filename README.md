@@ -1,6 +1,6 @@
 # T3rra-C0d3-Talos
 
-**操作索引，不是待办清单。** 只运行status当前任务需要的命令；后文已完成探针不应逐项重跑。当前修复入口见 [plan](docs/plan.md#下一小轮文案回归修复)，源码/安装/用户验收结果统一见status。
+**操作索引，不是待办清单。** 只运行status当前任务需要的命令；后文已完成探针不应逐项重跑。当前修复入口见 [plan](docs/plan.md#下一小轮平台路径回归修复)，源码/安装/用户验收结果统一见status。
 
 Talos 由两个仓库组成：这里维护 GUI 和产品文档；相邻 `C:\DEV\develop\Talos-CLI` 维护 mcode fork 的引擎与终端界面。项目现状只看 [status](docs/status.md)，往后做什么看 [plan](docs/plan.md)。本页仅作操作手册，不是要依次执行的任务清单。
 
@@ -436,3 +436,15 @@ pnpm exec vitest run --config vitest.oss.config.mjs --maxWorkers 1 packages/tui/
 ```
 
 保留能力、错误返回、状态序列和安全拒绝强度，不恢复旧登录、不盲改协议标识。实际结果只记status；纯测试修改不例行构建或重跑已完成探针。
+
+## 平台路径失败组的定向回归
+
+仅用于status F4，固定受支持Node，真实宿主运行两个既有文件：
+
+```powershell
+cd C:/DEV/develop/Talos-CLI
+$env:PATH="C:/Program Files/nodejs;$env:PATH"
+pnpm exec vitest run --config vitest.oss.config.mjs --maxWorkers 1 packages/tui/test/unit/observability.test.ts packages/tui/test/unit/wsl-attachment-paths.test.ts
+```
+
+期望按对应平台的真实路径/调用语义校准，保留WSL转换失败与无多余子进程检查。无需主人安装WSL。当前结果只记status，不能把Windows上的夹具验证说成Linux实测。
