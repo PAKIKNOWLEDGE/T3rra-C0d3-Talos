@@ -781,3 +781,17 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 【发行版本依据，2026-10-02】953cb94代码full15闸PASS保留；d395b6d只变root/TUI版本0.1.1、README版本/发布链接、docs/releases/0.1.1.md及source inventory。使用scripts/build.mjs生成0.1.1/gitHead与scripts/package-cli-release.mjs精确HEAD校验，LEGAL.md与新repository地址保留。运行package安装闸，不重复未变代码全套。用户免人工验收不等于目视/Unix已通过。
 
 【文档接收，2026-10-06】NixOS记录来自远端verification/nixos-2026-10-03/de5c44b，源码验证基点d395b6d。自动检查记录12/14通过及两项未通过，未附机读原始回执；实际模型驱动使用另获确认正常。两项限制暂不处理，不为追求通过而改测试或扩大阻塞。两类对话体验问题只记症状及后续范围，本轮未检查它们的源码，也未判断来源层。
+
+## 对话提醒与身份来源排查（2026-10-06）
+
+【源码】CLI738c495，未修改引擎、未运行模型或测试。本轮确认注入来源与既有回归的意图，不声称复现NixOS原始会话。
+
+- packages/agent-modules/runaway-guard/src/reminder.ts:63-70生成与记录完全相同的Three task_output reads…system-reminder；packages/agent-extension/src/runaway-guard.ts:68默认阈值3，:114-131在step end观察后用agent.steer写入role:user消息。packages/agent-modules/runaway-guard/src/signals.ts:108-153按任务进展键统计不变轮询，要求continuousPolling/reminderEligible；并非任意连续三次工具读。
+- packages/agent-modules/runaway-guard/src/reminder.ts:26-28以reminderAttempted限制同Turn最多一次尝试；guard.ts:65-69在finishTurn清理状态。production extension位于packages/local-runtime-v2/src/service/turn-system/runaway-guard/extension.ts:12-25，根据runawayGuard配置启用，goal-verifier不提醒。提醒不取消后台任务，也不自动强制静默。
+- packages/local-runtime/test/unit/local-background-task-task-output-polling-reminder.test.ts:518-549既有组合回归规定：3次读取后提醒进入模型上下文，并作为role:user持久化一次；:601继续回合仍可见旧提醒；:623-630断言提醒原文不进入显示流，但模型Waiting for the background task回复可见。假模型在:276-295固定输出该回复，因此这是结构/设计证据，不证明真实模型必然如何回应。本轮未重跑该测试。
+- 两类来源分开：轮询提醒由runaway-guard steer动态注入，不是system-reminder provider定时发。agent-context来自packages/agent-modules/system-reminder/src/blocks.ts:105-115与:206-219，首回合含displayName、routing agentName、agentRole；后续slim仍保留显示名与路由名，省略agentRole。providers.ts:193-198据turnCount切换；service.ts:213包入system-reminder。
+- packages/local-runtime/src/memory/local-data-collector.ts:200-225收集local场景的agentName/agentRole。packages/local-runtime-v2/src/service/agent/builtin/catalog.ts:130-153从PERSONA frontmatter读取displayName并为primary agent指定orchestrator角色；assets/agents/mavis/PERSONA.md:2默认display_name为Mavis。persona正文和模式资产也存在身份叙述；本轮未读取真实用户profile，不能断言原NixOS会话使用哪一份persona正文或覆盖。
+
+【判断】两个症状都有引擎上下文注入的明确来源，不支持将已定位提醒描述为未知外部注入。用户可见短回复来自模型对机器消息的回应，内部标签被文档采纳也不是UI直接复制。当前提醒没有明确要求无需确认、不要因收到提醒生成等待回复；身份metadata解释display/routing，却没有输出作者归属隔离。两者属于机器上下文与用户请求/产品身份的语义边界问题。
+
+【未验】同Turn只有一次提醒尝试，重复短回复可能跨Turn重新触发、既有持久化提醒影响续行或其他提示共同作用；缺少原会话trace不能确定次数来源。建议下一实施保留反重复轮询与后台完成通知，只澄清提示不是用户指令且无需确认，必要时进一步评估历史保留范围；身份优先分开显示名与routing ID，不全局改agentName/mavis目录或删会话路由字段。不做按文本匹配删除用户可见回复的掩盖。具体补丁待讨论确认。
