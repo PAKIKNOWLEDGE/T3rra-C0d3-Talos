@@ -12,8 +12,8 @@
 
 ## 正本与参考层级
 
-1. 当前可运行正本：[demo/talos.html](../demo/talos.html)、[CSS](../demo/talos.css)、[JS](../demo/talos.js)。它是主人已验收的小型交互范本，包含最后一次疏密调整。
-2. 主人提供的游戏图：[newend1](references/newend1.png)、[newend2](references/newend2.png)、[newend3](references/newend3.png)、[newend4](references/newend4.png)、[newend5](references/newend5.png)、[newend6](references/newend6.png)。主要取材为 newend5 的装配站工作区层次、newend1 的任务列表、newend3 的工业浮窗。
+1. 当前可运行正本：[demo/talos.html](../demo/talos.html)、[CSS](../demo/talos.css)、[JS](../demo/talos.js)。它是已验收的小型交互范本，包含最后一次疏密调整。
+2. 提供的游戏图：[newend1](references/newend1.png)、[newend2](references/newend2.png)、[newend3](references/newend3.png)、[newend4](references/newend4.png)、[newend5](references/newend5.png)、[newend6](references/newend6.png)。主要取材为 newend5 的装配站工作区层次、newend1 的任务列表、newend3 的工业浮窗。
 3. 历史来源是 `C:\DEV\develop\tmp\OPUS5-5`，随后独立整理到 `C:\DEV\develop\tmp\T3rra-C0d3-Talos`。现有文件已完整带入本项目；历史位置只是来源说明，不是日后启动或改版的必需依赖。
 
 不使用旧 `end.html` 覆盖当前正本，也不混入 Rhodes 的 ARK 令牌。产品首次实现优先保留这里的空间关系；风格名不能替代实际 HTML/CSS。
@@ -38,7 +38,7 @@
 
 TUI 采用对话流式终端方向：主阅读区留给连续对话和代码，工具详情与菜单按需展开。不要照搬 GUI 三栏或预设常驻侧栏；GUI 的已验收范本不因此改动。
 
-当前欢迎页保留已获主人认可的六行 Unicode `TALOS` 字标；右侧改用 GUI demo 顶栏的三六边形标识，以纯 ASCII 绘制，窄屏有简版。字标是静态字符资产，不在运行时加载 ANSI Shadow 字体。真实终端的验收记录统一见 status；GUI demo 本身不改。
+当前欢迎页保留已验收的六行 Unicode `TALOS` 字标；右侧改用 GUI demo 顶栏的三六边形标识，以纯 ASCII 绘制，窄屏有简版。字标是静态字符资产，不在运行时加载 ANSI Shadow 字体。真实终端的验收记录统一见 status；GUI demo 本身不改。
 
 此前 03 装配机械臂的 [字符稿](references/tui-arm.txt) 和 [文本示意图](references/tui-frames.md) 仅供历史构图参考，已不作为真实欢迎页标识。游戏参考目录 `C:\DEV\develop\tmp\Manuel-ref-image` 的素材仅用于设计比对，不是发布资产。
 
@@ -57,8 +57,8 @@ TUI 采用对话流式终端方向：主阅读区留给连续对话和代码，�
 
 ## 资产与分发
 
-字体是随 demo 搬迁的 HarmonyOS Sans SC Regular / Bold，文件在 `demo/fonts/`；系统字体仅引用，不复制 Windows 字体文件。旧项目已知未附 HarmonyOS 授权原文，本轮也未核验：本地范本沿用，公开分发前需取得原许可或由主人指定替代，不把“免费商用”当完整许可证据。
+字体是随 demo 搬迁的 HarmonyOS Sans SC Regular / Bold，文件在 `demo/fonts/`；系统字体仅引用，不复制 Windows 字体文件。旧项目已知未附 HarmonyOS 授权原文，本轮也未核验：本地范本沿用，公开分发前需取得原许可或由用户指定替代，不把“免费商用”当完整许可证据。
 
-六张参考图为主人提供的游戏界面，仅本地设计比对；不声明拥有游戏素材，不默认随公开源码或产品分发。本地 Git 已忽略参考 PNG，但文档与目录说明保留；若将来做可移植的公开交接，先处理可分发参考物，不留断链冒充完整。
+六张参考图为提供的游戏界面，仅本地设计比对；不声明拥有游戏素材，不默认随公开源码或产品分发。本地 Git 已忽略参考 PNG，但文档与目录说明保留；若将来做可移植的公开交接，先处理可分发参考物，不留断链冒充完整。
 
 预览、复验动作统一见 [README](../README.md)；验收结论只在 [status](status.md)。

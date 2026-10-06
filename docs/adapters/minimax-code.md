@@ -30,7 +30,7 @@
 
 【实测】2026-09-28，显式 Node `v24.15.0` 下：`pnpm build` 输出 `> talos-cli@0.5.7 build` 与 `Built Talos CLI 0.5.7 from 6267 source files.`；provider manager 定向单测 **23/23**；standalone typecheck 通过。未启动真实 TUI、未发送模型请求、未触碰 `.talos/` 用户目录。
 
-【未验】主人尚未在真实终端进入 `/provider` 观察新增行，也未从该行进入官方预设和 Custom provider；这项可见验收通过前，不能宣称 provider 中立化完成。MiniMax 行仍可存在，但不再是唯一新增入口。
+【未验】用户尚未在真实终端进入 `/provider` 观察新增行，也未从该行进入官方预设和 Custom provider；这项可见验收通过前，不能宣称 provider 中立化完成。MiniMax 行仍可存在，但不再是唯一新增入口。
 
 ## provider catalog 平级性复核（2026-09-28）
 
@@ -46,7 +46,7 @@
 
 【实测】2026-09-28，显式 Node `v24.15.0` 下：`pnpm build` 成功，输出 `> talos-cli@0.5.7 build` 与 `Built Talos CLI 0.5.7 from 6267 source files.`；provider preset、onboarding、manager 三个定向 Vitest 文件 **78/78** 通过；standalone typecheck 通过；`pnpm check:source` 通过（4276 files）；`git diff --check` 通过。未启动真实 TUI、未发送模型请求、未触碰 `.talos/` 内容。
 
-【未验】主人尚未在真实终端从 `/provider` → `+ Add provider` 目视确认目录分组；本条不证明 MiniMax 登录、区域网络出口、默认数据目录、独立 npm 发行或完整第三方模型链路已经中立化。若本地 catalog 快照缺少 `minimax`，应记录数据源问题，不由 UI 假造。
+【未验】用户尚未在真实终端从 `/provider` → `+ Add provider` 目视确认目录分组；本条不证明 MiniMax 登录、区域网络出口、默认数据目录、独立 npm 发行或完整第三方模型链路已经中立化。若本地 catalog 快照缺少 `minimax`，应记录数据源问题，不由 UI 假造。
 
 ## `/provider` 首屏目录复核（2026-09-29）
 
@@ -61,7 +61,7 @@
 
 【实测】2026-09-29，显式 Node `v24.15.0` 下，provider onboarding、manager、provider application、feature-flow 定向 Vitest **99/99** 通过；standalone typecheck 通过；`pnpm build` 输出 `Built Talos CLI 0.5.7 from 6267 source files.`；`pnpm check:source` 通过（4276 files）；`git diff --check` 通过。未发送模型请求、未修改真实数据目录。
 
-【未验】主人尚未在真实终端观察新的 `/provider` 首屏；本条不证明 provider catalog 网络刷新、第三方模型连接、MiniMax 登录或数据隔离已经完成。
+【未验】用户尚未在真实终端观察新的 `/provider` 首屏；本条不证明 provider catalog 网络刷新、第三方模型连接、MiniMax 登录或数据隔离已经完成。
 
 ## 原生 TUI 与 GUI 边界复核（2026-09-29）
 
@@ -100,7 +100,7 @@
 - `packages/tui/src/tui/theme/runtime.ts` 的 `tuiColors`、`tuiSelectListTheme`、`tuiEditorTheme` 和 Markdown theme 读取动态语义色；`shell/composer.ts:4`、`shell/chrome.ts:10` 沿用该层。主题能影响欢迎页之外的组件，但不保证每个硬编码颜色都随之变化。
 - `packages/tui/test/unit/tui/theme/palettes.test.ts:23` 起遍历所有内置深浅调色板，包含原配色兼容和对比度检查；相关 runtime/custom-themes/theme-picker 测试已在 `test/vitest-suites.json:177` 起登记。添加主题应保留原值兼容和阈值，不能将“预期新颜色”冒充渲染验收。
 
-【实施边界】真实终端、无色/16 色适配与各组件的最终外观仍需主人验收；本轮机读结果只证明主题注册、颜色契约和切换路径。主人反馈新版本已解决思考块体验，仅记录需求撤回，不据此断言本机 fork 已同步该版本。
+【实施边界】真实终端、无色/16 色适配与各组件的最终外观仍需用户验收；本轮机读结果只证明主题注册、颜色契约和切换路径。用户反馈新版本已解决思考块体验，仅记录需求撤回，不据此断言本机 fork 已同步该版本。
 
 ## 既有上游公共依据
 
@@ -110,15 +110,15 @@
 
 验证结果：显式 Node `v24.15.0`（将 `C:\Program Files\nodejs` 置于 PATH）下，主题 palette、runtime、custom-themes、theme-picker、composer 共 5 个测试文件 **137/137** 通过；standalone TypeScript 通过；source inventory **4276 files** 通过；`pnpm build` 成功，产物报告 `Built MiniMax Code 0.5.7 from 6267 source files`；`git diff --check` 通过。首次未覆盖 PATH 的构建显示 Node `v22.15.0` engine warning，随后已用显式 Node 24 重跑成功，该 warning 不计入最终构建结果。
 
-【主人待验】实际终端中通过 `/theme` 选择 `Talos`，观察欢迎区之外的正文、输入区、菜单、工具/审批提示的黄灰配色，再切换 dark/light、缩窄终端并取消返回原主题。未发送消息、未测试 provider、未改思考块、未改默认主题；本次机读结果不等于完整 TUI 视觉通过。
+【用户待验】实际终端中通过 `/theme` 选择 `Talos`，观察欢迎区之外的正文、输入区、菜单、工具/审批提示的黄灰配色，再切换 dark/light、缩窄终端并取消返回原主题。未发送消息、未测试 provider、未改思考块、未改默认主题；本次机读结果不等于完整 TUI 视觉通过。
 
 ## TUI 欢迎 ASCII 标题依据与实测（2026-09-28）
 
 【源码】欢迎视觉资产集中在 `packages/tui/src/tui/shell/welcome/design.ts`，`hero.ts` 按宽度选择 full/medium/micro/fallback；本轮复用这条管线，不改组件布局或主题系统。
 
-【实测】工作树基线为 fork HEAD `370c7646fdfd51ef8a812a4966538884b73db556`。本轮将 full hero 调整为内置 5×5 ASCII `TALOS` 标题 + 更小机械臂，中窄屏降为单行 `TALOS` + compact arm，极窄屏保留 fallback。相关欢迎渲染测试的新增断言、standalone TypeScript、source inventory 和 diff 检查已通过；整套 `tui-app.test.ts` 仍有 17 项既有文案/本地化断言失败，未把它们归因于本轮或宣称整套通过。构建和主人目视尚未完成。
+【实测】工作树基线为 fork HEAD `370c7646fdfd51ef8a812a4966538884b73db556`。本轮将 full hero 调整为内置 5×5 ASCII `TALOS` 标题 + 更小机械臂，中窄屏降为单行 `TALOS` + compact arm，极窄屏保留 fallback。相关欢迎渲染测试的新增断言、standalone TypeScript、source inventory 和 diff 检查已通过；整套 `tui-app.test.ts` 仍有 17 项既有文案/本地化断言失败，未把它们归因于本轮或宣称整套通过。构建和用户目视尚未完成。
 
-【主人待验】显式 Node 24 构建 fork 后观察宽屏、20–31 列中屏和极窄终端；标题应在机械臂上方、无厂商大字 logo、无横向溢出。只验画面，不发送消息。
+【用户待验】显式 Node 24 构建 fork 后观察宽屏、20–31 列中屏和极窄终端；标题应在机械臂上方、无厂商大字 logo、无横向溢出。只验画面，不发送消息。
 
 | 等级 | 来源 | 只支持什么结论 |
 | --- | --- | --- |
@@ -163,7 +163,7 @@
 | 审批拒绝尝试 | 新会话、客户端预备选择拒绝，但实际 `client/session/request_permission` 次数为 0；文件真实创建，内容为 `acceptance-ok`，最终 `end_turn` | 当前账号/权限规则没有触发 ACP 审批，不能宣称拒绝生效；按计划停止该验收项，不改规则、不用模拟卡片替代 |
 | 审批 allow-once 尝试 | 另一新会话、客户端预备选择 allow-once；实际 permission 请求仍为 0；文件真实创建，内容为 `acceptance-ok`，最终 `end_turn` | 只能证明当前设置下工具可直接执行；未证明 allow-once optionId、规则作用域或批准后行为 |
 
-脱敏结论：正常、取消、load/继续、工具更新均有真实 trace；审批未触发是实测事实，不是探针缺失。后续若主人希望继续审批专项，先从现有权限配置和源码确认可触发条件，再用新会话复测。
+脱敏结论：正常、取消、load/继续、工具更新均有真实 trace；审批未触发是实测事实，不是探针缺失。后续若用户希望继续审批专项，先从现有权限配置和源码确认可触发条件，再用新会话复测。
 
 ## 单会话链路源码证据
 
@@ -230,7 +230,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 ### 第三方预设与平级 provider 取证（2026-09-28）
 
-这次主人确认：源码已有的第三方 provider 预设可以保留，但 MiniMax 不应在产品里拥有固定优先级。以下是实现“平级”的第一批边界；先改顺序与默认绑定，再决定是否裁剪厂商网络入口。
+这次用户确认：源码已有的第三方 provider 预设可以保留，但 MiniMax 不应在产品里拥有固定优先级。以下是实现“平级”的第一批边界；先改顺序与默认绑定，再决定是否裁剪厂商网络入口。
 
 | 等级与 path:line | 读到的事实 | 当前处理结论 |
 | --- | --- | --- |
@@ -238,7 +238,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 | 【源码】`packages/local-runtime-v2/src/service/model-system/catalog/provider-presets/provider-presets.service.ts:20-34`、`:76-87`、`:256-273` | models.dev 预设明确排除四个 MiniMax provider ID；其余第三方预设保留，区域 pinned 列表只影响第三方预设展示顺序 | 第三方预设目录继续保留；区域推荐顺序先不删除，因为它不是 MiniMax provider 置顶，后续单独评估是否需要改为用户可选或完全字母排序 |
 | 【源码】`packages/local-runtime-v2/src/service/model-system/catalog/provider-presets/provider-presets.client.ts:9-16`、`:113-134` | 中国区目录和 pinned provider 配置默认从 MiniMax 相关 origin 获取；失败时回落到本地区域默认数组 | 这是厂商网络耦合点，不与“provider 平级”混为同一改动；先记录并在独立网络出口审计轮处理，不能只改 UI 顺序就宣称中立 |
 | 【实测】`packages/local-runtime-v2/src/service/model-system/catalog/provider-presets/provider-presets.service.test.ts`，使用 `vitest.oss.config.mjs` | 37/37 通过；第三方预设保留、区域默认排序、远程 pinned 覆盖、失败回落和超时处理均符合源码定义 | 预设排序机制可保留；是否去除 MiniMax 相关网络 origin 属于后续中立网络审计，不在本轮改动 |
-| 【文档】`docs/examples.md:27-59` | CLI 已支持 `/model`、`/provider`、第三方预设和 `custom_provider`，成功测试后才保存并可设为当前模型 | 可复用现有第三方配置路径；后续探针优先验证 custom provider 的保存、默认选择和 ACP 使用，不要求用户先配置 MiniMax 登录 |
+| 【文档】`docs/examples.md:27-59` | CLI 已支持 `/model`、`/provider`、第三方预设和 `custom_provider`，成功测试后才保存并可设为当前模型 | 可复用现有第三方配置路径；后续探针优先验证 custom provider 的保存、默认选择和 ACP 使用，不要求你先配置 MiniMax 登录 |
 | 【源码】`packages/config/src/config.ts:1711-1721`、`:1869-1884`；`packages/config/src/byok-config.ts:260-300` | 只有 managed/prod runtime 新建配置时才写入 `minimax/MiniMax-M3`；非 managed 的 `pnpm dev`/npm 路径不预置模型，由 onboarding/provider 配置接管。managed runtime 会补齐 `provider.minimax`，但不会覆盖用户自己的 `custom_provider` | “平级 provider”不能靠改一处排序完成；Talos 独立发行应继续走非 managed 配置语义，若未来做生产桌面壳，再单独定义无默认模型或首个已验证 custom provider 的选择规则 |
 | 【源码】`packages/tui/src/application/login-gate.ts:24-38`；【实测】`test/byok.test.mjs`（2026-09-28） | 登录门禁按当前模型来源区分：BYOK 不要求 MiniMax 登录；managed MiniMax 模型仍要求自己的登录。隔离 BYOK 套件完成保存 provider、设为默认、继续会话、真实读文件工具回传，并确认 managed 模型登录失败 | 第三方 provider 的认证边界已经可复用；该套件使用假 provider，不证明外部模型或完整隔离，不应删除通用登录/权限安全逻辑 |
 
@@ -308,7 +308,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 【实测】引擎 fork 提交 `107c9cf`（父提交 `b2c9930`）已落地本轮视觉切片：欢迎页改用 03 装配机械臂的 full/compact/micro 三档字符图，宽/堆叠/紧凑布局的可见标题和提示改为 Talos 中立文案，英雄图沿既有主题语义色的 warning 角色渲染。保留旧导出名作为兼容别名，未改主题默认 id、鉴权、provider、ACP、数据目录、更新器或命令入口。
 
-原执行记录：Node `v24.15.0` 下主题 palette 测试 `26/26`、欢迎应用筛选 `4 passed`（330 项被筛掉）、目标文件 ESLint、standalone TypeScript、source inventory `4276 files` 和 `git diff --check` 通过；另用 `tsx` 对宽度 80/30/15/8 做纯渲染预览。26 项不是 26 个欢迎页测试，也不是完整 TUI 套件通过。当时未启动真实 CLI、未发送模型请求；后来欢迎页的主人验收结论见 status，本次文档整理未重跑上述测试。
+原执行记录：Node `v24.15.0` 下主题 palette 测试 `26/26`、欢迎应用筛选 `4 passed`（330 项被筛掉）、目标文件 ESLint、standalone TypeScript、source inventory `4276 files` 和 `git diff --check` 通过；另用 `tsx` 对宽度 80/30/15/8 做纯渲染预览。26 项不是 26 个欢迎页测试，也不是完整 TUI 套件通过。当时未启动真实 CLI、未发送模型请求；后来欢迎页的用户验收结论见 status，本次文档整理未重跑上述测试。
 
 ### Talos 专属登录入口（2026-09-29）
 
@@ -337,7 +337,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 【未验】遥测、诊断、反馈、云插件等其他厂商出口另轮审计；本轮不承诺全进程零 MiniMax 请求。
 
-【实测，离线】注入 fetch 的预设目录测试在 Node `v24.15.0` 下 **39/39** 通过：CN neutral 仅向 `https://models.dev/api.json` 发刷新请求，不请求 MiniMax descriptor 或 `common_config`；直连成功写入 `models.dev` 图标来源，失败继续显示本地快照，旧镜像 ETag 不发送到直连请求，旧镜像图标 URL 不进入视图。standalone TypeScript 与源码清单（4277 files）通过。构建最初两次在清理旧 `dist` 时遇到 Windows `EPERM`；主人关闭旧程序后重试成功，产物报告 `Built Talos CLI 0.5.7`，可丢弃数据目录下 `--version` 和 `--help` 均退出码 0。未启动真实 TUI、未发真实网络请求或模型请求。
+【实测，离线】注入 fetch 的预设目录测试在 Node `v24.15.0` 下 **39/39** 通过：CN neutral 仅向 `https://models.dev/api.json` 发刷新请求，不请求 MiniMax descriptor 或 `common_config`；直连成功写入 `models.dev` 图标来源，失败继续显示本地快照，旧镜像 ETag 不发送到直连请求，旧镜像图标 URL 不进入视图。standalone TypeScript 与源码清单（4277 files）通过。构建最初两次在清理旧 `dist` 时遇到 Windows `EPERM`；用户关闭旧程序后重试成功，产物报告 `Built Talos CLI 0.5.7`，可丢弃数据目录下 `--version` 和 `--help` 均退出码 0。未启动真实 TUI、未发真实网络请求或模型请求。
 
 ### Windows 权限自动闸依据（2026-09-30）
 
@@ -369,7 +369,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 【复核结论】r1 mock 不再扩展为 Windows 上的 POSIX 模拟层。Luna 已精确撤销 stat 接线和依赖其通过的 Windows 反向用例，保留独立 cwd 修正；后续Windows权限入口已保留真实chmod的原生坏脚本用例，其原生结果仍待验证。当前 Windows 失败清单需按平台归因，不能全部称产品缺陷或全部忽略；执行范围见 [plan](../archive/2026-10-01/plan-before-scope-reset.md#历史方案posix-回收脚本平台夹具)。
 
-【未验】主人另一台类 Unix 机器的 OS/架构、文件系统、Node 和原生测试结果未知；Linux 与 macOS 不互相替代验收。Git Bash 探针没有执行真实删除，不能证明回收站后端功能。
+【未验】用户另一台类 Unix 机器的 OS/架构、文件系统、Node 和原生测试结果未知；Linux 与 macOS 不互相替代验收。Git Bash 探针没有执行真实删除，不能证明回收站后端功能。
 
 ### 权限写入测试的工作区归因（2026-09-30）
 
@@ -450,7 +450,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 【源码与实测，离线】`packages/tui/src/plugin/application.ts:15-36,59,77-81` 默认仅查 local 并防旧 mixed snapshot 暴露 official；明确 official 的查询/变更在调用 Runtime 前失败。`cli/plugin-command.ts:46-63` 只报告 local 来源和刷新；`tui/features/plugin/manager.ts:16-19,140-153,194,219-222,307` 保留 All/Installed/Local，计数与可操作项只来自本地，不推荐官方市场。源码所接的 cloud getter 不影响用户模型凭据或自配 MCP。
 
-【实测，离线】四组既有回归覆盖 neutral 下无厂商身份读取/签名/dispatch，下载被拒绝且 target 文件不存在，异步响应后变成 neutral 也不写盘；本地列表/安装/启停/移除/刷新仍委托 Runtime。GitHub source 在 neutral 下通过独立假 API fetch 解析 commit，证明未被厂商 transport 阻断；不是实际远程安装测试。非 neutral 原鉴权、签名、限流式下载边界和 connector 权限用例保留。TUI 夹具证明本地 tabs/计数/启停正常；真实终端待主人验收，结果见 [status](../status.md)。
+【实测，离线】四组既有回归覆盖 neutral 下无厂商身份读取/签名/dispatch，下载被拒绝且 target 文件不存在，异步响应后变成 neutral 也不写盘；本地列表/安装/启停/移除/刷新仍委托 Runtime。GitHub source 在 neutral 下通过独立假 API fetch 解析 commit，证明未被厂商 transport 阻断；不是实际远程安装测试。非 neutral 原鉴权、签名、限流式下载边界和 connector 权限用例保留。TUI 夹具证明本地 tabs/计数/启停正常；真实终端待用户验收，结果见 [status](../status.md)。
 
 【未验】内置 Matrix MCP 云工具和 mcode-tools broker 是其他链，本轮只记录其存在，不实现。真实 GitHub 安装、插件执行与全进程抓包均不属于本轮离线证明。
 
@@ -469,7 +469,7 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 【源码与实测，离线】同一 HEAD 后续工作树：`packages/tui/src/tui/controller/product/feedback-flow.ts:36-39` 在账号查询前给明确说明；`packages/tui/src/runtime/feedback/service.ts:113,173,340,367,402,541-548` 用 `feedback_unavailable`、403、不可重试保护 prepare/submit、上传与工单发送/确认边界；cancel 保留清理能力。`packages/tui/src/runtime/feedback/diagnostic-upload.ts:75,79,92,163,187` 在采集之前、异步刷新/采集之后以及 presign/PUT 前阻断；`catalog.ts:350-357` 不推荐 neutral 反馈命令，但仍识别手动输入；`welcome/design.ts:19,32,41,49` 改推荐本地 `/doctor`，保持原布局。
 
-【实测，离线】既有反馈测试覆盖 neutral 直调不读账号、不 flush/采集/上传，旧草稿提交拒绝而取消仍成功，异步期间切换 neutral 后不再创建工单或查询工单，不执行后续 PUT。完整 TUI 覆盖 `/feedback` 空参数和带描述均只写提示，runtime prepare/submit 与模型发送零调用。保留非 neutral 的原始脱敏、上传确认、取消和重试测试。结果见 [status](../status.md)；未请求真实上游网络或模型，真实终端展示待主人验收。
+【实测，离线】既有反馈测试覆盖 neutral 直调不读账号、不 flush/采集/上传，旧草稿提交拒绝而取消仍成功，异步期间切换 neutral 后不再创建工单或查询工单，不执行后续 PUT。完整 TUI 覆盖 `/feedback` 空参数和带描述均只写提示，runtime prepare/submit 与模型发送零调用。保留非 neutral 的原始脱敏、上传确认、取消和重试测试。结果见 [status](../status.md)；未请求真实上游网络或模型，真实终端展示待用户验收。
 
 【未验】这一轮只处理上游反馈链；其他云出口、工具服务和完整数据隔离另轮核对。不覆盖独立外部进程/工具或显式用户配置的模型网络。
 
@@ -563,11 +563,11 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 
 ### TUI 欢迎字形与退出语源码复核（2026-09-29）
 
-【源码，Talos-CLI HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 的工作树】`packages/tui/src/tui/shell/welcome/design.ts:81-87` 原先的 compact arm 是五行实心块；`hero.ts:46-53` 将它放在 42 列字标右侧。主人在实际终端截图中确认图案缩小后不可辨，随后否决线条机械臂。现行工作树的 `design.ts` 保存 GUI 顶栏标识的六行 ASCII 三六边形和两行窄屏简版；`hero.ts` 在 64 列以上让它与六行字标并排。这是 TUI 图形取舍，不涉及 ACP 报文或模型行为，真实视觉结果仍待主人验收。
+【源码，Talos-CLI HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4` 的工作树】`packages/tui/src/tui/shell/welcome/design.ts:81-87` 原先的 compact arm 是五行实心块；`hero.ts:46-53` 将它放在 42 列字标右侧。用户在实际终端截图中确认图案缩小后不可辨，随后否决线条机械臂。现行工作树的 `design.ts` 保存 GUI 顶栏标识的六行 ASCII 三六边形和两行窄屏简版；`hero.ts` 在 64 列以上让它与六行字标并排。这是 TUI 图形取舍，不涉及 ACP 报文或模型行为，真实视觉结果仍待用户验收。
 
 本轮先读 Talos-CLI fork HEAD `8a90a0f6aa152c22300d6eb1a8e2c5cce611cee4`，未启动 TUI、未发送模型请求。以下路径均相对于 `C:\DEV\develop\Talos-CLI\`。
 
-先纠正一个对象边界：上一段记录的是当前 Talos 替换后的 5×5 `TALOS` 字形；主人截图中的巨大 `MINIMAX CODE` 横幅来自上游原始欢迎页，不能用当前 Talos 字形的结论代替。
+先纠正一个对象边界：上一段记录的是当前 Talos 替换后的 5×5 `TALOS` 字形；用户截图中的巨大 `MINIMAX CODE` 横幅来自上游原始欢迎页，不能用当前 Talos 字形的结论代替。
 
 | 等级与源码位置 | 读到的事实 | 当前结论 / 未覆盖 |
 | --- | --- | --- |
@@ -576,13 +576,13 @@ SDK 稳定入口的包声明在规划时经 npm 包元数据及内存读取声�
 | 【源码，历史基线】原始 `hero.ts`（同一提交）及 `design.ts:51-55` | 原始阈值为 `fullMinWidth: 91`、`mediumMinWidth: 44`、`microMinWidth: 11`；`hero.ts` 使用 `wordmarkHighlight → brand → wordmarkShadow` 六行渐变渲染 | 截图是宽屏 full wordmark；其蓝色多层效果来自主题渐变，不是字体渲染器。提交 `107c9cf` 的 Talos 欢迎改造才把这组横幅换成机械臂和当前 Talos 字形 |
 | 【源码】`packages/tui/src/tui/shell/welcome/hero.ts:12-45` | 宽度 `>=42` 才渲染 6 行完整 wordmark；6 行按 `wordmarkHighlight → brand → wordmarkShadow` 渐变；`20-41` 只渲染单行 `TALOS`；`10-19` 只渲染微型机械臂；低于 `10` 回退为 `T` | 42 列阈值用于容纳新字标；渐变保留块字轮廓的可读性；窄屏仍有明确降级 |
 | 【源码】`packages/tui/src/tui/launcher.ts:71`、`:897-900` | 退出消息由单一常量拼入 `formatTuiExitMessage()`；会话提示（若有）先输出，结束语最后单独换行输出 | 本轮只替换可见结束语；会话继续提示仍沿用现有逻辑，未把内部命令入口改名混入本轮 |
-| 【实测】 | 退出语已改为 `-- 3NDM1N15T4T0R OFFL1NE --`；定向 Vitest **2/2** 锁定无会话与带会话两种格式。显式 Node `v24.15.0` 下 standalone typecheck、`pnpm build`、`pnpm check:source`（4277 files）和 `git diff --check` 均通过 | 仍需主人启动新构建并退出做可见验收；未做真实模型请求 |
+| 【实测】 | 退出语已改为 `-- 3NDM1N15T4T0R OFFL1NE --`；定向 Vitest **2/2** 锁定无会话与带会话两种格式。显式 Node `v24.15.0` 下 standalone typecheck、`pnpm build`、`pnpm check:source`（4277 files）和 `git diff --check` 均通过 | 仍需用户启动新构建并退出做可见验收；未做真实模型请求 |
 
 ### 真实 custom provider 文本实测（2026-09-28）
 
-【主人反馈】主人在 `/provider-setup.html` 中使用 provider origin `https://api.xiaomimimo.com`、模型 `mimo-v2.6-flash` 和 `openai-completions`，页面显示“连接成功，模型已返回 talos-custom-ok”。这是当时所运行路径的成功反馈。提交 `74df78b` 的 `src/service/ws-server.ts:132` 起使用进程退出码和整段 trace 子串判定成功，未对结构化 ACP 结果逐项验真；本次未重读原始 trace，不能升级为 fork 构建、隔离或完整独立运行证明。API key 不写入此文档。
+【用户反馈】用户在 `/provider-setup.html` 中使用 provider origin `https://api.xiaomimimo.com`、模型 `mimo-v2.6-flash` 和 `openai-completions`，页面显示“连接成功，模型已返回 talos-custom-ok”。这是当时所运行路径的成功反馈。提交 `74df78b` 的 `src/service/ws-server.ts:132` 起使用进程退出码和整段 trace 子串判定成功，未对结构化 ACP 结果逐项验真；本次未重读原始 trace，不能升级为 fork 构建、隔离或完整独立运行证明。API key 不写入此文档。
 
-保留该成功反馈，不要求主人重测。它不覆盖 fork 工具执行、取消、load/继续、审批及网络出口隔离；已安装 CLI 的第 2 轮 ACP 证据仍按前文范围有效。
+保留该成功反馈，不要求你重测。它不覆盖 fork 工具执行、取消、load/继续、审批及网络出口隔离；已安装 CLI 的第 2 轮 ACP 证据仍按前文范围有效。
 
 ### CLI发行完成度复核（2026-10-01）
 
@@ -711,7 +711,7 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 
 ### 本地候选包身份与Windows验证准备（2026-10-01）
 
-【源码】scripts/package-cli-release.mjs:55-71此前硬编码@minimax-ai/code/private/upstream repo；verify-cli-release.mjs:14,40-49仅Linux/macOS，安装目录lib/node_modules固定上游名。仅打包脚本能生成独立manifest，开发根private保持；正式包名由主人确认，准备显式参数且缺失/上游身份拒绝，测试使用@fixture/talos-cli。
+【源码】scripts/package-cli-release.mjs:55-71此前硬编码@minimax-ai/code/private/upstream repo；verify-cli-release.mjs:14,40-49仅Linux/macOS，安装目录lib/node_modules固定上游名。仅打包脚本能生成独立manifest，开发根private保持；正式包名由用户确认，准备显式参数且缺失/上游身份拒绝，测试使用@fixture/talos-cli。
 【范围】package stage排除退役mcode-tools.js、matrix-mcp-stdio.js、internal-bin、embedded/mcode-tools，保留LICENSE/NOTICE/runtime资源。允许本地私有测试包、明确private保护，未确认正式身份不发布。Windows安装用自身Node运行npm-cli.js和实际npm生成talos.cmd，独立prefix/fake home；同版重装与卸载实测可独立完成，跨版本升级不能冒称通过。旧GitHub发布脚本入口退役，不再自动发布上游品牌资产。
 【未验】尚待修改和实际安装；完整本轮源码verifier正在独立基点d3f7e6c运行，不能把后续package改动算进其结果。
 
@@ -734,15 +734,15 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 
 【实测】安装包CLI update由精确测试URL的本地假fetch返回0.5.8，生成npm install --global @talos-local-fixture/cli@latest，明确不自动安装；记录的请求仅该URL，未真正查询registry测试scope。TUI/CLI现有回归351通过，初轮假registry15分支通过，追加4身份负例纳入最终能力回归。实际registry与目视提醒未验。
 
-【范围】正式包名/版本与其他主机原生结果仍待主人，不能发布这个测试包。完整回执/包校验在忽略候选目录，源码导出不含Git历史/依赖。无真实模型token、账号操作、远程主机或push/npm publish。
+【范围】正式包名/版本与其他主机原生结果仍待用户，不能发布这个测试包。完整回执/包校验在忽略候选目录，源码导出不含Git历史/依赖。无真实模型token、账号操作、远程主机或push/npm publish。
 
 ### 具名本地验收候选（2026-10-01）
 
-【实测】CLI3055bc5，包名由主人确认@pakiknowledge/tal0s-code，保留0.5.7仅作当前验收版本，未决定首发版本。独立prefix安装到GUI仓库忽略目录，未修改系统mcode或npm配置。Node24.15.0下安装后现有smoke+BYOK22通过/3原平台跳过，包含真实Runtime/假模型的配置、工具、审批/取消/异常load证据。
+【实测】CLI3055bc5，包名由用户确认@pakiknowledge/tal0s-code，保留0.5.7仅作当前验收版本，未决定首发版本。独立prefix安装到GUI仓库忽略目录，未修改系统mcode或npm配置。Node24.15.0下安装后现有smoke+BYOK22通过/3原平台跳过，包含真实Runtime/假模型的配置、工具、审批/取消/异常load证据。
 
 【实测】两个简单cmd入口均固定当前C:/Program Files/nodejs Node，普通模式通过call npm生成talos.cmd输出0.5.7。离线预览只为精确自身registry latest URL提供本地0.5.8响应，update输出npm install --global @pakiknowledge/tal0s-code@latest和不自动安装说明；模型未调用。程序文件与生产代码不改，前段TEMP Python cmd引号调用失败不当作引擎故障，也不以直接cli.js版本替代真实shim验证。
 
-【未验】TUI真实终端渲染/用户实际对话由主人验收；普通入口沿用既有.talos设置，预览隔离，无隐式凭据复制。首发版本/类Unix结果/npm发布均未决定或未完成。
+【未验】TUI真实终端渲染/用户实际对话由用户验收；普通入口沿用既有.talos设置，预览隔离，无隐式凭据复制。首发版本/类Unix结果/npm发布均未决定或未完成。
 
 【本轮实现依据，2026-10-01】CLI3055bc5的host.ts:532同时调用进程PATH注入与持久化集成；ensure-bin-in-path.ts:19独立保留模型工具发现能力。npm安装已提供talos命令。修复将持久化集成改为显式TALOS_ENABLE_SHELL_PATH_INTEGRATION=1才执行，默认启动不写注册表或shell配置；保留进程内注入和原有显式集成实现。这是Astra本轮对环境副作用的边界决定，不删权限检查或工具。
 
@@ -772,10 +772,12 @@ Windows工具夹具由实际getShellConfig选择shell，临时Node脚本生成�
 | #186/#317（开放） | provider URL query保留、启动模型在new后延续 | 有价值但非已发布修复；当前无用户报错，先观察；以后可独立评审，不以开放为唯一否决理由 |
 | #307/#319（开放） | YAML别名/凭据/脱敏写入，或多个SQLite Turn写入重试 | 暂缓：涉及配置/秘密和持久化语义，不随小修顺手合 |
 
-建议本次批准范围若主人认可：#199、#388、#410文字部分；不是执行授权，不合任何代码。#381大范围后台stop、#379终端队列与#376hook正文暂不追加本轮范围；纯版本PR与已撤回滚动补丁不接。
+建议本次批准范围若用户认可：#199、#388、#410文字部分；不是执行授权，不合任何代码。#381大范围后台stop、#379终端队列与#376hook正文暂不追加本轮范围；纯版本PR与已撤回滚动补丁不接。
 
-【本轮实施依据，2026-10-02】Talos c7adea2，主人批准#199/bf3916f、#388/67a5c2a、#410/5683465的literal-text、view、panel与文字回归。采用官方PR逐文件补丁；#410 runtime-event-flow、observability和stale-run测试不纳入。保留供应商账本，新增HTTP/字面文本回归登记现有capability清单；不改变extraction.sourceRevision。实测结果如下。
+【本轮实施依据，2026-10-02】Talos c7adea2，用户批准#199/bf3916f、#388/67a5c2a、#410/5683465的literal-text、view、panel与文字回归。采用官方PR逐文件补丁；#410 runtime-event-flow、observability和stale-run测试不纳入。保留供应商账本，新增HTTP/字面文本回归登记现有capability清单；不改变extraction.sourceRevision。实测结果如下。
 
-【实测，2026-10-02，953cb94】已批准补丁应用后，6个受影响测试文件513通过，包括7个本机HTTP/SDK compaction检查、错误清理边界、原样用户文字/面板/待发送消息回归。现有full15Windows适用闸PASS：capability5026通过/61跳过，Windows4/4、权限147通过/15POSIX跳过、status11/11、smoke20通过/1macOS跳过、BYOK2通过/2POSIX跳过；source4285。原作者DanielWalnut经官方commits API核对，移植commit coauthor和PR SHA保留。main/origin均953cb94，临时分支清理；未运行真实provider/Unix或发布新npm。用户注册表Path前后一致，模拟终端测试不等于主人目视验收。
+【实测，2026-10-02，953cb94】已批准补丁应用后，6个受影响测试文件513通过，包括7个本机HTTP/SDK compaction检查、错误清理边界、原样用户文字/面板/待发送消息回归。现有full15Windows适用闸PASS：capability5026通过/61跳过，Windows4/4、权限147通过/15POSIX跳过、status11/11、smoke20通过/1macOS跳过、BYOK2通过/2POSIX跳过；source4285。原作者DanielWalnut经官方commits API核对，移植commit coauthor和PR SHA保留。main/origin均953cb94，临时分支清理；未运行真实provider/Unix或发布新npm。用户注册表Path前后一致，模拟终端测试不等于用户目视验收。
 
-【发行版本依据，2026-10-02】953cb94代码full15闸PASS保留；d395b6d只变root/TUI版本0.1.1、README版本/发布链接、docs/releases/0.1.1.md及source inventory。使用scripts/build.mjs生成0.1.1/gitHead与scripts/package-cli-release.mjs精确HEAD校验，LEGAL.md与新repository地址保留。运行package安装闸，不重复未变代码全套。主人免人工验收不等于目视/Unix已通过。
+【发行版本依据，2026-10-02】953cb94代码full15闸PASS保留；d395b6d只变root/TUI版本0.1.1、README版本/发布链接、docs/releases/0.1.1.md及source inventory。使用scripts/build.mjs生成0.1.1/gitHead与scripts/package-cli-release.mjs精确HEAD校验，LEGAL.md与新repository地址保留。运行package安装闸，不重复未变代码全套。用户免人工验收不等于目视/Unix已通过。
+
+【文档接收，2026-10-06】NixOS记录来自远端verification/nixos-2026-10-03/de5c44b，源码验证基点d395b6d。自动检查记录12/14通过及两项未通过，未附机读原始回执；实际模型驱动使用另获确认正常。两项限制暂不处理，不为追求通过而改测试或扩大阻塞。两类对话体验问题只记症状及后续范围，本轮未检查它们的源码，也未判断来源层。

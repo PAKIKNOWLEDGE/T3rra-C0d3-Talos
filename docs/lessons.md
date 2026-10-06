@@ -1,6 +1,6 @@
 # 可迁移经验：记住问题，不继承旧引擎假设
 
-【文档】来源为 Rhodes 的 `docs/status.md` §7–8、`docs/rules.md`、`docs/design.md` 与主人逐轮反馈；本轮读取时 Rhodes HEAD 为 `5a12cacac8229908fd7f7ace641a67bc1b8ad178`。这是经验提炼，不是 MiniMax 已验证契约。需要考古时只读 `C:\DEV\develop\t3rra-C0d3`，日常接手不必通读旧仓。
+【文档】来源为 Rhodes 的 `docs/status.md` §7–8、`docs/rules.md`、`docs/design.md` 与用户逐轮反馈；本轮读取时 Rhodes HEAD 为 `5a12cacac8229908fd7f7ace641a67bc1b8ad178`。这是经验提炼，不是 MiniMax 已验证契约。需要考古时只读 `C:\DEV\develop\t3rra-C0d3`，日常接手不必通读旧仓。
 
 ## 状态与接口
 
