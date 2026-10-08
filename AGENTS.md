@@ -8,7 +8,14 @@
 
 行动前读取 status 顶部唯一的“当前交接卡”，核对任务标识、修订、阶段、角色和范围，首条工作说明用一句话报告本轮角色、任务与停止点。同一 session 切换模型、恢复压缩上下文也遵守此规则。用户最新明确指令优先于文件，先同步有冲突的卡片；角色声明本身不授权开启下一项。具体分工、无角色时的处理和状态转换见 [workflow 的角色交接规则](docs/workflow.md#0-角色与交接)。
 
-Talos 现在由两个相邻、分工明确的仓库组成：本仓库维护 GUI、文档与产品视觉；`C:\DEV\develop\Talos-CLI` 是独立维护的引擎 fork，维护 CLI/TUI、provider、账号与数据目录。两仓库通过 ACP 对接，不使用 Git 子模块；目录名称已固定，后续不要随意移动，也不让 GUI 直接导入引擎内部模块。
+Talos 由两个相邻仓库组成，**各有一张状态卡**（split-strict）：
+
+| 仓库 | 路径 | 写什么 |
+| --- | --- | --- |
+| **本仓（桌面）** | `C:\DEV\develop\T3rra-C0d3-Talos` | GUI demo、`app/`、视觉、Tauri 路线、GUI 侧 ACP 证据；[docs/status.md](docs/status.md) |
+| **引擎** | `C:\DEV\develop\Talos-CLI` | CLI/TUI、`talos`、provider、发行与验证；`docs/status.md` |
+
+冷启动：读本仓 AGENTS + 本仓 status；动引擎再读 Talos-CLI 的 AGENTS + status。两仓经 ACP 对接，不用子模块，GUI 不直接导入引擎内部模块。名字见 [docs/glossary.md](docs/glossary.md)。
 
 ## 任务准入：先证明为什么要做
 
@@ -19,13 +26,13 @@ Talos 现在由两个相邻、分工明确的仓库组成：本仓库维护 GUI�
 
 ## 项目与取舍
 
-Windows 优先的 coding-agent 桌面控制台，MiniMax Code 后端、Endfield 族视觉、Tauri 2 外壳。视觉是核心资产，先有已确认的可运行 demo，再做产品。Electron 不接受。当前已验收视觉正本及来源见 [设计地图](docs/design.md)。
+Windows 优先的 Talos **桌面**控制台（Endfield 族视觉、Tauri 2 外壳）；终端 CLI 在 Talos-CLI 发行。视觉是核心资产，先有已确认的可运行 demo，再做产品。Electron 不接受。当前已验收视觉正本及来源见 [设计地图](docs/design.md)。
 
 ## 接手规则
 
 - **冷启动缺文档即停**：本次任务依赖的当前文档、权威引用或路径找不到、打不开、链接失效，停止实现，报准确路径与缺项，由用户恢复或指定替代；不能用记忆、归档或相近文件代替。明确标为“待建”的产品文件不属于丢失文档，不能装作已经存在。
 - 先查状态和工作树，再做局部修改。不要整文件回滚别人的改动；不改 Rhodes 或其他外部参考仓库。相邻引擎 fork 只有在当前轮明确授权时才可修改，并且仍需遵守它自己的 source inventory、许可证和同步规则。
-- 对 MiniMax Code 的接口结论标【源码】/【实测】/【文档】/【未验】。动引擎前先在 [接驳证据](docs/adapters/minimax-code.md) 记录源码版本、path:line、映射与缺失项，再实现和跑可复现探针。不要用 opencode 报文证明 MiniMax 行为。
+- 对引擎行为的结论标【源码】/【实测】/【文档】/【未验】。动引擎前先在 [接驳证据](docs/adapters/talos-engine.md) 记录源码版本、path:line、映射与缺失项，再实现和跑可复现探针。不要用 opencode 报文代替 Talos-CLI 实测。
 - 用户说“通过”就更新现状；同时说“推进”才按当前范围进入下一项。不反复索取已经给过的授权；用户说仅评估、计划、收尾或停止时按该边界办。
 - 不因机检全绿宣称产品或视觉已通过。已完成、未完成、未验证必须并列说清；不编造运行结果。
 
@@ -55,7 +62,8 @@ Windows 优先的 coding-agent 桌面控制台，MiniMax Code 后端、Endfield 
 | [docs/workflow.md](docs/workflow.md) | 开发、验收、文档更新、机读闸和服务生命周期 |
 | [docs/design.md](docs/design.md) | Talos 的视觉正本、参考层级、demo 到产品的边界 |
 | [docs/lessons.md](docs/lessons.md) | Rhodes 反复踩过的坑及迁移时如何避开 |
-| [docs/adapters/minimax-code.md](docs/adapters/minimax-code.md) | MiniMax 源码入口、已知证据、待查契约 |
+| [docs/glossary.md](docs/glossary.md) | Talos / CLI / 上游名字分层 |
+| [docs/adapters/talos-engine.md](docs/adapters/talos-engine.md) | 引擎 ACP/TUI 证据（按需查阅） |
 | [demo/talos.html](demo/talos.html) | 已验收静态交互 demo，不接后端 |
 
 仓库边界：`C:\DEV\develop\Talos-CLI` 是本项目相邻的自有引擎 fork；`C:\DEV\develop\t3rra-C0d3` 仍是只读的 Rhodes 经验来源。引擎 fork 的代码、CLI/TUI、provider、凭据与数据目录属于引擎仓库；Talos 只通过 ACP 和固定的启动参数使用它。新项目视觉已带入本地，不再以临时目录为正本。

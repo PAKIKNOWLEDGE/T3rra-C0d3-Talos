@@ -1,6 +1,6 @@
 # Talos 提示词审查报告
 
-日期：2026-10-06。源码基点：CLI main738c495。仅静态审查，不改引擎或提示词，不运行模型、服务或产品测试，不读取真实profile、密钥和会话。
+日期：2026-10-06（静态快照）。源码基点：CLI main **738c495**。身份 rebranding 已在 CLI **0.1.2** 合入；现行引擎事实见 Talos-CLI [status](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/status.md) 与 [verification](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/verification.md#talos-prompt-identity-rebrand-2026-10-07)。本报告不改引擎，不运行模型，不读取真实 profile、密钥和会话。
 
 ## 结论
 

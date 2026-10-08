@@ -4,7 +4,7 @@
 
 ## 接手地图
 
-先读[AGENTS.md](AGENTS.md)与[当前状态](docs/status.md)，再只读当前任务需要的[计划](docs/plan.md)、[工作流](docs/workflow.md)或[契约证据](docs/adapters/minimax-code.md)。状态、计划、命令各有一个入口，历史探针不是每轮待办。
+先读[AGENTS.md](AGENTS.md)与[桌面状态](docs/status.md)；动引擎再读 Talos-CLI 的 `docs/status.md`。再按需读[计划](docs/plan.md)、[工作流](docs/workflow.md)、[词汇表](docs/glossary.md)或[引擎证据](docs/adapters/talos-engine.md)。
 
 | 文档 | 用途 |
 | --- | --- |
@@ -13,7 +13,8 @@
 | [workflow](docs/workflow.md) | 实施、验收、Git与文档规则 |
 | [design](docs/design.md) | 已验收视觉正本与素材来源 |
 | [lessons](docs/lessons.md) | 可迁移经验 |
-| [adapter](docs/adapters/minimax-code.md) | 按版本标记的源码与实测证据 |
+| [glossary](docs/glossary.md) | 产品名与引擎名分层 |
+| [talos-engine](docs/adapters/talos-engine.md) | 引擎 ACP/TUI 证据（按需） |
 
 ## CLI安装与使用
 

@@ -2,7 +2,7 @@
 
 这组三张文本仅供终端构图参考，不是 Endfield GUI 网页 demo，也不是运行中的终端程序。当前验收与任务入口统一见 [status](../status.md)，这里不派发下一轮工作。
 
-**已知语义偏差**：审批图里的 `Esc keep waiting`、`Allow once` 和任意动态选项不等于原生 TUI 契约；原生主选择页 Esc 拒绝，允许可能作用于整个会话。只参考排列与密度，具体事实见 [adapter](../adapters/minimax-code.md#原生-tui-与-gui-边界复核2026-09-29)。保留原图供比对，不借本轮文档整理修改设计资产。
+**已知语义偏差**：审批图里的 `Esc keep waiting`、`Allow once` 和任意动态选项不等于原生 TUI 契约；原生主选择页 Esc 拒绝，允许可能作用于整个会话。只参考排列与密度，具体事实见 [talos-engine](../adapters/talos-engine.md#原生-tui-与-gui-边界复核2026-09-29)。保留原图供比对，不借本轮文档整理修改设计资产。
 
 | 范本 | 文件 | 要看什么 |
 | --- | --- | --- |
