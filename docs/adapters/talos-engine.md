@@ -129,6 +129,10 @@
 | 【文档】 | 上游 `README_ZH.md` 的安装、数据目录、继续工作章节 | 存在 Windows 启动器、账号/BYOK、TUI 队列等说明；不能推导 ACP 路径具有相同行为 |
 | 【文档】 | 上游 `LICENSE` 及 `LICENSE-STATUS.md` 入口 | 第一方默认 MIT；第三方、商标、字体等不能概括成同一许可。此次只读 LICENSE，未做分发审计 |
 
+## GUI 观察桥环境（2026-10-08）
+
+【实测】`gui-acp-bridge/r1`：`src/host/environment.ts` 解析 PATH 上 `talos.cmd` → `@pakiknowledge/tal0s-code/cli.js`；版本闸 **0.1.x**（可用 `TALOS_CLI_VERSION_EXPECTED=0.1.2` 钉死 patch）。Node `v24.15.0`；`npm run check:env` ok；`npm run spike:initialize` → `protocolVersion: 1`，`agentInfo.title` Talos / `0.1.2`，`loadSession: true`，stderr 空。子进程 argv 为 `node <entry> acp`（见 `src/host/minimax-process.ts`）。不证明产品页 prompt、刷新恢复或会话 load。
+
 ## 第 1 轮握手实测
 
 核对日期：2026-09-28。使用显式 `C:\\Program Files\\nodejs\\node.exe` 运行仓库锁定的 `tsx` 与探针；未创建会话、未发送 prompt、未调用模型。CLI 启动器与入口由探针解析，不复制凭据。可重跑命令见 README。
@@ -166,6 +170,21 @@
 | 审批 allow-once 尝试 | 另一新会话、客户端预备选择 allow-once；实际 permission 请求仍为 0；文件真实创建，内容为 `acceptance-ok`，最终 `end_turn` | 只能证明当前设置下工具可直接执行；未证明 allow-once optionId、规则作用域或批准后行为 |
 
 脱敏结论：正常、取消、load/继续、工具更新均有真实 trace；审批未触发是实测事实，不是探针缺失。后续若用户希望继续审批专项，先从现有权限配置和源码确认可触发条件，再用新会话复测。
+
+## 工作室带 1 ACP 探针（2026-10-09）
+
+【源码】相邻引擎 `C:\DEV\develop\Talos-CLI`，工作树当次读取；未跑真实 `talos acp` 列表 RPC。
+
+| 位置 | 事实 |
+| --- | --- |
+| `packages/tui/src/acp/agent.ts:433-457` | `initialize` 广告 `loadSession: true`；`sessionCapabilities: { list, fork, resume, close }`；`promptCapabilities` 的 image/audio/embeddedContext 均为 false |
+| `packages/tui/src/acp/agent.ts:625-638` | `session/list` 调 `runtime.listSessionPage`，支持 `cwd`、`cursor`、含 archived |
+| `packages/tui/src/acp/agent.ts:357-360` | 每 ACP 进程仅接受 **一个** client 连接 |
+| `packages/tui/src/acp/agent.ts:1068` 起 | 活跃 prompt 存在时拒绝第二个普通 prompt |
+
+【文档】Talos Desktop 宿主计划：带 1 接 `session/list` + 显式 new/load；**不撤**完整目录设计。并行多件活首版做 **会话切换**，不做双路同时生成。fork / 附件 / diff 审查台不在带 1。见 GUI [plan.md](../plan.md#acp-边界探针带-1源码talos-cli)。
+
+【未验】本机 `initialize` 返回与上表一致；`session/list` 在主人 cwd 下分页与标题字段；Desktop 接线后的目视。
 
 ## 单会话链路源码证据
 

@@ -10,6 +10,10 @@ function createService() {
     sendPrompt: vi.fn(async () => void calls.send++),
     cancel: vi.fn(async () => void calls.cancel++),
     replyApproval: vi.fn(async () => void calls.approve++),
+    setMode: vi.fn(async () => {}),
+    setConfigOption: vi.fn(async () => {}),
+    createSession: vi.fn(async () => {}),
+    loadSession: vi.fn(async () => {}),
   };
   const service = new TalosService(new FactStore('service-1'), engine);
   return { service, engine, calls };

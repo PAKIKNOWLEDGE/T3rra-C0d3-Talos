@@ -1,10 +1,13 @@
 {
   "version": 1,
   "elements": [
-    { "id": "currentSessionBadge", "status": "static: 首版固定当前会话，暂不提供并行或新建会话" },
+    { "id": "newSession", "status": "wired: new_session（生成中禁用）" },
+    { "id": "sessionList", "status": "wired: snapshot.sessions + load_session" },
+    { "id": "sessionCount", "status": "wired: 列表条数" },
     { "id": "recordTab", "status": "wired" },
     { "id": "eventsTab", "status": "wired" },
-    { "id": "prompt", "status": "wired" },
+    { "id": "prompt", "status": "wired: send_prompt；/ 触发广告命令补全" },
+    { "id": "slashMenu", "status": "wired: availableCommands 过滤列表" },
     { "id": "sendButton", "status": "wired" },
     { "id": "stopButton", "status": "wired" },
     { "id": "overviewToggle", "status": "wired" },
@@ -13,8 +16,18 @@
     { "id": "doneDetail", "status": "wired" },
     { "id": "stream", "status": "wired" },
     { "id": "plan", "status": "static: 真实计划投影尚未接入" },
-    { "id": "usageValue", "status": "static: 引擎未报告 usage 时保持留白" },
+    { "id": "usageValue", "status": "static: 无用量数据时留白" },
+    { "id": "usageCap", "status": "static: 无用量数据时显示占位文案" },
     { "id": "files", "status": "wired" },
-    { "id": "modelValue", "status": "static: 只显示引擎当前值，不提供配置编辑" }
+    { "id": "modelControl", "status": "wired: 自定义 model 菜单（贴 composer）或 modelValue" },
+    { "id": "modelTrigger", "status": "wired" },
+    { "id": "modelMenu", "status": "wired" },
+    { "id": "modeControl", "status": "wired: demo 胶囊按钮或 modeValue" },
+    { "id": "modeValue", "status": "wired: 只读回退" },
+    { "id": "workspaceTitle", "status": "wired: 来自会话 cwd 派生" },
+    { "id": "workspacePath", "status": "wired: 来自会话 cwd" },
+    { "id": "workspaceSwitchForm", "status": "wired: switch_workspace 绝对路径" },
+    { "id": "workspaceInput", "status": "wired" },
+    { "id": "textScaleControls", "status": "wired: 顶栏字号 标准/舒适/大，localStorage talos.textScale" }
   ]
 }

@@ -51,7 +51,36 @@ python -m http.server 5192 --bind 127.0.0.1 --directory demo
 
 ## 浏览器产品
 
-浏览器产品仍是未完成骨架：回复可见性、样张残留和刷新恢复尚未收口，当前暂停。不要把demo或事件页有数据当作真实对话体验已完成；恢复时以status确认的任务为入口。
+产品壳在 [app/index.html](app/index.html)，样式与 [demo/talos.css](demo/talos.css) 共用正本（另加 `app/product.css` 少量壳差异）。可用 Vite 预览布局（不接引擎时 WebSocket 不会连接）：
+
+```powershell
+cd C:/DEV/develop/T3rra-C0d3-Talos
+npm run dev:shell
+```
+
+打开 http://127.0.0.1:5193/ 对照 demo 目视验收。须用 `dev:shell`（或 `dev:product`），不要裸跑 `npx vite app`，否则 `/demo/talos.css` 与 Harmony 字体不会正确加载。
+
+**Talos Desktop** 依赖本机已安装的 **Talos CLI**（`talos` 在 PATH 上，**0.1.x**）。Desktop 与终端 TUI 并存，不取代 TUI；未安装 CLI 时窗口应显示连接/环境失败，而不是假在线。
+
+接观察服务（另需已配置 provider 才能发模型请求）：
+
+```powershell
+cd C:/DEV/develop/T3rra-C0d3-Talos
+npm run check:env
+npm run dev:product -- --cwd C:/path/to/your/workspace
+```
+
+浏览器打开 http://127.0.0.1:5193/ ，底栏应显示已连接。侧栏可**输入另一绝对路径**并点「切换工作区」以更换项目（浏览器版无系统文件夹对话框；安装版以后由 Tauri 提供）。发 prompt 会消耗 provider 配额。可选 `npm run spike:initialize` 仅握手。见 [status](docs/status.md)。
+
+若启动报 `EADDRINUSE` / 5194 占用，说明上一次的 `dev:product` 仍在后台（常见于**直接关终端窗口**、或崩溃后未退出）。先释放端口：
+
+```powershell
+npm run stop:product
+```
+
+等价手工：`netstat -ano | findstr :5194` → `taskkill /PID <PID> /F`（5193 若仍占用也一并结束）。然后重新 `npm run dev:product`。
+
+正常退出请在**运行服务的那个终端**按 **Ctrl+C**（应看到 `Shutting down`），不要只关窗口。
 
 ## 文档与范本检查
 

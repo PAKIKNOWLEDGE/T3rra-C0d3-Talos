@@ -30,6 +30,14 @@ export type EngineEvent =
   | { kind: 'disconnected'; processEpoch: number; error?: string }
   | { kind: 'session.created'; processEpoch: number; sessionId: string; cwd: string }
   | { kind: 'session.loaded'; processEpoch: number; sessionId: string; cwd: string }
+  | {
+      kind: 'session.listed';
+      processEpoch: number;
+      cwd: string;
+      sessions: SessionIndexItem[];
+    }
+  | { kind: 'session.list_error'; processEpoch: number; cwd: string; message: string }
+  | { kind: 'session.context'; processEpoch: number; sessionId: string; context: SessionContext }
   | { kind: 'turn.started'; processEpoch: number; sessionId: string; turnId: string; prompt: string }
   | { kind: 'user.message'; processEpoch: number; sessionId: string; messageId: string; text: string }
   | {
@@ -73,12 +81,44 @@ export type EngineEvent =
       sessionId?: string;
     };
 
+export type SessionModeOption = { id: string; name: string };
+export type SessionModelOption = { value: string; name: string };
+
+export type SessionSlashCommand = {
+  name: string;
+  description?: string;
+  inputHint?: string;
+};
+
+export type SessionIndexItem = {
+  sessionId: string;
+  cwd: string;
+  title?: string;
+  updatedAt?: string;
+};
+
+export type SessionContext = {
+  modeLabel?: string;
+  modelLabel?: string;
+  usageLabel?: string;
+  usageCapLabel?: string;
+  currentModeId?: string;
+  availableModes?: SessionModeOption[];
+  modelConfigId?: string;
+  currentModelValue?: string;
+  modelOptions?: SessionModelOption[];
+  availableCommands?: SessionSlashCommand[];
+};
+
 export type ServiceSnapshot = {
   serviceEpoch: string;
   revision: number;
   connection: { status: ConnectionStatus; processEpoch: number };
   session: { status: SessionStatus; sessionId?: string; cwd?: string };
   turn: { status: TurnStatus; turnId?: string; prompt?: string; stopReason?: string };
+  context: SessionContext;
+  sessions: SessionIndexItem[];
+  sessionListError?: string;
   messages: MessageFact[];
   tools: ToolFact[];
   approvals: ApprovalFact[];
@@ -88,4 +128,9 @@ export type ServiceSnapshot = {
 export type ServiceAction =
   | { type: 'send_prompt'; operationId: string; sessionId: string; prompt: string }
   | { type: 'cancel'; operationId: string; sessionId: string }
-  | { type: 'reply_approval'; operationId: string; sessionId: string; requestId: string; optionId: string };
+  | { type: 'reply_approval'; operationId: string; sessionId: string; requestId: string; optionId: string }
+  | { type: 'switch_workspace'; operationId: string; cwd: string }
+  | { type: 'set_mode'; operationId: string; sessionId: string; modeId: string }
+  | { type: 'set_config_option'; operationId: string; sessionId: string; configId: string; value: string }
+  | { type: 'new_session'; operationId: string; cwd: string }
+  | { type: 'load_session'; operationId: string; sessionId: string; cwd: string };

@@ -1,4 +1,4 @@
-import type { EngineEvent, MessageFact, ServiceSnapshot, ToolFact } from './types.js';
+import type { EngineEvent, MessageFact, ServiceSnapshot, SessionIndexItem, ToolFact } from './types.js';
 
 export class FactStore {
   private readonly state: ServiceSnapshot;
@@ -10,6 +10,8 @@ export class FactStore {
       connection: { status: 'disconnected', processEpoch: 0 },
       session: { status: 'none' },
       turn: { status: 'idle' },
+      context: {},
+      sessions: [],
       messages: [],
       tools: [],
       approvals: [],
@@ -19,6 +21,34 @@ export class FactStore {
 
   snapshot(): ServiceSnapshot {
     return structuredClone(this.state);
+  }
+
+  restoreSnapshot(snapshot: ServiceSnapshot) {
+    this.state = structuredClone(snapshot);
+    this.state.revision += 1;
+  }
+
+  prepareForWorkspaceSwitch(processEpoch: number) {
+    this.state.connection = { status: 'connecting', processEpoch };
+    this.state.session = { status: 'loading' };
+    this.state.turn = { status: 'idle' };
+    this.state.context = {};
+    this.state.sessions = [];
+    this.state.sessionListError = undefined;
+    this.state.messages = [];
+    this.state.tools = [];
+    this.state.approvals = [];
+    this.state.revision += 1;
+  }
+
+  prepareForSessionSwitch(sessionId: string, cwd: string) {
+    this.state.session = { status: 'loading', sessionId, cwd };
+    this.state.turn = { status: 'idle' };
+    this.state.context = {};
+    this.state.messages = [];
+    this.state.tools = [];
+    this.state.approvals = [];
+    this.state.revision += 1;
   }
 
   apply(event: EngineEvent): boolean {
@@ -38,18 +68,39 @@ export class FactStore {
       case 'session.created':
       case 'session.loaded':
         this.state.session = { status: 'ready', sessionId: event.sessionId, cwd: event.cwd };
+        this.upsertListedSession({ sessionId: event.sessionId, cwd: event.cwd });
+        break;
+      case 'session.listed':
+        this.state.sessions = structuredClone(event.sessions);
+        this.state.sessionListError = undefined;
+        break;
+      case 'session.list_error':
+        this.state.sessionListError = event.message;
+        this.state.errors.push(event.message);
+        break;
+      case 'session.context':
+        this.state.context = { ...this.state.context, ...structuredClone(event.context) };
+        const ctx = this.state.context;
+        if (ctx.currentModeId && ctx.availableModes?.length) {
+          const mode = ctx.availableModes.find((item) => item.id === ctx.currentModeId);
+          if (mode) ctx.modeLabel = mode.name;
+        }
+        if (ctx.currentModelValue && ctx.modelOptions?.length) {
+          const model = ctx.modelOptions.find((item) => item.value === ctx.currentModelValue);
+          if (model) ctx.modelLabel = model.name;
+        }
         break;
       case 'turn.started':
         this.state.session.status = 'running';
         this.state.turn = { status: 'running', turnId: event.turnId, prompt: event.prompt };
         break;
       case 'user.message':
-        this.upsertMessage({ messageId: event.messageId, role: 'user', text: event.text });
+        this.appendMessage({ messageId: event.messageId, role: 'user', text: event.text });
         break;
       case 'assistant.delta': {
         const existing = this.state.messages.find((message) => message.messageId === event.messageId);
         if (existing) existing.text += event.text;
-        else this.upsertMessage({ messageId: event.messageId, role: 'assistant', text: event.text });
+        else this.appendMessage({ messageId: event.messageId, role: 'assistant', text: event.text });
         break;
       }
       case 'tool.update':
@@ -89,10 +140,21 @@ export class FactStore {
     return true;
   }
 
-  private upsertMessage(message: MessageFact) {
+  private appendMessage(message: MessageFact) {
     const existing = this.state.messages.find((item) => item.messageId === message.messageId);
-    if (existing) existing.text = message.text;
+    if (existing) existing.text += message.text;
     else this.state.messages.push(structuredClone(message));
+  }
+
+  private upsertListedSession(item: SessionIndexItem) {
+    const existing = this.state.sessions.find((session) => session.sessionId === item.sessionId);
+    if (existing) {
+      if (!existing.title && item.title) existing.title = item.title;
+      if (!existing.updatedAt && item.updatedAt) existing.updatedAt = item.updatedAt;
+      existing.cwd = item.cwd;
+      return;
+    }
+    this.state.sessions.unshift(structuredClone(item));
   }
 
   private upsertTool(toolCallId: string, patch: Omit<ToolFact, 'toolCallId'>) {

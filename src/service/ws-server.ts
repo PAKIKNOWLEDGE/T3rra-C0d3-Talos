@@ -25,17 +25,38 @@ export function createTalosWebSocketServer(service: TalosService, port = 5193) {
     });
     socket.on('close', stop);
   });
-  httpServer.listen(port, '127.0.0.1');
-  const ready = new Promise<number>((resolve) => {
+  const portInUseMessage = () =>
+    `Port ${port} is already in use. Run: npm run stop:product — or netstat -ano | findstr :${port} then taskkill /PID <pid> /F`;
+
+  const ready = new Promise<number>((resolve, reject) => {
+    let settled = false;
+    const fail = (error: NodeJS.ErrnoException) => {
+      if (settled) return;
+      settled = true;
+      if (error.code === 'EADDRINUSE') reject(new Error(portInUseMessage()));
+      else reject(error);
+    };
     httpServer.once('listening', () => {
+      if (settled) return;
+      settled = true;
       const address = httpServer.address();
       resolve(typeof address === 'object' && address ? address.port : port);
     });
+    httpServer.once('error', fail);
+    websocketServer.once('error', fail);
+    httpServer.listen(port, '127.0.0.1');
   });
   return {
     httpServer,
     websocketServer,
     ready,
-    close: () => new Promise<void>((resolve) => websocketServer.close(() => (httpServer as Server).close(() => resolve()))),
+    close: () =>
+      new Promise<void>((resolve) => {
+        for (const client of websocketServer.clients) client.terminate();
+        websocketServer.close(() => {
+          httpServer.closeAllConnections();
+          (httpServer as Server).close(() => resolve());
+        });
+      }),
   };
 }

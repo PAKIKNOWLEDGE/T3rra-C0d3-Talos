@@ -210,4 +210,5 @@ document.addEventListener('keydown', (event) => {
 });
 recordEvent('demo.session', '打开主题令牌样例');
 recordEvent('demo.permission', '等待批准 legacy 目录操作');
+if (globalThis.TalosTextScale) TalosTextScale.init();
 render(); syncOverview();
