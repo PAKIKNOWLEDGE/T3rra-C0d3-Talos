@@ -158,6 +158,7 @@ describe('fact store messages and context', () => {
       setConfigOption: async () => {},
       createSession: async () => {},
       loadSession: async () => {},
+      deleteSession: async () => {},
     });
     service.apply({ kind: 'connected', processEpoch: 1 });
     service.apply({
@@ -203,6 +204,7 @@ describe('fact store messages and context', () => {
       setConfigOption: async () => {},
       createSession: async () => {},
       loadSession: async () => {},
+      deleteSession: async () => {},
     });
     service.apply({ kind: 'connected', processEpoch: 1 });
     service.apply({

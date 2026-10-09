@@ -25,6 +25,50 @@
   cursor: not-allowed;
 }
 
+.session-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px;
+  align-items: stretch;
+}
+
+.session-row .session {
+  min-width: 0;
+}
+
+.session-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-height: 68px;
+  padding: 0;
+  border: 1px solid #ffffff14;
+  border-radius: 3px;
+  background: #ffffff06;
+  color: #a8a8a6;
+  cursor: pointer;
+}
+
+.session-delete:hover {
+  background: #ffffff12;
+  color: #f4eb16;
+  border-color: #f4eb1640;
+}
+
+.session-delete .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.session-row .session.current + .session-delete {
+  color: #4a4a48;
+}
+
+.session-row .session.current + .session-delete:hover {
+  color: #252625;
+}
+
 .session-empty {
   padding: 14px 10px;
   font-size: 11px;

@@ -43,6 +43,10 @@ const ui = {
   sessionSwitchBlocked: '当前这条活还在生成。请先停止，再切换或新建。',
   sessionLoading: '正在打开这条活…',
   sessionCreating: '正在新建…',
+  sessionDeleting: '正在删除…',
+  sessionDeleteConfirm: '确定删除这条活？删除后无法从列表恢复。',
+  sessionDeleteBlocked: '生成中不能删除。请先停止。',
+  sessionDeleteUnsupported: '当前 Talos 版本不支持删除。请升级到 0.1.3。',
   emptyTitle: '尚未开始会话',
   emptyBody: '连接后即可在此继续当前工作。',
   emptyAction: '重新连接',
@@ -455,6 +459,31 @@ function requestNewSession() {
   notice(ui.sessionCreating);
 }
 
+function sessionDeleteEnabled() {
+  return Boolean(state.snapshot?.agent?.sessionDelete);
+}
+
+function requestDeleteSession(targetId) {
+  if (!targetId) return;
+  if (!sessionDeleteEnabled()) return notice(ui.sessionDeleteUnsupported);
+  const cwd = workspaceCwd();
+  if (!cwd) return notice(ui.workspacePathPending);
+  if (state.snapshot?.connection?.status !== 'connected') return notice(ui.disconnected);
+  if (turnRunning()) return notice(ui.sessionDeleteBlocked);
+  if (!window.confirm(ui.sessionDeleteConfirm)) return;
+  if (
+    !sendAction({
+      type: 'delete_session',
+      operationId: nextOperationId('delete-session'),
+      sessionId: targetId,
+      cwd,
+    })
+  ) {
+    return;
+  }
+  notice(ui.sessionDeleting);
+}
+
 function requestLoadSession(targetId) {
   if (!targetId || targetId === sessionId()) return;
   const cwd = workspaceCwd();
@@ -509,7 +538,11 @@ function renderSessions() {
             active && running
               ? '运行中'
               : formatSessionTime(item.updatedAt) || (active ? phase() : '历史');
-          return `<button type="button" class="session${active ? ' current' : ''}" data-session-id="${escapeHtml(item.sessionId)}" ${active ? 'aria-current="true"' : ''} ${running && !active ? 'disabled' : ''}><span class="session-index">${String(index + 1).padStart(2, '0')}</span><span><span class="session-name">${escapeHtml(sessionLabel(item))}</span><span class="session-meta">${escapeHtml(meta)}</span></span></button>`;
+          const deleteControl =
+            sessionDeleteEnabled() && !running
+              ? `<button type="button" class="session-delete" data-session-delete="${escapeHtml(item.sessionId)}" aria-label="删除这条活"><svg class="icon"><use href="#i-close"/></svg></button>`
+              : '';
+          return `<div class="session-row"><button type="button" class="session${active ? ' current' : ''}" data-session-id="${escapeHtml(item.sessionId)}" ${active ? 'aria-current="true"' : ''} ${running && !active ? 'disabled' : ''}><span class="session-index">${String(index + 1).padStart(2, '0')}</span><span><span class="session-name">${escapeHtml(sessionLabel(item))}</span><span class="session-meta">${escapeHtml(meta)}</span></span></button>${deleteControl}</div>`;
         })
         .join(''),
     );
@@ -747,6 +780,10 @@ document.addEventListener('click', (event) => {
   }
   if (button.id === 'newSession') {
     requestNewSession();
+    return;
+  }
+  if (button.dataset.sessionDelete) {
+    requestDeleteSession(button.dataset.sessionDelete);
     return;
   }
   if (button.dataset.sessionId) {

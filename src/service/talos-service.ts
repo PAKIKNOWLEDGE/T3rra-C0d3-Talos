@@ -10,6 +10,7 @@ export interface EnginePort {
   setConfigOption(sessionId: string, configId: string, value: string): Promise<void>;
   createSession(cwd: string): Promise<void>;
   loadSession(sessionId: string, cwd: string): Promise<void>;
+  deleteSession(sessionId: string, cwd: string): Promise<void>;
 }
 
 export interface WorkspaceHost {
@@ -120,6 +121,45 @@ export class TalosService {
           this.store.restoreSnapshot(rollback);
           this.broadcast();
           throw error;
+        }
+        return { operationId: action.operationId, accepted: true };
+      }
+      case 'delete_session': {
+        this.assertTurnIdle();
+        const snap = this.store.snapshot();
+        if (!snap.agent.sessionDelete) {
+          throw new Error('当前 Talos 不支持删除会话。请安装 talos 0.1.3 或更新 PATH 中的 talos。');
+        }
+        const isCurrent = snap.session.sessionId === action.sessionId;
+        const rollback = this.store.snapshot();
+        try {
+          await this.engine.deleteSession(action.sessionId, action.cwd);
+        } catch (error) {
+          throw error;
+        }
+        if (isCurrent) {
+          const remaining = this.store.snapshot().sessions;
+          if (remaining.length > 0) {
+            const nextId = remaining[0].sessionId;
+            const rollbackAfterDelete = this.store.snapshot();
+            this.prepareSessionSwitch(nextId, action.cwd);
+            try {
+              await this.engine.loadSession(nextId, action.cwd);
+            } catch (error) {
+              this.store.restoreSnapshot(rollbackAfterDelete);
+              this.broadcast();
+              throw error;
+            }
+          } else {
+            this.prepareSessionSwitch('', action.cwd);
+            try {
+              await this.engine.createSession(action.cwd);
+            } catch (error) {
+              this.store.restoreSnapshot(rollback);
+              this.broadcast();
+              throw error;
+            }
+          }
         }
         return { operationId: action.operationId, accepted: true };
       }

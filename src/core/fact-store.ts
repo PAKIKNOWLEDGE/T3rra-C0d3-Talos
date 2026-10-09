@@ -12,6 +12,7 @@ export class FactStore {
       turn: { status: 'idle' },
       context: {},
       sessions: [],
+      agent: { sessionDelete: false },
       messages: [],
       tools: [],
       approvals: [],
@@ -35,6 +36,7 @@ export class FactStore {
     this.state.context = {};
     this.state.sessions = [];
     this.state.sessionListError = undefined;
+    this.state.agent = { sessionDelete: false };
     this.state.messages = [];
     this.state.tools = [];
     this.state.approvals = [];
@@ -60,6 +62,22 @@ export class FactStore {
     switch (event.kind) {
       case 'connected':
         this.state.connection.status = 'connected';
+        break;
+      case 'agent.capabilities':
+        this.state.agent = { sessionDelete: event.sessionDelete };
+        break;
+      case 'session.deleted':
+        this.state.sessions = this.state.sessions.filter((row) => row.sessionId !== event.sessionId);
+        if (this.state.session.sessionId === event.sessionId) {
+          this.state.session = {
+            status: 'none',
+            ...(this.state.session.cwd ? { cwd: this.state.session.cwd } : {}),
+          };
+          this.state.messages = [];
+          this.state.tools = [];
+          this.state.approvals = [];
+          this.state.context = {};
+        }
         break;
       case 'disconnected':
         this.state.connection.status = 'disconnected';

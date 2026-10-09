@@ -35,6 +35,7 @@ describe('workspace switch state', () => {
       setConfigOption: async () => {},
       createSession: async () => {},
       loadSession: async () => {},
+      deleteSession: async () => {},
     };
     const service = new TalosService(new FactStore('s'), engine);
     service.apply({ kind: 'connected', processEpoch: 1 });
@@ -63,6 +64,7 @@ describe('workspace switch state', () => {
         setConfigOption: async () => {},
         createSession: async () => {},
         loadSession: async () => {},
+        deleteSession: async () => {},
       },
       { switchWorkspace: async (cwd) => void (seen = cwd) },
     );

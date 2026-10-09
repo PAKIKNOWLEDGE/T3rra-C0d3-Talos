@@ -14,6 +14,13 @@ type AcpAdapterHolder = { adapter: MinimaxAcpAdapter | undefined };
  * ACP client handlers must be registered before `client.connect(stream)`;
  * otherwise early `session/update` notifications (e.g. `available_commands_update`) are dropped.
  */
+export function readSessionDeleteCapability(initialized: {
+  agentCapabilities?: { sessionCapabilities?: Record<string, unknown> | null };
+}): boolean {
+  const caps = initialized.agentCapabilities?.sessionCapabilities;
+  return Boolean(caps && typeof caps === 'object' && caps.delete != null);
+}
+
 export function prepareTalosAcpClient(): { client: acp.ClientApp; holder: AcpAdapterHolder } {
   const client = acp.client({ name: 'talos-service' });
   const holder: AcpAdapterHolder = { adapter: undefined };
@@ -100,6 +107,11 @@ export class MinimaxAcpAdapter {
     this.emit({ kind: 'session.loaded', processEpoch: this.processEpoch, sessionId, cwd });
     this.emitSessionContext(sessionId, result);
     return result;
+  }
+
+  async deleteSession(sessionId: string) {
+    await this.connection.agent.request(acp.methods.agent.session.delete, { sessionId });
+    this.emit({ kind: 'session.deleted', processEpoch: this.processEpoch, sessionId });
   }
 
   async listSessions(cwd: string) {

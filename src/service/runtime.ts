@@ -1,7 +1,7 @@
 import { FactStore } from '../core/fact-store.js';
 import { assertWorkspaceDirectory } from '../host/workspace-path.js';
 import { startTalosAcpProcess } from '../host/minimax-process.js';
-import type { MinimaxAcpAdapter } from '../adapter/minimax-acp.js';
+import { readSessionDeleteCapability, type MinimaxAcpAdapter } from '../adapter/minimax-acp.js';
 import { TalosService, type EnginePort } from './talos-service.js';
 import { createTalosWebSocketServer } from './ws-server.js';
 import { bindGuiSession } from './workspace-session.js';
@@ -58,6 +58,23 @@ export async function startRuntimeService(initialCwd: string, port = 5194) {
         /* list error already emitted */
       }
     },
+    deleteSession: async (sessionId, cwd) => {
+      if (!adapter) throw new Error('Talos ACP adapter is not connected.');
+      await adapter.deleteSession(sessionId);
+      try {
+        await adapter.listSessions(cwd);
+      } catch {
+        /* list error already emitted */
+      }
+    },
+  };
+
+  const applyAgentCapabilities = (bundle: AcpBundle) => {
+    service.apply({
+      kind: 'agent.capabilities',
+      processEpoch,
+      sessionDelete: readSessionDeleteCapability(bundle.initialized),
+    });
   };
 
   let service!: TalosService;
@@ -73,6 +90,7 @@ export async function startRuntimeService(initialCwd: string, port = 5194) {
     try {
       acpBundle = await startTalosAcpProcess(processEpoch, (event) => service.apply(event));
       adapter = acpBundle.adapter;
+      applyAgentCapabilities(acpBundle);
       await bindGuiSession(adapter, nextDir);
     } catch (error) {
       service.apply({
@@ -89,6 +107,7 @@ export async function startRuntimeService(initialCwd: string, port = 5194) {
   try {
     acpBundle = await startTalosAcpProcess(processEpoch, (event) => service.apply(event));
     adapter = acpBundle.adapter;
+    applyAgentCapabilities(acpBundle);
     await bindGuiSession(adapter, workspaceDir);
     const socketServer = createTalosWebSocketServer(service, port);
     await socketServer.ready;

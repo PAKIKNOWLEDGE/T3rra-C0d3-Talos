@@ -28,6 +28,8 @@ export type ApprovalFact = {
 export type EngineEvent =
   | { kind: 'connected'; processEpoch: number }
   | { kind: 'disconnected'; processEpoch: number; error?: string }
+  | { kind: 'agent.capabilities'; processEpoch: number; sessionDelete: boolean }
+  | { kind: 'session.deleted'; processEpoch: number; sessionId: string }
   | { kind: 'session.created'; processEpoch: number; sessionId: string; cwd: string }
   | { kind: 'session.loaded'; processEpoch: number; sessionId: string; cwd: string }
   | {
@@ -119,6 +121,7 @@ export type ServiceSnapshot = {
   context: SessionContext;
   sessions: SessionIndexItem[];
   sessionListError?: string;
+  agent: { sessionDelete: boolean };
   messages: MessageFact[];
   tools: ToolFact[];
   approvals: ApprovalFact[];
@@ -133,4 +136,5 @@ export type ServiceAction =
   | { type: 'set_mode'; operationId: string; sessionId: string; modeId: string }
   | { type: 'set_config_option'; operationId: string; sessionId: string; configId: string; value: string }
   | { type: 'new_session'; operationId: string; cwd: string }
-  | { type: 'load_session'; operationId: string; sessionId: string; cwd: string };
+  | { type: 'load_session'; operationId: string; sessionId: string; cwd: string }
+  | { type: 'delete_session'; operationId: string; sessionId: string; cwd: string };

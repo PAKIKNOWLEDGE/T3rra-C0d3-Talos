@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { parseSessionIndex, nextListCursor, mergeSessionPages } from '../src/adapter/session-index.js';
+import {
+  parseSessionIndex,
+  nextListCursor,
+  mergeSessionPages,
+} from '../src/adapter/session-index.js';
+import { readSessionDeleteCapability } from '../src/adapter/minimax-acp.js';
 import { FactStore } from '../src/core/fact-store.js';
 import { TalosService } from '../src/service/talos-service.js';
 
@@ -15,9 +20,21 @@ function engineStub(overrides: Partial<{
     setConfigOption: vi.fn(async () => {}),
     createSession: vi.fn(async () => {}),
     loadSession: vi.fn(async () => {}),
+    deleteSession: vi.fn(async () => {}),
     ...overrides,
   };
 }
+
+describe('session delete capability', () => {
+  it('reads sessionCapabilities.delete from initialize payload', () => {
+    expect(readSessionDeleteCapability({ agentCapabilities: { sessionCapabilities: { delete: {} } } })).toBe(
+      true,
+    );
+    expect(readSessionDeleteCapability({ agentCapabilities: { sessionCapabilities: { list: {} } } })).toBe(
+      false,
+    );
+  });
+});
 
 describe('session index parsing', () => {
   it('sorts by updatedAt descending and dedupes sessionId', () => {
@@ -84,6 +101,45 @@ describe('session directory service', () => {
     await expect(
       service.dispatch({ type: 'new_session', operationId: 'op-new', cwd: 'C:/w' }),
     ).rejects.toThrow(/还在生成/);
+  });
+
+  it('rejects delete_session without engine capability', async () => {
+    const service = new TalosService(new FactStore('s'), engineStub());
+    service.apply({ kind: 'connected', processEpoch: 1 });
+    service.apply({ kind: 'session.created', processEpoch: 1, sessionId: 's1', cwd: 'C:/w' });
+    await expect(
+      service.dispatch({
+        type: 'delete_session',
+        operationId: 'op-del',
+        sessionId: 's1',
+        cwd: 'C:/w',
+      }),
+    ).rejects.toThrow(/不支持删除/);
+  });
+
+  it('dispatches delete_session when capability is advertised', async () => {
+    const engine = engineStub();
+    const service = new TalosService(new FactStore('s'), engine);
+    service.apply({ kind: 'connected', processEpoch: 1 });
+    service.apply({ kind: 'agent.capabilities', processEpoch: 1, sessionDelete: true });
+    service.apply({ kind: 'session.created', processEpoch: 1, sessionId: 's1', cwd: 'C:/w' });
+    service.apply({
+      kind: 'session.listed',
+      processEpoch: 1,
+      cwd: 'C:/w',
+      sessions: [
+        { sessionId: 's1', cwd: 'C:/w' },
+        { sessionId: 's2', cwd: 'C:/w' },
+      ],
+    });
+    await service.dispatch({
+      type: 'delete_session',
+      operationId: 'op-del',
+      sessionId: 's2',
+      cwd: 'C:/w',
+    });
+    expect(engine.deleteSession).toHaveBeenCalledWith('s2', 'C:/w');
+    expect(service.snapshot().session.sessionId).toBe('s1');
   });
 
   it('restores snapshot when load_session fails', async () => {

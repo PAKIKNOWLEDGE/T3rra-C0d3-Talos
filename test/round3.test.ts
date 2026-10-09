@@ -14,6 +14,7 @@ function createService() {
     setConfigOption: vi.fn(async () => {}),
     createSession: vi.fn(async () => {}),
     loadSession: vi.fn(async () => {}),
+    deleteSession: vi.fn(async () => {}),
   };
   const service = new TalosService(new FactStore('service-1'), engine);
   return { service, engine, calls };

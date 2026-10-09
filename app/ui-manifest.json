@@ -2,7 +2,7 @@
   "version": 1,
   "elements": [
     { "id": "newSession", "status": "wired: new_session（生成中禁用）" },
-    { "id": "sessionList", "status": "wired: snapshot.sessions + load_session" },
+    { "id": "sessionList", "status": "wired: snapshot.sessions + load_session + delete_session（需 agent.sessionDelete）" },
     { "id": "sessionCount", "status": "wired: 列表条数" },
     { "id": "recordTab", "status": "wired" },
     { "id": "eventsTab", "status": "wired" },
