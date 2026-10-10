@@ -7,25 +7,25 @@
 | 字段 | 值 |
 | --- | --- |
 | 任务标识 / 修订 | desktop-message-fidelity / r1 |
-| 阶段 | **执行中（第三次技术复核退回）** |
-| 本轮角色 / 来源 | Codex 技术复核；用户要求复核当前候选 |
+| 阶段 | **待技术复核** |
+| 本轮角色 / 来源 | Luna；用户授权修复第三次复核 H1–H2 |
 | 目标 / 方案入口 | [R1 对话记录忠实接驳](plan.md#下一小轮r1-对话记录忠实接驳) |
 | 允许范围 | 同 R1；`fact-store` 重同步/回合边界 + 定向回归 |
 | 禁止范围 | R2+、Talos-CLI、视觉、Tauri、宣称产品/画面通过 |
-| 验收 / 停止点 | 修复下方 H1–H2，提交新候选并停在待技术复核；本候选不进入用户验收 |
-| 完成证据 | 见「实施交付」；**未**用户验收、**未**真实引擎付费复现 |
-| 下一接手 / 就绪性 | Cursor：继续同一 R1 的 H1–H2；不得推进 R2 |
+| 验收 / 停止点 | Codex 技术复核本候选；通过前不进入用户验收、不推进 R2 |
+| 完成证据 | 见「实施交付」；`npm run check:all` 0；**未**用户验收、**未**真实引擎付费复现 |
+| 下一接手 / 就绪性 | Codex 复核；若再退回则继续 H 项或新编号项 |
 
 ## 触发与已确认决定
 
-Codex 二次复核 `78529b9` 不通过（`d581c46` 记账 G1–G2）；用户授权继续同一 R1 修复。
+Codex 二次复核 `78529b9` 不通过（`d581c46` 记账 G1–G2）；三次复核 `0be98d8` 不通过（H1–H2）；用户授权修复并提交新候选。
 
 ## 产品事实与已知问题
 
 | 项 | 状态 |
 | --- | --- |
-| 失效候选 | `caae401`、`78529b9` |
-| 当前候选 | **`0be98d8`** — G1 重同步代次 + G2 迟到回合流事件 |
+| 失效候选 | `caae401`、`78529b9`、`0be98d8` |
+| 当前候选 | 见「实施交付」提交号 — H1 pending 消费 + H2 `turn.finished` 身份核对 |
 | 真实 Studio / 付费 turn | **【未验】** |
 | 浏览器目视 | **【未验】** |
 
@@ -33,19 +33,19 @@ Codex 二次复核 `78529b9` 不通过（`d581c46` 记账 G1–G2）；用户授
 
 - R1 原始基点：`597a2a1`
 - 上轮候选：`78529b9`；二次复核记账：`d581c46`
-- **当前产品候选：`0be98d8`**
+- **当前产品候选：** 见下表提交号（相对 `0be98d8` 的 H1–H2 修复）
 
 ## 当前候选与实施交付
 
 | 字段 | 当前值 |
 | --- | --- |
-| 实施基点 | `78529b9` |
-| 产品候选提交 | **`0be98d8`** — `fix(desktop): resync generation and late turn stream guards for R1` |
-| 相对 78529b9 的改动 | `fact-store.ts`：`pendingHistoryResyncCount` + `liveStreamFactsDuringResync`（替代 revision baseline）；流式事件仅在 `turn.running` 且 turnId 匹配时接受；`turn.started`/`turn.finished` 不受旧 turnId 误拒 |
-| G1 回归 | 无新事实时 resync 后应用 NEW 历史；仅 `session.context` 不阻塞；F3 正文 delta 仍阻止陈旧快照（保留） |
-| G2 回归 | 回合结束后拒绝同/旧 turnId 的 delta、tool、notice；跨回合完成后拒绝 t1 迟到正文 |
-| 既有 F1–F6 | 未回退；`test/message-fidelity-r1.test.ts` 现 **15** 项 |
-| 命令、退出码 | `npm run check:all` **0**（`test:core` **125** passed） |
+| 实施基点 | `0be98d8` |
+| 产品候选提交 | **（提交后填入 SHA）** — `fix(desktop): R1 resync pending consume and turn.finished guard` |
+| 相对 0be98d8 的改动 | `fact-store.ts`：跳过陈旧历史时仍递减 `pendingHistoryResyncCount`，重试可应用新历史；`turn.finished` 须匹配当前 `turnId` 且 `status === running`（旧回合 finish 不得结束新回合） |
+| H1 回归 | 实时事实导致跳过旧快照后，下一次 resync+历史应用 `fresh retry`；迟到旧历史在 pending 已消费后不再改写 |
+| H2 回归 | `t2` 运行中拒绝 `t1 turn.finished`；同一回合重复 terminal finish 不二次改写 |
+| 既有 F1–F6、G1–G2 | 保留；`test/message-fidelity-r1.test.ts` 现 **19** 项 |
+| 命令、退出码 | `npm run check:all` **0**（`test:core` **129** passed） |
 | 引擎运行 | **未运行** |
 | 用户入口 | 技术通过后：`npm run dev:product -- --cwd <绝对路径>` → `http://127.0.0.1:5193/`；[plan 用户验收](plan.md#用户验收) |
 
@@ -61,6 +61,8 @@ Codex 二次复核 `78529b9` 不通过（`d581c46` 记账 G1–G2）；用户授
 | H2 / P1 | `src/core/fact-store.ts:119` | 当前 `t2` 已 `turn.started`，迟到的 `t1 turn.finished` 因生命周期 kind 绕过 turnId 检查，将 `t2` 改为 completed，且 turnId 回退到 `t1` | 生命周期事件也必须核对当前会话和回合身份；旧 finish 不得结束新 turn。补 `t1 finished` 在 `t2 running` 期间到达及重复 terminal 通知的回归 |
 
 上述复现均是合成回放，不是安装版实测。Cursor 只需修 H1–H2，保留当前已通过的正文、布局、generic、思考、斜杠与 G1/G2 其他场景。新候选再由 Codex 复核后才进入用户验收。
+
+**H1–H2 修复已提交新候选（见上表 SHA）。** 待第四次技术复核；未启动引擎、未浏览器验收。
 
 ## 用户验收
 
