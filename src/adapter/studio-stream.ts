@@ -20,8 +20,10 @@ type StreamEvent = {
   data?: Record<string, unknown>;
 };
 
-function streamIds(event: StreamEvent, fallbackMessageId?: string) {
-  const turnId = typeof event.turnId === 'string' && event.turnId ? event.turnId : undefined;
+function streamIds(event: StreamEvent, fallbackMessageId?: string, fallbackTurnId?: string) {
+  const turnId =
+    (typeof event.turnId === 'string' && event.turnId ? event.turnId : undefined) ??
+    fallbackTurnId;
   const messageId =
     fallbackMessageId ??
     event.messageId ??
@@ -98,7 +100,7 @@ export class TurnStreamProjector {
     const events: EngineEvent[] = [];
 
     if (type === 'delta') {
-      const { messageId, thoughtId } = streamIds(event);
+      const { messageId, thoughtId } = streamIds(event, undefined, turnId);
       if (typeof event.thinking === 'string' && event.thinking) {
         pushThoughtDelta(events, processEpoch, sessionId, thoughtId, event.thinking, turnId);
       }
@@ -160,7 +162,7 @@ export class TurnStreamProjector {
           });
         }
       } else if (message.role === 'assistant') {
-        const { thoughtId } = streamIds(event, messageId);
+        const { thoughtId } = streamIds(event, messageId, turnId);
         const hasParts = Array.isArray(message.parts) && message.parts.length > 0;
         if (hasParts) {
           const layout = layoutAssistantMessage(message, messageId);

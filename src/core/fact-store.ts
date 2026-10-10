@@ -554,12 +554,17 @@ export class FactStore {
   }
 
   private replaceTimelineThought(thoughtId: string, text: string) {
-    const entry = this.state.timeline.find(
-      (item): item is Extract<TimelineItem, { kind: 'thought' }> =>
-        item.kind === 'thought' && item.thoughtId === thoughtId,
-    );
-    if (entry) entry.text = text;
-    else if (text) this.state.timeline.push({ kind: 'thought', thoughtId, text });
+    let replaced = false;
+    this.state.timeline = this.state.timeline.filter((item) => {
+      if (item.kind !== 'thought' || item.thoughtId !== thoughtId) return true;
+      if (replaced) return false;
+      item.text = text;
+      replaced = true;
+      return true;
+    });
+    if (replaced || !text) return;
+    if (this.state.timeline.some((item) => item.kind === 'thought' && item.text === text)) return;
+    this.state.timeline.push({ kind: 'thought', thoughtId, text });
   }
 
   private setAssistantSlashReply(messageId: string, text: string) {
