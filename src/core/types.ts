@@ -197,6 +197,7 @@ export type EngineEvent =
       message: string;
       sessionId?: string;
       turnId?: string;
+      historyRequestId?: number;
     };
 
 export type SessionModeOption = { id: string; name: string };

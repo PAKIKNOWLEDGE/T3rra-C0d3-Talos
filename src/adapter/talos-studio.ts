@@ -692,6 +692,7 @@ export class TalosStudioAdapter {
         processEpoch: this.processEpoch,
         sessionId,
         message: `session/messages failed: ${message}`,
+        historyRequestId: requestId,
       });
     }
   }

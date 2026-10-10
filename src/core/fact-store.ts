@@ -263,6 +263,7 @@ export class FactStore {
           if (event.historyRequestId !== undefined) {
             this.pendingHistoryRequestIds.delete(event.historyRequestId);
             this.liveFactSkipHistoryRequestIds.delete(event.historyRequestId);
+            if (event.historyRequestId < this.latestHistoryRequestId) break;
           }
           this.state.session = { ...this.state.session, historyLoadError: event.message };
         }
@@ -400,6 +401,12 @@ export class FactStore {
         }
         break;
       case 'error':
+        if (
+          event.historyRequestId !== undefined &&
+          event.historyRequestId < this.latestHistoryRequestId
+        ) {
+          break;
+        }
         this.state.connection.status = 'error';
         this.state.errors.push(event.message);
         break;
