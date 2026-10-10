@@ -91,13 +91,22 @@ describe('studio stream mapping', () => {
     ]);
   });
 
-  it('maps generic runtime events to stream.notice', () => {
+  it('maps whitelisted generic runtime events to stream.notice', () => {
     const events = engineEventsFromTurnStream(1, 's1', {
       type: 'generic',
       eventType: 'plan.updated',
       data: { message: 'step 1 done' },
     });
     expect(events[0]).toMatchObject({ kind: 'stream.notice', text: expect.stringContaining('plan.updated') });
+  });
+
+  it('drops unknown generic events without a product message', () => {
+    const events = engineEventsFromTurnStream(1, 's1', {
+      type: 'generic',
+      eventType: 'internal.new',
+      data: { key: 'value' },
+    });
+    expect(events).toEqual([]);
   });
 
   it('maps turn completed status', () => {

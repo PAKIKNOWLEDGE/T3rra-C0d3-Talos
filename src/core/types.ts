@@ -21,7 +21,7 @@ export type MessageFact = {
 export type TimelineItem =
   | { kind: 'user'; messageId: string; text: string }
   | { kind: 'thought'; thoughtId: string; text: string }
-  | { kind: 'assistant'; messageId: string; text: string }
+  | { kind: 'assistant'; messageId: string; text: string; segmentIndex?: number }
   | { kind: 'tool'; toolCallId: string }
   | { kind: 'notice'; noticeId: string; text: string };
 
@@ -81,6 +81,7 @@ export type EngineEvent =
       sessionId: string;
       messageId: string;
       text: string;
+      turnId?: string;
     }
   | {
       kind: 'assistant.replace';
@@ -88,6 +89,17 @@ export type EngineEvent =
       sessionId: string;
       messageId: string;
       text: string;
+      turnId?: string;
+    }
+  | {
+      kind: 'assistant.layout';
+      processEpoch: number;
+      sessionId: string;
+      messageId: string;
+      timeline: TimelineItem[];
+      tools: ToolFact[];
+      combinedText: string;
+      turnId?: string;
     }
   | {
       kind: 'session.history_resync';
@@ -101,6 +113,15 @@ export type EngineEvent =
       sessionId: string;
       thoughtId: string;
       text: string;
+      turnId?: string;
+    }
+  | {
+      kind: 'thought.replace';
+      processEpoch: number;
+      sessionId: string;
+      thoughtId: string;
+      text: string;
+      turnId?: string;
     }
   | {
       kind: 'tool.update';
@@ -108,6 +129,7 @@ export type EngineEvent =
       sessionId: string;
       toolCallId: string;
       patch: Omit<ToolFact, 'toolCallId'>;
+      turnId?: string;
     }
   | {
       kind: 'approval.requested';

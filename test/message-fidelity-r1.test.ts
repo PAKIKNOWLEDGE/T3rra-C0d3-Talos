@@ -1,12 +1,12 @@
 /**
  * Synthetic fixtures for desktop-message-fidelity / r1.
  * CLI semantics source: Talos-CLI d045efc92408fd444487098da9a7c04318365882
- * (packages/tui/src/runtime/stream-events.ts, turn-live-projection.ts, turn-history-projection.ts)
  */
 import { describe, expect, it } from 'vitest';
 import { FactStore } from '../src/core/fact-store.js';
 import { mapStudioHistoryMessages } from '../src/adapter/session-history.js';
 import { TurnStreamProjector } from '../src/adapter/studio-stream.js';
+import { TalosService } from '../src/service/talos-service.js';
 
 const CLI_EVIDENCE_SHA = 'd045efc92408fd444487098da9a7c04318365882';
 
@@ -15,16 +15,26 @@ function projectAndApply(
   sessionId: string,
   rawEvents: unknown[],
   processEpoch = 1,
+  outerTurnId?: string,
 ): void {
   const projector = new TurnStreamProjector();
   store.apply({ kind: 'connected', processEpoch });
   for (const raw of rawEvents) {
-    for (const event of projector.project(processEpoch, sessionId, raw)) {
-      if (event.kind === 'session.history_resync') continue;
+    for (const event of projector.project(processEpoch, sessionId, raw, outerTurnId)) {
       store.apply(event);
     }
   }
 }
+
+const partsFixture = {
+  id: 'a1',
+  role: 'assistant',
+  parts: [
+    { type: 'text', content: 'before ' },
+    { type: 'tool', toolCall: { id: 't1', name: 'read_file', status: 'completed' } },
+    { type: 'text', content: 'after' },
+  ],
+};
 
 describe('desktop-message-fidelity r1', () => {
   it('A1 preserves spaces, newlines, and code indentation across deltas', () => {
@@ -59,6 +69,20 @@ describe('desktop-message-fidelity r1', () => {
     expect(snap.timeline.filter((item) => item.kind === 'thought')).toHaveLength(1);
   });
 
+  it('A2 preserves thinking spaces across deltas and full frame', () => {
+    const store = new FactStore('svc');
+    projectAndApply(store, 's1', [
+      { type: 'delta', messageId: 'm1', thinking: 'I' },
+      { type: 'delta', messageId: 'm1', thinking: ' think' },
+      {
+        type: 'message',
+        message: { id: 'm1', role: 'assistant', content: 'ok', thinking: 'I think' },
+      },
+    ]);
+    const thought = store.snapshot().timeline.find((item) => item.kind === 'thought');
+    expect(thought?.text).toBe('I think');
+  });
+
   it('A3 keeps two assistant messages with identical text', () => {
     const store = new FactStore('svc');
     projectAndApply(store, 's1', [
@@ -74,57 +98,162 @@ describe('desktop-message-fidelity r1', () => {
     expect(snap.timeline.filter((item) => item.kind === 'assistant')).toHaveLength(2);
   });
 
-  it('A4 maps historical parts as text → tool → text', () => {
-    const { timeline, tools, messages } = mapStudioHistoryMessages([
-      {
-        id: 'a1',
-        role: 'assistant',
-        parts: [
-          { type: 'text', content: 'before ' },
-          { type: 'tool', toolCall: { id: 't1', name: 'read_file', status: 'completed' } },
-          { type: 'text', content: 'after' },
-        ],
-        content: 'legacy',
-        toolCalls: [{ id: 'legacy', name: 'ignored' }],
-      },
-    ]);
-    expect(timeline.map((item) => item.kind)).toEqual(['assistant', 'tool', 'assistant']);
-    expect(tools).toHaveLength(1);
-    expect(tools[0]?.toolCallId).toBe('t1');
-    expect(messages[0]?.text).toBe('before after');
+  it('A4 matches live layout and history for text → tool → text', () => {
+    const history = mapStudioHistoryMessages([partsFixture]);
+    const store = new FactStore('svc');
+    projectAndApply(store, 's1', [{ type: 'message', message: partsFixture }]);
+    const live = store.snapshot();
+    expect(live.timeline.map((item) => item.kind)).toEqual(history.timeline.map((item) => item.kind));
+    expect(live.messages[0]?.text).toBe(history.messages[0]?.text);
+    expect(live.tools[0]?.toolCallId).toBe('t1');
   });
 
-  it('A5 suppresses query_collapse_view noise and reads stream error message field', () => {
+  it('A4 keeps tool between text deltas for the same message', () => {
+    const store = new FactStore('svc');
+    projectAndApply(store, 's1', [
+      { type: 'delta', messageId: 'm1', content: 'before ' },
+      { type: 'delta', messageId: 'm1', toolCalls: [{ id: 't1', name: 'read_file' }] },
+      { type: 'delta', messageId: 'm1', content: 'after' },
+    ]);
+    const snap = store.snapshot();
+    expect(snap.timeline.map((item) => item.kind)).toEqual(['assistant', 'tool', 'assistant']);
+    expect(snap.messages[0]?.text).toBe('before after');
+  });
+
+  it('A5 suppresses internal generic noise and reads stream error message field', () => {
     const projector = new TurnStreamProjector();
-    const generic = projector.project(1, 's1', {
-      type: 'generic',
-      eventType: 'query_collapse_view',
-      data: { query_collapse_view: { query_key: 'x' } },
-    });
-    expect(generic).toEqual([]);
+    expect(
+      projector.project(1, 's1', {
+        type: 'generic',
+        eventType: 'query_collapse_view',
+        data: { query_collapse_view: { query_key: 'x' } },
+      }),
+    ).toEqual([]);
+    expect(
+      projector.project(1, 's1', {
+        type: 'generic',
+        eventType: 'internal.new',
+        data: { key: 'value' },
+      }),
+    ).toEqual([]);
     const err = projector.project(1, 's1', { type: 'error', message: 'provider down' });
     expect(err[0]).toMatchObject({ kind: 'error', message: 'provider down' });
     const resync = projector.project(1, 's1', { type: 'resync-required' });
     expect(resync[0]).toMatchObject({ kind: 'session.history_resync', reason: 'resync-required' });
   });
 
-  it('A6 drops stale processEpoch events', () => {
+  it('A6 drops stale processEpoch and foreign session events via service path', () => {
     const store = new FactStore('svc');
-    store.apply({ kind: 'connected', processEpoch: 2 });
-    const applied = store.apply({
+    const service = new TalosService(store, {
+      sendPrompt: async () => {},
+      executeSlash: async () => {},
+      renameSession: async () => {},
+      archiveSession: async () => {},
+      cancel: async () => {},
+      replyApproval: async () => {},
+      setMode: async () => {},
+      setConfigOption: async () => {},
+      createSession: async () => {},
+      loadSession: async () => {},
+      deleteSession: async () => {},
+      replyQuestionnaire: async () => {},
+      dismissQuestionnaire: async () => {},
+      searchWorkspaceFiles: async () => [],
+      listWorkspaceFiles: async () => [],
+      steerTurn: async () => {},
+      enqueueMessage: async () => {},
+      deleteQueueItem: async () => {},
+      continueQueue: async () => {},
+      previewRewind: async () => 'preview',
+      rewindSession: async () => {},
+      steerQueueItem: async () => {},
+      getForkOptions: async () => ({ canFork: false }),
+      forkSession: async () => 's2',
+      editSessionMessage: async () => {},
+      updateQueueItem: async () => {},
+      retrySessionHistory: async () => {},
+    });
+    service.apply({ kind: 'connected', processEpoch: 1 });
+    service.prepareSessionSwitch('s2', '/tmp');
+    service.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's2', cwd: '/tmp' });
+    service.apply({
       kind: 'assistant.delta',
       processEpoch: 1,
       sessionId: 's1',
-      messageId: 'stale',
+      messageId: 'foreign',
       text: 'nope',
     });
-    expect(applied).toBe(false);
     expect(store.snapshot().messages).toEqual([]);
+    service.apply({ kind: 'turn.started', processEpoch: 1, sessionId: 's2', turnId: 't2', prompt: 'hi' });
+    service.apply({
+      kind: 'assistant.delta',
+      processEpoch: 1,
+      sessionId: 's2',
+      messageId: 'm1',
+      text: 'yes',
+      turnId: 't-old',
+    });
+    expect(store.snapshot().messages).toEqual([]);
+    service.apply({
+      kind: 'assistant.delta',
+      processEpoch: 1,
+      sessionId: 's2',
+      messageId: 'm1',
+      text: 'live',
+      turnId: 't2',
+    });
+    expect(store.snapshot().messages[0]?.text).toBe('live');
+  });
+
+  it('F3 ignores stale history snapshots after live deltas during resync', () => {
+    const store = new FactStore('svc');
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: '/tmp' });
+    store.apply({ kind: 'session.history_resync', processEpoch: 1, sessionId: 's1', reason: 'resync-required' });
+    store.apply({
+      kind: 'assistant.delta',
+      processEpoch: 1,
+      sessionId: 's1',
+      messageId: 'm1',
+      text: 'NEW TEXT',
+    });
+    store.apply({
+      kind: 'session.history',
+      processEpoch: 1,
+      sessionId: 's1',
+      messages: [{ messageId: 'm1', role: 'assistant', text: 'OLD SNAPSHOT' }],
+      timeline: [{ kind: 'assistant', messageId: 'm1', text: 'OLD SNAPSHOT' }],
+      tools: [],
+    });
+    expect(store.snapshot().messages[0]?.text).toBe('NEW TEXT');
+  });
+
+  it('F6 keeps slash.completed messages and timeline consistent', () => {
+    const store = new FactStore('svc');
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({
+      kind: 'slash.completed',
+      processEpoch: 1,
+      sessionId: 's1',
+      messageId: 'u1',
+      replyId: 'a1',
+      command: '/status',
+      output: 'OK',
+    });
+    const snap = store.snapshot();
+    expect(snap.messages).toEqual([
+      { messageId: 'u1', role: 'user', text: '/status' },
+      { messageId: 'a1', role: 'assistant', text: 'OK' },
+    ]);
+    expect(snap.timeline.filter((item) => item.kind === 'assistant')).toEqual([
+      { kind: 'assistant', messageId: 'a1', segmentIndex: 0, text: 'OK' },
+    ]);
   });
 
   it('continues assistant deltas after a stream notice on the timeline', () => {
     const store = new FactStore('svc');
     store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: '/tmp' });
     store.apply({
       kind: 'assistant.delta',
       processEpoch: 1,

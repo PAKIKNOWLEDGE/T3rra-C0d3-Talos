@@ -303,7 +303,7 @@ describe('fact store messages and context', () => {
     });
     expect(service.snapshot().timeline).toEqual([
       { kind: 'thought', thoughtId: 'thought-a1', text: 'reason' },
-      { kind: 'assistant', messageId: 'a1', text: 'hi' },
+      { kind: 'assistant', messageId: 'a1', segmentIndex: 0, text: 'hi' },
     ]);
     expect(service.snapshot().messages).toEqual([{ messageId: 'a1', role: 'assistant', text: 'hi' }]);
   });

@@ -1,21 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import type { EngineEvent } from '../core/types.js';
+import { layoutAssistantMessage, type LayoutMessage } from './studio-message-layout.js';
 import { stripRedactedThinkingBlocks } from './studio-message-text.js';
 
-type StreamMessage = {
-  id?: string;
-  role?: string;
-  content?: string;
-  thinking?: string;
-  parts?: Array<{ type?: string; content?: string }>;
-  toolCalls?: Array<{
-    id?: string;
-    name?: string;
-    status?: string | number;
-    input?: unknown;
-    output?: unknown;
-  }>;
-};
+type StreamMessage = LayoutMessage;
 
 type StreamEvent = {
   type?: string;
@@ -25,7 +13,7 @@ type StreamEvent = {
   role?: string;
   content?: string;
   thinking?: string;
-  toolCalls?: StreamMessage['toolCalls'];
+  toolCalls?: LayoutMessage['toolCalls'];
   errorMessage?: string;
   eventType?: string;
   data?: Record<string, unknown>;
@@ -54,97 +42,93 @@ function toolPatch(tool: NonNullable<StreamEvent['toolCalls']>[number]) {
   };
 }
 
-function sanitizeThoughtDisplay(text: string): string {
-  return stripRedactedThinkingBlocks(text).trim();
+function withTurn<T extends EngineEvent>(event: T, turnId?: string): T {
+  if (!turnId) return event;
+  return { ...event, turnId };
 }
 
-function assistantTextFromMessage(message: StreamMessage): string | undefined {
-  if (Array.isArray(message.parts)) {
-    const chunks: string[] = [];
-    for (const part of message.parts) {
-      if (part?.type === 'text' && typeof part.content === 'string') {
-        chunks.push(part.content);
-      }
-    }
-    if (chunks.length) return stripRedactedThinkingBlocks(chunks.join(''));
-  }
-  if (typeof message.content === 'string' && message.content) {
-    return stripRedactedThinkingBlocks(message.content);
-  }
-  return undefined;
-}
+const INTERNAL_GENERIC_EVENTS = new Set(['query_collapse_view']);
 
-function thoughtChunksFromMessage(message: StreamMessage): string[] {
-  const chunks: string[] = [];
-  if (Array.isArray(message.parts)) {
-    for (const part of message.parts) {
-      if (part?.type === 'thinking' && typeof part.content === 'string' && part.content) {
-        chunks.push(part.content);
-      }
-    }
-  }
-  if (typeof message.thinking === 'string' && message.thinking) chunks.push(message.thinking);
-  return chunks;
-}
+const GENERIC_NOTICE_EVENTS = new Set(['plan.updated', 'todo_updated']);
 
-function pushThought(
+function pushThoughtDelta(
   events: EngineEvent[],
   processEpoch: number,
   sessionId: string,
   thoughtId: string,
   text: string,
+  turnId?: string,
 ) {
-  const cleaned = sanitizeThoughtDisplay(text);
+  const cleaned = stripRedactedThinkingBlocks(text);
   if (!cleaned) return;
-  events.push({
-    kind: 'thought.delta',
-    processEpoch,
-    sessionId,
-    thoughtId,
-    text: cleaned,
-  });
+  events.push(
+    withTurn(
+      {
+        kind: 'thought.delta',
+        processEpoch,
+        sessionId,
+        thoughtId,
+        text: cleaned,
+      },
+      turnId,
+    ),
+  );
 }
-
-const INTERNAL_GENERIC_EVENTS = new Set(['query_collapse_view']);
 
 /** Projects turn/event payloads into engine events. */
 export class TurnStreamProjector {
-  private readonly streamedThoughtKeys = new Set<string>();
-
   reset(): void {
-    this.streamedThoughtKeys.clear();
+    /* per-turn projector state is event-local */
   }
 
-  project(processEpoch: number, sessionId: string, rawEvent: unknown): EngineEvent[] {
+  project(
+    processEpoch: number,
+    sessionId: string,
+    rawEvent: unknown,
+    outerTurnId?: string,
+  ): EngineEvent[] {
     if (!rawEvent || typeof rawEvent !== 'object') return [];
     const event = rawEvent as StreamEvent;
     const type = event.type;
+    const turnId =
+      (typeof event.turnId === 'string' && event.turnId) ||
+      (typeof outerTurnId === 'string' && outerTurnId) ||
+      undefined;
     const events: EngineEvent[] = [];
 
     if (type === 'delta') {
       const { messageId, thoughtId } = streamIds(event);
       if (typeof event.thinking === 'string' && event.thinking) {
-        pushThought(events, processEpoch, sessionId, thoughtId, event.thinking);
-        this.streamedThoughtKeys.add(`${thoughtId}:${sanitizeThoughtDisplay(event.thinking)}`);
+        pushThoughtDelta(events, processEpoch, sessionId, thoughtId, event.thinking, turnId);
       }
       if (typeof event.content === 'string') {
-        events.push({
-          kind: 'assistant.delta',
-          processEpoch,
-          sessionId,
-          messageId,
-          text: stripRedactedThinkingBlocks(event.content),
-        });
+        events.push(
+          withTurn(
+            {
+              kind: 'assistant.delta',
+              processEpoch,
+              sessionId,
+              messageId,
+              text: stripRedactedThinkingBlocks(event.content),
+            },
+            turnId,
+          ),
+        );
       }
       for (const tool of event.toolCalls ?? []) {
         const mapped = toolPatch(tool);
-        events.push({
-          kind: 'tool.update',
-          processEpoch,
-          sessionId,
-          toolCallId: mapped.toolCallId,
-          patch: mapped.patch,
-        });
+        events.push(
+          withTurn(
+            {
+              kind: 'tool.update',
+              processEpoch,
+              sessionId,
+              toolCallId: mapped.toolCallId,
+              patch: mapped.patch,
+            },
+            turnId,
+          ),
+        );
       }
       return events;
     }
@@ -153,7 +137,13 @@ export class TurnStreamProjector {
       const message = event.message;
       const messageId = message.id ?? `msg-${randomUUID()}`;
       if (message.role === 'user') {
-        const text = assistantTextFromMessage(message) ?? message.content;
+        const text =
+          (Array.isArray(message.parts)
+            ? message.parts
+                .filter((part) => part?.type === 'text' && typeof part.content === 'string')
+                .map((part) => part.content as string)
+                .join('\n')
+            : undefined) ?? message.content;
         if (text) {
           events.push({
             kind: 'user.message',
@@ -165,31 +155,84 @@ export class TurnStreamProjector {
         }
       } else if (message.role === 'assistant') {
         const { thoughtId } = streamIds(event, messageId);
-        for (const chunk of thoughtChunksFromMessage(message)) {
-          const key = `${thoughtId}:${sanitizeThoughtDisplay(chunk)}`;
-          if (this.streamedThoughtKeys.has(key)) continue;
-          pushThought(events, processEpoch, sessionId, thoughtId, chunk);
-          this.streamedThoughtKeys.add(key);
-        }
-        const text = assistantTextFromMessage(message);
-        if (text !== undefined) {
-          events.push({
-            kind: 'assistant.replace',
-            processEpoch,
-            sessionId,
-            messageId,
-            text,
-          });
-        }
-        for (const tool of message.toolCalls ?? []) {
-          const mapped = toolPatch(tool);
-          events.push({
-            kind: 'tool.update',
-            processEpoch,
-            sessionId,
-            toolCallId: mapped.toolCallId,
-            patch: mapped.patch,
-          });
+        const hasParts = Array.isArray(message.parts) && message.parts.length > 0;
+        if (hasParts) {
+          const layout = layoutAssistantMessage(message, messageId);
+          if (layout.thoughtText) {
+            events.push(
+              withTurn(
+                {
+                  kind: 'thought.replace',
+                  processEpoch,
+                  sessionId,
+                  thoughtId,
+                  text: layout.thoughtText,
+                },
+                turnId,
+              ),
+            );
+          }
+          events.push(
+            withTurn(
+              {
+                kind: 'assistant.layout',
+                processEpoch,
+                sessionId,
+                messageId,
+                timeline: layout.timeline.filter((item) => item.kind !== 'thought'),
+                tools: layout.tools,
+                combinedText: layout.combinedText,
+              },
+              turnId,
+            ),
+          );
+        } else {
+          if (typeof message.thinking === 'string' && message.thinking) {
+            const thought = stripRedactedThinkingBlocks(message.thinking);
+            if (thought) {
+              events.push(
+                withTurn(
+                  {
+                    kind: 'thought.replace',
+                    processEpoch,
+                    sessionId,
+                    thoughtId,
+                    text: thought,
+                  },
+                  turnId,
+                ),
+              );
+            }
+          }
+          if (typeof message.content === 'string') {
+            events.push(
+              withTurn(
+                {
+                  kind: 'assistant.replace',
+                  processEpoch,
+                  sessionId,
+                  messageId,
+                  text: stripRedactedThinkingBlocks(message.content),
+                },
+                turnId,
+              ),
+            );
+          }
+          for (const tool of message.toolCalls ?? []) {
+            const mapped = toolPatch(tool);
+            events.push(
+              withTurn(
+                {
+                  kind: 'tool.update',
+                  processEpoch,
+                  sessionId,
+                  toolCallId: mapped.toolCallId,
+                  patch: mapped.patch,
+                },
+                turnId,
+              ),
+            );
+          }
         }
       }
       return events;
@@ -214,10 +257,9 @@ export class TurnStreamProjector {
     if (type === 'generic') {
       const label = typeof event.eventType === 'string' ? event.eventType : 'runtime';
       if (INTERNAL_GENERIC_EVENTS.has(label)) return events;
-      const detail =
-        event.data && typeof event.data.message === 'string'
-          ? event.data.message
-          : JSON.stringify(event.data ?? {});
+      if (!GENERIC_NOTICE_EVENTS.has(label)) return events;
+      const detail = event.data && typeof event.data.message === 'string' ? event.data.message : undefined;
+      if (!detail) return events;
       events.push({
         kind: 'stream.notice',
         processEpoch,
@@ -246,8 +288,9 @@ export function engineEventsFromTurnStream(
   processEpoch: number,
   sessionId: string,
   rawEvent: unknown,
+  outerTurnId?: string,
 ): EngineEvent[] {
-  return new TurnStreamProjector().project(processEpoch, sessionId, rawEvent);
+  return new TurnStreamProjector().project(processEpoch, sessionId, rawEvent, outerTurnId);
 }
 
 export function mapTurnCompletedStatus(

@@ -7,8 +7,11 @@ import type {
   ToolFact,
 } from './types.js';
 
+type TurnScoped = { sessionId?: string; turnId?: string };
+
 export class FactStore {
   private readonly state: ServiceSnapshot;
+  private historyResyncBaselineRevision?: number;
 
   constructor(serviceEpoch: string) {
     this.state = {
@@ -57,6 +60,7 @@ export class FactStore {
     this.state.queue = [];
     this.state.inspection = { skillNames: [], mcpServerNames: [] };
     this.state.inputSummaries = [];
+    this.historyResyncBaselineRevision = undefined;
     this.state.revision += 1;
   }
 
@@ -72,11 +76,25 @@ export class FactStore {
     this.state.queue = [];
     this.state.inspection = { skillNames: [], mcpServerNames: [] };
     this.state.inputSummaries = [];
+    this.historyResyncBaselineRevision = undefined;
     this.state.revision += 1;
   }
 
-  apply(event: EngineEvent): boolean {
+  private shouldApply(event: EngineEvent): boolean {
     if (event.processEpoch < this.state.connection.processEpoch) return false;
+    const scoped = event as EngineEvent & TurnScoped;
+    if (scoped.sessionId) {
+      const active = this.state.session.sessionId;
+      if (active && scoped.sessionId !== active) return false;
+    }
+    if (scoped.turnId && this.state.turn.turnId && this.state.turn.status === 'running') {
+      if (scoped.turnId !== this.state.turn.turnId) return false;
+    }
+    return true;
+  }
+
+  apply(event: EngineEvent): boolean {
+    if (!this.shouldApply(event)) return false;
     if (event.processEpoch > this.state.connection.processEpoch) {
       this.state.connection.processEpoch = event.processEpoch;
       this.state.connection.status = 'connecting';
@@ -117,6 +135,13 @@ export class FactStore {
         break;
       case 'session.history':
         if (this.state.session.sessionId === event.sessionId) {
+          if (
+            this.historyResyncBaselineRevision !== undefined &&
+            this.state.revision > this.historyResyncBaselineRevision
+          ) {
+            break;
+          }
+          this.historyResyncBaselineRevision = undefined;
           this.state.messages = structuredClone(event.messages);
           this.state.timeline = structuredClone(event.timeline);
           this.state.tools = structuredClone(event.tools);
@@ -199,11 +224,13 @@ export class FactStore {
       case 'slash.completed':
         this.appendMessage({ messageId: event.messageId, role: 'user', text: event.command });
         this.appendTimelineUser(event.messageId, event.command);
-        this.appendMessage({ messageId: event.replyId, role: 'assistant', text: event.output });
-        this.appendTimelineAssistant(event.replyId, event.output);
+        this.setAssistantSlashReply(event.replyId, event.output);
         break;
       case 'thought.delta':
         this.appendTimelineThought(event.thoughtId, event.text);
+        break;
+      case 'thought.replace':
+        this.replaceTimelineThought(event.thoughtId, event.text);
         break;
       case 'assistant.delta':
         this.appendAssistantDelta(event.messageId, event.text);
@@ -211,7 +238,11 @@ export class FactStore {
       case 'assistant.replace':
         this.replaceAssistantMessage(event.messageId, event.text);
         break;
+      case 'assistant.layout':
+        this.applyAssistantLayout(event.messageId, event.timeline, event.tools, event.combinedText);
+        break;
       case 'session.history_resync':
+        this.historyResyncBaselineRevision = this.state.revision;
         break;
       case 'tool.update':
         this.upsertTool(event.toolCallId, event.patch);
@@ -262,31 +293,116 @@ export class FactStore {
     else this.state.messages.push(structuredClone(message));
   }
 
-  private appendAssistantDelta(messageId: string, text: string) {
-    if (!text) return;
-    const existing = this.state.messages.find(
-      (message) => message.messageId === messageId && message.role === 'assistant',
-    );
-    if (existing) existing.text += text;
-    else this.state.messages.push({ messageId, role: 'assistant', text });
-    this.appendTimelineAssistantDelta(messageId, text);
-  }
-
-  private replaceAssistantMessage(messageId: string, text: string) {
+  private setAssistantMessageText(messageId: string, text: string) {
     const existing = this.state.messages.find(
       (message) => message.messageId === messageId && message.role === 'assistant',
     );
     if (existing) existing.text = text;
     else this.state.messages.push({ messageId, role: 'assistant', text });
-    this.replaceTimelineAssistant(messageId, text);
   }
 
-  private timelineAssistantEntry(messageId: string) {
+  private rebuildAssistantMessageText(messageId: string) {
+    const text = this.state.timeline
+      .filter((item): item is Extract<TimelineItem, { kind: 'assistant' }> =>
+        item.kind === 'assistant' && item.messageId === messageId,
+      )
+      .map((item) => item.text)
+      .join('');
+    if (!text) {
+      this.state.messages = this.state.messages.filter(
+        (message) => message.messageId !== messageId || message.role !== 'assistant',
+      );
+      return;
+    }
+    this.setAssistantMessageText(messageId, text);
+  }
+
+  private lastAssistantSegment(messageId: string) {
     for (let index = this.state.timeline.length - 1; index >= 0; index -= 1) {
       const item = this.state.timeline[index];
       if (item?.kind === 'assistant' && item.messageId === messageId) return item;
+      if (item?.kind === 'user') break;
     }
     return undefined;
+  }
+
+  private appendAssistantDelta(messageId: string, text: string) {
+    if (!text) return;
+    const last = this.state.timeline.at(-1);
+    if (last?.kind === 'tool') {
+      const segmentIndex = this.state.timeline.filter(
+        (item) => item.kind === 'assistant' && item.messageId === messageId,
+      ).length;
+      this.state.timeline.push({ kind: 'assistant', messageId, segmentIndex, text });
+    } else if (last?.kind === 'assistant' && last.messageId === messageId) {
+      last.text += text;
+    } else {
+      const segment = this.lastAssistantSegment(messageId);
+      if (segment && (last?.kind === 'notice' || last?.kind === 'thought')) {
+        segment.text += text;
+      } else {
+        const segmentIndex = this.state.timeline.filter(
+          (item) => item.kind === 'assistant' && item.messageId === messageId,
+        ).length;
+        this.state.timeline.push({ kind: 'assistant', messageId, segmentIndex, text });
+      }
+    }
+    this.rebuildAssistantMessageText(messageId);
+  }
+
+  private replaceAssistantMessage(messageId: string, text: string) {
+    this.removeAssistantRun(messageId);
+    if (text) {
+      this.state.timeline.push({ kind: 'assistant', messageId, segmentIndex: 0, text });
+      this.setAssistantMessageText(messageId, text);
+    }
+  }
+
+  private applyAssistantLayout(
+    messageId: string,
+    patchTimeline: TimelineItem[],
+    patchTools: ToolFact[],
+    combinedText: string,
+  ) {
+    this.removeAssistantRun(messageId);
+    this.state.timeline.push(...structuredClone(patchTimeline));
+    for (const tool of patchTools) {
+      const existing = this.state.tools.find((row) => row.toolCallId === tool.toolCallId);
+      if (existing) Object.assign(existing, structuredClone(tool));
+      else this.state.tools.push(structuredClone(tool));
+    }
+    if (combinedText) this.setAssistantMessageText(messageId, combinedText);
+    else this.rebuildAssistantMessageText(messageId);
+  }
+
+  private removeAssistantRun(messageId: string) {
+    this.state.timeline = this.stripAssistantRun(this.state.timeline, messageId);
+  }
+
+  private stripAssistantRun(timeline: TimelineItem[], messageId: string): TimelineItem[] {
+    const out: TimelineItem[] = [];
+    let index = 0;
+    while (index < timeline.length) {
+      const item = timeline[index];
+      if (item.kind === 'assistant' && item.messageId === messageId) {
+        while (index < timeline.length) {
+          const current = timeline[index];
+          if (current.kind === 'assistant' && current.messageId === messageId) {
+            index += 1;
+            continue;
+          }
+          if (current.kind === 'tool') {
+            index += 1;
+            continue;
+          }
+          break;
+        }
+        continue;
+      }
+      out.push(item);
+      index += 1;
+    }
+    return out;
   }
 
   private appendTimelineUser(messageId: string, text: string) {
@@ -309,32 +425,24 @@ export class FactStore {
     this.state.timeline.push({ kind: 'thought', thoughtId, text });
   }
 
-  private appendTimelineAssistantDelta(messageId: string, text: string) {
+  private replaceTimelineThought(thoughtId: string, text: string) {
+    const entry = this.state.timeline.find(
+      (item): item is Extract<TimelineItem, { kind: 'thought' }> =>
+        item.kind === 'thought' && item.thoughtId === thoughtId,
+    );
+    if (entry) entry.text = text;
+    else if (text) this.state.timeline.push({ kind: 'thought', thoughtId, text });
+  }
+
+  private setAssistantSlashReply(messageId: string, text: string) {
     if (!text) return;
+    this.setAssistantMessageText(messageId, text);
     const last = this.state.timeline.at(-1);
     if (last?.kind === 'assistant' && last.messageId === messageId) {
-      last.text += text;
+      last.text = text;
       return;
     }
-    const entry = this.timelineAssistantEntry(messageId);
-    if (entry) {
-      entry.text += text;
-      return;
-    }
-    this.state.timeline.push({ kind: 'assistant', messageId, text });
-  }
-
-  private replaceTimelineAssistant(messageId: string, text: string) {
-    const entry = this.timelineAssistantEntry(messageId);
-    if (entry) {
-      entry.text = text;
-      return;
-    }
-    if (text) this.state.timeline.push({ kind: 'assistant', messageId, text });
-  }
-
-  private appendTimelineAssistant(messageId: string, text: string) {
-    this.appendAssistantDelta(messageId, text);
+    this.state.timeline.push({ kind: 'assistant', messageId, segmentIndex: 0, text });
   }
 
   private upsertListedSession(item: SessionIndexItem) {
