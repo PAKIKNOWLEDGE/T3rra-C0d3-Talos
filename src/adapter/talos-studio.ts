@@ -120,9 +120,7 @@ export class TalosStudioAdapter {
         turnId,
       )) {
         if (event.kind === 'session.history_resync') {
-          const historyRequestId = this.allocateHistoryRequestId();
-          this.emit({ ...event, historyRequestId });
-          void this.hydrateSessionHistory(sessionId, historyRequestId);
+          void this.requestHistory(sessionId, event.reason);
           continue;
         }
         this.emit(event);
@@ -182,7 +180,7 @@ export class TalosStudioAdapter {
     this.emit({ kind: 'session.created', processEpoch: this.processEpoch, sessionId, cwd });
     this.markAttached(sessionId);
     await this.emitSessionBundle(sessionId, result);
-    await this.hydrateSessionHistory(sessionId);
+    await this.requestHistory(sessionId, 'session-create');
     await this.syncActiveRun(sessionId);
     await this.refreshWorkspaceGit(sessionId, cwd);
     return { sessionId };
@@ -193,14 +191,14 @@ export class TalosStudioAdapter {
     this.emit({ kind: 'session.loaded', processEpoch: this.processEpoch, sessionId, cwd });
     this.markAttached(sessionId);
     await this.emitSessionBundle(sessionId, result);
-    await this.hydrateSessionHistory(sessionId);
+    await this.requestHistory(sessionId, 'session-load');
     await this.syncActiveRun(sessionId);
     await this.refreshWorkspaceGit(sessionId, cwd);
     return result;
   }
 
   async retrySessionHistory(sessionId: string): Promise<void> {
-    await this.hydrateSessionHistory(sessionId);
+    await this.requestHistory(sessionId, 'manual-retry');
   }
 
   async resumeSession(sessionId: string, cwd: string) {
@@ -208,7 +206,7 @@ export class TalosStudioAdapter {
     this.emit({ kind: 'session.loaded', processEpoch: this.processEpoch, sessionId, cwd });
     this.markAttached(sessionId);
     await this.emitSessionBundle(sessionId, result);
-    await this.hydrateSessionHistory(sessionId);
+    await this.requestHistory(sessionId, 'session-resume');
     await this.syncActiveRun(sessionId);
     await this.refreshWorkspaceGit(sessionId, cwd);
     return result;
@@ -305,7 +303,7 @@ export class TalosStudioAdapter {
       userMessageId,
       content,
     });
-    await this.hydrateSessionHistory(sessionId);
+    await this.requestHistory(sessionId, 'edit-message');
     await this.refreshSessionAuxiliary(sessionId);
   }
 
@@ -325,7 +323,7 @@ export class TalosStudioAdapter {
       userMessageId,
       ...(rewindTurnDiff ? { rewindTurnDiff: true } : {}),
     });
-    await this.hydrateSessionHistory(sessionId);
+    await this.requestHistory(sessionId, 'rewind');
     await this.refreshInteractions(sessionId);
     await this.refreshSessionAuxiliary(sessionId);
   }
@@ -641,6 +639,18 @@ export class TalosStudioAdapter {
     return this.historyRequestSeq;
   }
 
+  private async requestHistory(sessionId: string, reason: string): Promise<void> {
+    const historyRequestId = this.allocateHistoryRequestId();
+    this.emit({
+      kind: 'session.history_resync',
+      processEpoch: this.processEpoch,
+      sessionId,
+      reason,
+      historyRequestId,
+    });
+    await this.hydrateSessionHistory(sessionId, historyRequestId);
+  }
+
   private async hydrateSessionHistory(sessionId: string, historyRequestId?: number) {
     const requestId = historyRequestId ?? this.allocateHistoryRequestId();
     try {
@@ -675,6 +685,7 @@ export class TalosStudioAdapter {
         processEpoch: this.processEpoch,
         sessionId,
         message,
+        historyRequestId: requestId,
       });
       this.emit({
         kind: 'error',

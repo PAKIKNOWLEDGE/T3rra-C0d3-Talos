@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { EngineEvent } from '../core/types.js';
+import { mapStudioHistoryMessages } from './session-history.js';
 import { layoutAssistantMessage, type LayoutMessage } from './studio-message-layout.js';
 import { stripRedactedThinkingBlocks } from './studio-message-text.js';
 
@@ -146,11 +147,16 @@ export class TurnStreamProjector {
             : undefined) ?? message.content;
         if (text) {
           events.push({
-            kind: 'user.message',
-            processEpoch,
-            sessionId,
-            messageId,
-            text,
+            ...withTurn(
+              {
+                kind: 'user.message' as const,
+                processEpoch,
+                sessionId,
+                messageId,
+                text,
+              },
+              turnId,
+            ),
           });
         }
       } else if (message.role === 'assistant') {
@@ -246,10 +252,15 @@ export class TurnStreamProjector {
             ? event.errorMessage
             : 'Turn stream failed.';
       events.push({
-        kind: 'error',
-        processEpoch,
-        sessionId,
-        message,
+        ...withTurn(
+          {
+            kind: 'error' as const,
+            processEpoch,
+            sessionId,
+            message,
+          },
+          turnId,
+        ),
       });
       return events;
     }
@@ -261,22 +272,53 @@ export class TurnStreamProjector {
       const detail = event.data && typeof event.data.message === 'string' ? event.data.message : undefined;
       if (!detail) return events;
       events.push({
-        kind: 'stream.notice',
-        processEpoch,
-        sessionId,
-        noticeId: `notice-${randomUUID()}`,
-        text: `${label}: ${detail}`,
+        ...withTurn(
+          {
+            kind: 'stream.notice' as const,
+            processEpoch,
+            sessionId,
+            noticeId: `notice-${randomUUID()}`,
+            text: `${label}: ${detail}`,
+          },
+          turnId,
+        ),
       });
       return events;
     }
 
-    if (type === 'messages-replaced' || type === 'messages-rewound' || type === 'resync-required') {
-      events.push({
-        kind: 'session.history_resync',
-        processEpoch,
-        sessionId,
-        reason: type,
-      });
+    if (type === 'messages-replaced') {
+      const messages = Array.isArray((event as { messages?: unknown[] }).messages)
+        ? ((event as { messages: unknown[] }).messages)
+        : [];
+      const mapped = mapStudioHistoryMessages(messages);
+      events.push(
+        withTurn(
+          {
+            kind: 'session.history_replaced' as const,
+            processEpoch,
+            sessionId,
+            messages: mapped.messages,
+            timeline: mapped.timeline,
+            tools: mapped.tools,
+          },
+          turnId,
+        ),
+      );
+      return events;
+    }
+
+    if (type === 'messages-rewound' || type === 'resync-required') {
+      events.push(
+        withTurn(
+          {
+            kind: 'session.history_resync' as const,
+            processEpoch,
+            sessionId,
+            reason: type,
+          },
+          turnId,
+        ),
+      );
       return events;
     }
 

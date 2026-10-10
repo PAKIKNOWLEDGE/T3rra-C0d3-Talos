@@ -48,13 +48,20 @@ export type EngineEvent =
       timeline: TimelineItem[];
       tools: ToolFact[];
     }
-  | { kind: 'session.history_error'; processEpoch: number; sessionId: string; message: string }
+  | {
+      kind: 'session.history_error';
+      processEpoch: number;
+      sessionId: string;
+      message: string;
+      historyRequestId?: number;
+    }
   | {
       kind: 'stream.notice';
       processEpoch: number;
       sessionId: string;
       noticeId: string;
       text: string;
+      turnId?: string;
     }
   | {
       kind: 'session.listed';
@@ -66,7 +73,14 @@ export type EngineEvent =
   | { kind: 'session.run_state'; processEpoch: number; sessionId: string; running: boolean }
   | { kind: 'session.context'; processEpoch: number; sessionId: string; context: SessionContext }
   | { kind: 'turn.started'; processEpoch: number; sessionId: string; turnId: string; prompt: string }
-  | { kind: 'user.message'; processEpoch: number; sessionId: string; messageId: string; text: string }
+  | {
+      kind: 'user.message';
+      processEpoch: number;
+      sessionId: string;
+      messageId: string;
+      text: string;
+      turnId?: string;
+    }
   | {
       kind: 'slash.completed';
       processEpoch: number;
@@ -108,6 +122,16 @@ export type EngineEvent =
       sessionId: string;
       reason: string;
       historyRequestId?: number;
+      turnId?: string;
+    }
+  | {
+      kind: 'session.history_replaced';
+      processEpoch: number;
+      sessionId: string;
+      messages: MessageFact[];
+      timeline: TimelineItem[];
+      tools: ToolFact[];
+      turnId?: string;
     }
   | {
       kind: 'thought.delta';
@@ -172,6 +196,7 @@ export type EngineEvent =
       processEpoch: number;
       message: string;
       sessionId?: string;
+      turnId?: string;
     };
 
 export type SessionModeOption = { id: string; name: string };
