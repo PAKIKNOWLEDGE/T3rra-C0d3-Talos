@@ -7,14 +7,14 @@
 | 字段 | 值 |
 | --- | --- |
 | 任务标识 / 修订 | desktop-message-fidelity / r1 |
-| 阶段 | **执行中（集中技术复核退回）** |
-| 本轮角色 / 来源 | Codex 技术复核；用户要求复核当前候选 |
+| 阶段 | **待用户验收** |
+| 本轮角色 / 来源 | Codex 直接接手实现 J1–J3；用户明确授权接手 |
 | 目标 / 方案入口 | [R1 对话记录忠实接驳](plan.md#下一小轮r1-对话记录忠实接驳) |
-| 允许范围 | 同 R1；按下方 J1–J3 一次修正历史与回合归属 |
+| 允许范围 | 同 R1；历史请求生命周期、完整替换、turn/event 归属 |
 | 禁止范围 | R2+、Talos-CLI、视觉、Tauri、宣称产品/画面通过 |
-| 验收 / 停止点 | 修正 J1–J3 并提交一个候选，再进行技术复核；当前候选不进入用户验收 |
-| 完成证据 | 见「实施交付」；`npm run check:all` 0；**未**用户验收、**未**真实引擎付费复现 |
-| 下一接手 / 就绪性 | Cursor 执行同一 R1 的 J1–J3；若实现受阻，交 Codex 直接接手该组状态逻辑 |
+| 验收 / 停止点 | Codex 技术复核通过；用户按 R1 五步验收，之后停在 R1 收口或退回修复 |
+| 完成证据 | 见「实施交付」；typecheck 与 handoff 检查通过；**未**用户验收、**未**真实引擎付费复现 |
+| 下一接手 / 就绪性 | 用户：按 [plan 用户验收](plan.md#用户验收) 验收候选 `a83b7a2` |
 
 ## 触发与已确认决定
 
@@ -25,50 +25,45 @@ Codex 二次复核 `78529b9` 不通过（G1–G2）；三次 `0be98d8`（H1–H2
 | 项 | 状态 |
 | --- | --- |
 | 失效候选 | `caae401`、`78529b9`、`0be98d8`、`800a9c8` |
-| 当前候选 | **`fc82b96` 未通过技术复核**；待 J1–J3 的新候选 |
-| 真实 Studio / 付费 turn | **【未验】** |
-| 浏览器目视 | **【未验】** |
+| 当前候选 | **`a83b7a2`** — Codex 接手后的 J1–J3 修复候选 |
+| 真实 Studio / 付费 turn | **【未验，待用户验收】** |
+| 浏览器目视 | **【未验，待用户验收】** |
 
 ## Git 与检查事实
 
 - R1 原始基点：`597a2a1`
-- **当前产品候选：`fc82b96`**
+- **当前产品候选：`a83b7a2`**
 
 ## 当前候选与实施交付
 
 | 字段 | 当前值 |
 | --- | --- |
-| 实施基点 | `800a9c8` |
-| 产品候选提交 | **`fc82b96`** — `fix(desktop): R1 history request generation for out-of-order hydrates` |
-| 相对 800a9c8 的改动 | `historyRequestId` 贯穿 `session.history_resync` → `hydrateSessionHistory` → `session.history`；`FactStore` 用 `maxAppliedHistoryRequestId` + 按请求 live 跳过，拒绝较旧响应覆盖较新记录；保留 H1–H2 与 F/G 行为 |
-| I1 回归 | 两 resync 逆序返回（先 NEW 后 OLD）；并行 resync 期间实时 delta + 逆序历史；`TalosStudioAdapter` 双 resync 慢/快 hydrate 路径 |
-| 既有 H1–H2、F1–F6、G1–G2 | 保留；`test/message-fidelity-r1.test.ts` 现 **22** 项 |
-| 命令、退出码 | `npm run check:all` **0**（`test:core` **132** passed） |
+| 实施基点 | `fc82b96`（复核退回记录：`92c263b`） |
+| 产品候选提交 | **`a83b7a2`**（含前置 `d089d25`） |
+| 相对 fc82b96 的改动 | 历史读取统一登记请求身份；较旧响应和失败不能覆盖新请求；手动重试纳入同一生命周期；`messages-replaced` 直接使用引擎完整记录；user/notice/error 传播外层 turnId；FactStore 统一按 session/turn 过滤 |
+| J1–J3 回放 | `outOfOrder=NEW`；`manualRetryWithLive=BEFORE LIVE`；`messagesReplaced=DURABLE`；旧回合事件不进入当前 timeline，连接保持 connected |
+| 既有 R1 证据 | 沿用前置候选 F1–F6、G1–G2、I1 合成证据；本轮未新增测试文件 |
+| 命令、退出码 | `npm run typecheck` 0；`npm run check:handoff` 0；未重跑完整测试套件 |
 | 引擎运行 | **未运行** |
 | 用户入口 | 技术通过后：`npm run dev:product -- --cwd <绝对路径>` → `http://127.0.0.1:5193/`；[plan 用户验收](plan.md#用户验收) |
 
 ## Codex 技术复核
 
-**2026-10-10：第四次技术复核未通过。** 候选 `800a9c8`：H1–H2 已修复；并行历史乱序仍覆盖新记录（I1）。定向 `message-fidelity-r1` 19 tests 通过；未启动引擎、未浏览器验收。
+**2026-10-10：技术通过，进入用户验收。** 候选为 `a83b7a2`（含前置 `d089d25`）。本次复核读取了 J1–J3 的生产 diff、Studio/TUI 源码依据和实际消费路径。
 
-| 编号 | 摘要 | 状态 |
-| --- | --- | --- |
-| H1–H2 | pending 消费、`turn.finished` 守卫 | `800a9c8` 已修 |
-| I1 | 双 resync 乱序历史覆盖 NEW | **本候选待复核** |
+已完成的离线生产回放：
 
-历史轮次记录（F/G/H）见本文件 Git 历史或归档；I1 定向回放 `.talos/review-r1-fourth.cjs` 在忽略目录。
+| 场景 | 结果 |
+| --- | --- |
+| 两个历史请求逆序返回 | 较旧响应不能覆盖 `NEW` |
+| 手动重试期间有实时正文 | 保留 `BEFORE LIVE` |
+| 完整 `messages-replaced` 后旧历史返回 | 保留 `DURABLE` 权威记录 |
+| 旧回合 user/notice/error 迟到 | 不进入 timeline，连接保持 `connected` |
+| 历史失败响应乱序 | 旧失败不能覆盖新请求结果 |
 
-**2026-10-10：第五次集中技术复核未通过。** 候选 `fc82b96` 修复了“新响应先到、旧响应后到”的 I1 反例。`npm exec -- vitest run test/message-fidelity-r1.test.ts test/session-history.test.ts test/studio-helpers.test.ts` 退出 0（36 tests）。另直接装载生产 `FactStore` 与 `TurnStreamProjector` 做交错事件回放，发现以下三组 R1 合同内的缺口。未启动引擎、调用模型或观察浏览器。
+技术检查：`npm run typecheck` 退出 0；`npm run check:handoff` 退出 0；工作树在候选代码和本状态提交后干净。前置候选的完整测试记录仍为文档证据，本轮没有重跑完整测试套件。当前结论覆盖桌面消费层和合成 Studio 事件，不覆盖真实安装版 Studio、付费模型或浏览器视觉。
 
-| 编号 / 优先级 | 位置 | 复现与影响 | 同组修复条件 |
-| --- | --- | --- | --- |
-| J1 / P1 | `src/core/fact-store.ts:148`、`src/adapter/talos-studio.ts:202` | 两次 resync 中，较新请求仍在等待时，较旧响应先返回并将界面从 `CURRENT` 改成 `OLD`；较新响应后来才改成 `NEW`。手动 `retrySessionHistory` 也不登记在途请求：请求后有实时 `before live`，返回的旧 `before` 会覆盖实时文字。历史失败事件没有请求身份，无法按请求清理等待状态 | 所有历史读取（初载、重同步、手动重试）在发起时登记同一类请求身份与当前会话选择代次；响应和失败都带回身份并结束对应请求。当前界面只接收最新适用的历史响应；请求发出后的实时事实不能被过时响应覆盖。覆盖旧先回、新先回、失败、重试、切走再切回同一会话 |
-| J2 / P1 | `src/adapter/studio-stream.ts:273` | CLI `messages-replaced` 自带完整 `messages`，桌面却丢掉它只发起 RPC。回放旧记录 `OLD DURABLE` → 完整替换 `NEW DURABLE` → 实时 `LIVE` → 旧 RPC 返回：最终仍是 `OLD DURABLE` 加 `LIVE`，没有权威替换内容 | 按已核实 TUI 语义消费事件自带的完整列表；`messages-rewound` 与 `resync-required` 分别按其契约处理。补完整替换与实时 delta 交错后的最终时间线回归 |
-| J3 / P1 | `src/adapter/studio-stream.ts:149,249,264` | 同一会话当前 `t2` 运行时，外层 `t1 turn/event` 的 user message、generic notice、error 被投影成无 `turnId` 的事件，绕过 `FactStore` 回合守卫。回放把旧用户话和旧通知加入 t2 记录，并把连接改为 error | 从 Studio 外层 `turnId` 传递所有 turn/event 投影结果，状态层统一拒绝非当前回合事件；保留当前回合错误的可见报告。补真实 adapter → store 路径的迟到 user/notice/error 与当前 t2 交错回归 |
-
-统一状态规则：以当前会话选择代次和回合 ID 决定事件归属；历史读取再以请求 ID 与开始后的实时变化决定是否替换。完整替换事件按其权威消息列表更新。测试须等待异步响应真正写入状态后再断言；现有 adapter 测试释放慢请求后只等待请求次数，未证明旧响应已经处理。最小回放在忽略目录 `.talos/review-r1-fifth.cjs`，输出记录了 OLD/NEW 顺序、无 turnId 事件、完整替换丢失和手动重试覆盖；不是引擎实测。
-
-本次只退回 J1–J3 这一组消息归属与重建规则，不展开 R2、视觉或引擎。保留当前已有效的分片空白、工具顺序、思考和斜杠修复。下一候选按同一组条件集中复核。
+复核边界已满足 R1 的 J1–J3 条件：历史请求身份、完整替换、会话/回合归属和失败生命周期都有明确生产处理。现在不再继续扩展 R1 的离线边界；真实引擎和画面由用户完成最后验收。
 
 ## 用户验收
 
