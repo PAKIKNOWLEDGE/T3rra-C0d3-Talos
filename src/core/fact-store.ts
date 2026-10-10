@@ -9,9 +9,31 @@ import type {
 
 type TurnScoped = { sessionId?: string; turnId?: string };
 
+const STREAM_TURN_SCOPED_KINDS = new Set<EngineEvent['kind']>([
+  'assistant.delta',
+  'assistant.replace',
+  'assistant.layout',
+  'thought.delta',
+  'thought.replace',
+  'tool.update',
+  'stream.notice',
+]);
+
+const LIVE_FACT_DURING_RESYNC_KINDS = new Set<EngineEvent['kind']>([
+  'assistant.delta',
+  'assistant.replace',
+  'assistant.layout',
+  'thought.delta',
+  'thought.replace',
+  'tool.update',
+]);
+
+const TURN_LIFECYCLE_KINDS = new Set<EngineEvent['kind']>(['turn.started', 'turn.finished']);
+
 export class FactStore {
   private readonly state: ServiceSnapshot;
-  private historyResyncBaselineRevision?: number;
+  private pendingHistoryResyncCount = 0;
+  private liveStreamFactsDuringResync = false;
 
   constructor(serviceEpoch: string) {
     this.state = {
@@ -60,7 +82,8 @@ export class FactStore {
     this.state.queue = [];
     this.state.inspection = { skillNames: [], mcpServerNames: [] };
     this.state.inputSummaries = [];
-    this.historyResyncBaselineRevision = undefined;
+    this.pendingHistoryResyncCount = 0;
+    this.liveStreamFactsDuringResync = false;
     this.state.revision += 1;
   }
 
@@ -76,7 +99,8 @@ export class FactStore {
     this.state.queue = [];
     this.state.inspection = { skillNames: [], mcpServerNames: [] };
     this.state.inputSummaries = [];
-    this.historyResyncBaselineRevision = undefined;
+    this.pendingHistoryResyncCount = 0;
+    this.liveStreamFactsDuringResync = false;
     this.state.revision += 1;
   }
 
@@ -87,14 +111,26 @@ export class FactStore {
       const active = this.state.session.sessionId;
       if (active && scoped.sessionId !== active) return false;
     }
-    if (scoped.turnId && this.state.turn.turnId && this.state.turn.status === 'running') {
-      if (scoped.turnId !== this.state.turn.turnId) return false;
+    if (scoped.turnId) {
+      if (STREAM_TURN_SCOPED_KINDS.has(event.kind)) {
+        if (this.state.turn.status !== 'running') return false;
+        if (!this.state.turn.turnId || scoped.turnId !== this.state.turn.turnId) return false;
+      } else if (
+        !TURN_LIFECYCLE_KINDS.has(event.kind) &&
+        this.state.turn.turnId &&
+        scoped.turnId !== this.state.turn.turnId
+      ) {
+        return false;
+      }
     }
     return true;
   }
 
   apply(event: EngineEvent): boolean {
     if (!this.shouldApply(event)) return false;
+    if (this.pendingHistoryResyncCount > 0 && LIVE_FACT_DURING_RESYNC_KINDS.has(event.kind)) {
+      this.liveStreamFactsDuringResync = true;
+    }
     if (event.processEpoch > this.state.connection.processEpoch) {
       this.state.connection.processEpoch = event.processEpoch;
       this.state.connection.status = 'connecting';
@@ -135,13 +171,13 @@ export class FactStore {
         break;
       case 'session.history':
         if (this.state.session.sessionId === event.sessionId) {
-          if (
-            this.historyResyncBaselineRevision !== undefined &&
-            this.state.revision > this.historyResyncBaselineRevision
-          ) {
+          if (this.pendingHistoryResyncCount > 0 && this.liveStreamFactsDuringResync) {
             break;
           }
-          this.historyResyncBaselineRevision = undefined;
+          if (this.pendingHistoryResyncCount > 0) {
+            this.pendingHistoryResyncCount -= 1;
+          }
+          this.liveStreamFactsDuringResync = false;
           this.state.messages = structuredClone(event.messages);
           this.state.timeline = structuredClone(event.timeline);
           this.state.tools = structuredClone(event.tools);
@@ -242,7 +278,8 @@ export class FactStore {
         this.applyAssistantLayout(event.messageId, event.timeline, event.tools, event.combinedText);
         break;
       case 'session.history_resync':
-        this.historyResyncBaselineRevision = this.state.revision;
+        this.pendingHistoryResyncCount += 1;
+        this.liveStreamFactsDuringResync = false;
         break;
       case 'tool.update':
         this.upsertTool(event.toolCallId, event.patch);

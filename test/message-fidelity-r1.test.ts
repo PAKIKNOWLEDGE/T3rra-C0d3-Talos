@@ -205,6 +205,51 @@ describe('desktop-message-fidelity r1', () => {
     expect(store.snapshot().messages[0]?.text).toBe('live');
   });
 
+  it('G1 applies history returned after resync when no live stream facts arrived', () => {
+    const store = new FactStore('svc');
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: '/tmp' });
+    store.apply({
+      kind: 'assistant.delta',
+      processEpoch: 1,
+      sessionId: 's1',
+      messageId: 'm1',
+      text: 'OLD',
+    });
+    store.apply({ kind: 'session.history_resync', processEpoch: 1, sessionId: 's1', reason: 'resync-required' });
+    store.apply({
+      kind: 'session.history',
+      processEpoch: 1,
+      sessionId: 's1',
+      messages: [{ messageId: 'm1', role: 'assistant', text: 'NEW' }],
+      timeline: [{ kind: 'assistant', messageId: 'm1', text: 'NEW' }],
+      tools: [],
+    });
+    expect(store.snapshot().messages[0]?.text).toBe('NEW');
+  });
+
+  it('G1 still applies history after resync when only auxiliary session events arrived', () => {
+    const store = new FactStore('svc');
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: '/tmp' });
+    store.apply({ kind: 'session.history_resync', processEpoch: 1, sessionId: 's1', reason: 'resync-required' });
+    store.apply({
+      kind: 'session.context',
+      processEpoch: 1,
+      sessionId: 's1',
+      context: { modelLabel: 'test-model' },
+    });
+    store.apply({
+      kind: 'session.history',
+      processEpoch: 1,
+      sessionId: 's1',
+      messages: [{ messageId: 'm1', role: 'assistant', text: 'NEW' }],
+      timeline: [{ kind: 'assistant', messageId: 'm1', text: 'NEW' }],
+      tools: [],
+    });
+    expect(store.snapshot().messages[0]?.text).toBe('NEW');
+  });
+
   it('F3 ignores stale history snapshots after live deltas during resync', () => {
     const store = new FactStore('svc');
     store.apply({ kind: 'connected', processEpoch: 1 });
@@ -226,6 +271,94 @@ describe('desktop-message-fidelity r1', () => {
       tools: [],
     });
     expect(store.snapshot().messages[0]?.text).toBe('NEW TEXT');
+  });
+
+  it('G2 drops late stream events after the turn has finished', () => {
+    const store = new FactStore('svc');
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: '/tmp' });
+    store.apply({ kind: 'turn.started', processEpoch: 1, sessionId: 's1', turnId: 't1', prompt: 'hi' });
+    store.apply({
+      kind: 'assistant.delta',
+      processEpoch: 1,
+      sessionId: 's1',
+      messageId: 'm1',
+      text: 'live',
+      turnId: 't1',
+    });
+    store.apply({
+      kind: 'turn.finished',
+      processEpoch: 1,
+      sessionId: 's1',
+      turnId: 't1',
+      stopReason: 'end_turn',
+    });
+    store.apply({
+      kind: 'assistant.delta',
+      processEpoch: 1,
+      sessionId: 's1',
+      messageId: 'm1',
+      text: 'late',
+      turnId: 't1',
+    });
+    store.apply({
+      kind: 'tool.update',
+      processEpoch: 1,
+      sessionId: 's1',
+      toolCallId: 'tool-late',
+      patch: { title: 'read_file' },
+      turnId: 't1',
+    });
+    store.apply({
+      kind: 'stream.notice',
+      processEpoch: 1,
+      sessionId: 's1',
+      noticeId: 'n-late',
+      text: 'plan.updated: late',
+      turnId: 't1',
+    });
+    expect(store.snapshot().messages[0]?.text).toBe('live');
+    expect(store.snapshot().tools).toEqual([]);
+    expect(store.snapshot().timeline.some((item) => item.kind === 'notice')).toBe(false);
+  });
+
+  it('G2 drops stream events from a previous turn after a new turn completed', () => {
+    const store = new FactStore('svc');
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: '/tmp' });
+    store.apply({ kind: 'turn.started', processEpoch: 1, sessionId: 's1', turnId: 't1', prompt: 'a' });
+    store.apply({
+      kind: 'turn.finished',
+      processEpoch: 1,
+      sessionId: 's1',
+      turnId: 't1',
+      stopReason: 'end_turn',
+    });
+    store.apply({ kind: 'turn.started', processEpoch: 1, sessionId: 's1', turnId: 't2', prompt: 'b' });
+    store.apply({
+      kind: 'assistant.delta',
+      processEpoch: 1,
+      sessionId: 's1',
+      messageId: 'm2',
+      text: 'current',
+      turnId: 't2',
+    });
+    store.apply({
+      kind: 'turn.finished',
+      processEpoch: 1,
+      sessionId: 's1',
+      turnId: 't2',
+      stopReason: 'end_turn',
+    });
+    store.apply({
+      kind: 'assistant.delta',
+      processEpoch: 1,
+      sessionId: 's1',
+      messageId: 'm1',
+      text: 'stale',
+      turnId: 't1',
+    });
+    expect(store.snapshot().messages.map((message) => message.text)).toEqual(['current']);
   });
 
   it('F6 keeps slash.completed messages and timeline consistent', () => {
