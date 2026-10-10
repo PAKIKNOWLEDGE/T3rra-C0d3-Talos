@@ -1,0 +1,3 @@
+*.md text eol=lf
+*.mdc text eol=lf
+docs/archive/2026-10-10-workflow-reset/**/*.md.txt -text

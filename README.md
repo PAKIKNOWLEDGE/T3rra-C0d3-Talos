@@ -1,102 +1,104 @@
-# Talos GUI 与项目文档
+# Talos Desktop
 
-本仓库维护GUI范本、`talos studio` 接驳与项目文档。可安装的终端产品在[独立CLI仓库](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI)，本地源码目录为C:/DEV/develop/Talos-CLI。两仓库相邻独立，不使用子模块，也不互相导入内部实现。
+Windows 优先的 Talos 桌面工作台，沿用已确认的 Endfield 视觉，通过本机 talos studio 使用 Talos CLI。CLI 是独立终端产品；本仓包含浏览器产品壳和桌面接驳，Tauri 发行形态仍在开发。
 
-## 接手地图
+## 开发协作入口
 
-先读[AGENTS.md](AGENTS.md)与[桌面状态](docs/status.md)；**接屎山或换人手**时必读 **[诚实接手说明（2026-10-10）](docs/handoff-honest-2026-10-10.md)**。动引擎再读 Talos-CLI 的 `docs/status.md`。再按需读[计划](docs/plan.md)、[工作流](docs/workflow.md)、[词汇表](docs/glossary.md)或[引擎证据](docs/adapters/talos-engine.md)。
+用户在 Codex 确定方向与复核，Cursor 执行当前任务，用户验收真实使用。
 
-| 文档 | 用途 |
-| --- | --- |
-| [handoff-honest-2026-10-10](docs/handoff-honest-2026-10-10.md) | 项目简史、架构、屎山原因、P0 缺陷、接手原则 |
-| [status](docs/status.md) | 当前结果、限制和下一入口 |
-| [plan](docs/plan.md) | 本轮范围与后续方向 |
-| [workflow](docs/workflow.md) | 实施、验收、Git与文档规则 |
-| [design](docs/design.md) | 已验收视觉正本与素材来源 |
-| [lessons](docs/lessons.md) | 可迁移经验 |
-| [glossary](docs/glossary.md) | 产品名与引擎名分层 |
-| [talos-engine](docs/adapters/talos-engine.md) | 引擎 `talos studio` 接驳（按需） |
-| [fulfillment-matrix](docs/fulfillment-matrix.md) | 用户动作 → studio 方法 → UI（Tauri 前全产品） |
+- [当前状态](docs/status.md)：本轮、候选与验收。
+- [当前任务与路线](docs/plan.md)：执行什么、做到哪里停。
+- [工作流与复制提示词](docs/workflow.md)：分别给 Cursor 和 Codex 的操作。
+- [代理规则](AGENTS.md)：仓库边界。
+- [视觉](docs/design.md)、[Studio 证据](docs/adapters/talos-engine.md)：任务按需引用。
 
-## CLI安装与使用
+不用先读历史事故，也不用把 Codex 聊天全文复制到 Cursor。执行提示词引用仓库文件即可。产品是否通过以 status 中绑定提交的记录为准。
 
-使用包要求支持的Node：>=22.19 <23或>=24.2 <27。
+## 环境
 
-```sh
-npm install -g @pakiknowledge/tal0s-code@latest --registry=https://registry.npmjs.org/ --ignore-scripts=false --include=optional
-talos --version
-cd /path/to/your/project
-talos
-```
+需要 package.json 声明的 Node 版本：>=22.19 <23 或 >=24.2 <27，npm，以及文档/范本检查使用的 Python。
 
-输入/provider配置或选择模型，模型调用由选定供应商计费。默认配置与会话存放在~/.talos。Talos只提示更新，升级仍使用上述npm命令。本地从CLI源码运行时使用pnpm build和pnpm start；这不是GUI启动命令。
+在仓库根目录安装项目依赖：
 
-Windows检查及NixOS实际使用记录见status。NixOS两项自动检查限制保留，不需要为了使用重跑全库或购买模型请求。GUI、Tauri与默认联网搜索未在CLI发行中交付。
-
-## GUI静态范本
-
-已验收的正本是[demo/talos.html](demo/talos.html)。在外部终端启动静态服务并保持打开：
-
-```powershell
+~~~powershell
 cd C:/DEV/develop/T3rra-C0d3-Talos
-python -m http.server 5192 --bind 127.0.0.1 --directory demo
-```
+npm ci
+~~~
 
-访问 http://127.0.0.1:5192/talos.html 。这是模拟数据的视觉范本，不是引擎使用验收。需要复看时：
+产品连接需要本机已配置的 Talos CLI，且支持 Studio v2。CLI 安装、provider、登录和升级由 [CLI 项目](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI) 负责。不要为日常验收自动升级用户已满意的 CLI。
 
-1. 打开页面，检查浅灰顶栏、石墨阅读区和黄色主操作。
-2. 切换演示场景，检查内容与空态入口。
-3. 打开/关闭工单详情，检查主阅读面未被长内容撑开。
-4. 收放概况并缩窄窗口，检查主要操作可达。
+## 启动浏览器产品
 
-退出静态服务在它所属终端按Ctrl+C。不要关闭其他会话的服务。字体与参考图分发边界见design。
+先选择实际存在的绝对工作区路径；需要真实生成时，使用用户已配置好的 provider。将下面示例路径替换成该工作区：
 
-## 浏览器产品
-
-产品壳在 [app/index.html](app/index.html)，样式与 [demo/talos.css](demo/talos.css) 共用正本（另加 `app/product.css` 少量壳差异）。可用 Vite 预览布局（不接引擎时 WebSocket 不会连接）：
-
-```powershell
-cd C:/DEV/develop/T3rra-C0d3-Talos
-npm run dev:shell
-```
-
-打开 http://127.0.0.1:5193/ 对照 demo 目视验收。须用 `dev:shell`（或 `dev:product`），不要裸跑 `npx vite app`，否则 `/demo/talos.css` 与 Harmony 字体不会正确加载。
-
-**Talos Desktop** 依赖本机已安装的 **Talos CLI**（`talos` 在 PATH 上，**0.1.x**）。Desktop 与终端 TUI 并存，不取代 TUI；未安装 CLI 时窗口应显示连接/环境失败，而不是假在线。
-
-接观察服务（另需已配置 provider 才能发模型请求）：
-
-```powershell
+~~~powershell
 cd C:/DEV/develop/T3rra-C0d3-Talos
 npm run check:env
-npm run dev:product -- --cwd C:/path/to/your/workspace
-```
+npm run dev:product -- --cwd "C:/path/to/workspace"
+~~~
 
-浏览器打开 http://127.0.0.1:5193/ ，底栏应显示已连接。侧栏可**输入另一绝对路径**并点「切换工作区」以更换项目（浏览器版无系统文件夹对话框；安装版以后由 Tauri 提供）。发 prompt 会消耗 provider 配额。可选 `npm run spike:initialize` 仅握手。见 [status](docs/status.md)。
+检查环境通过后再启动服务。用户在外部终端运行并保持打开，访问 [http://127.0.0.1:5193/](http://127.0.0.1:5193/)。界面为 5193，内部观察服务为 5194。发送任务会按 provider 计费。
 
-**带 0–5 产品签字**（studio 全链路，非 demo）：按 [plan 目视清单](docs/plan.md#下一小轮带-0-目视验收) 顺序操作；机读对照见 [fulfillment-matrix 机读证据](docs/fulfillment-matrix.md#机读证据非目视替代)。
+正常退出在所属终端按 Ctrl+C。端口占用时先确认是否已有验收服务；不要杀未知进程，也不要重复起第二份。已确认属于本项目的遗留进程可使用现有 npm run stop:product，执行前查看其影响端口；它不是每次启动的前置命令。
 
-若启动报 `EADDRINUSE` / 5194 占用，说明上一次的 `dev:product` 仍在后台（常见于**直接关终端窗口**、或崩溃后未退出）。先释放端口：
+候选验收前核对版本：
 
-```powershell
-npm run stop:product
-```
+~~~powershell
+git rev-parse HEAD
+git status --short
+~~~
 
-等价手工：`netstat -ano | findstr :5194` → `taskkill /PID <PID> /F`（5193 若仍占用也一并结束）。然后重新 `npm run dev:product`。
+产品代码必须对应 status 的候选；候选之后仅有文档提交时应有明确说明。不要一边验旧服务，一边修改它读取的产品代码。
 
-正常退出请在**运行服务的那个终端**按 **Ctrl+C**（应看到 `Shutting down`），不要只关窗口。
+## 仅看视觉
 
-## 文档与范本检查
+产品壳布局预览：
 
-本轮文档修改仅使用既有交接检查，视觉范本校验按需要执行：
+~~~powershell
+npm run dev:shell
+~~~
 
-```powershell
-python tools/check-handoff.py
-python demo/talos-check.py
-```
+访问 [http://127.0.0.1:5193/](http://127.0.0.1:5193/)。单独的壳没有引擎连接；不应把它当成功对话证据。不用裸 npx vite app，以免丢失共享样式/字体。
 
-产品实现变化另按package.json登记的适用检查执行；不因文档修改重跑模型、全库或安装演练。启动服务和真实模型请求必须在具体任务中说明用途，不作为例行交接操作。
+已验收的静态正本：
 
-## 历史操作说明
+~~~powershell
+python -m http.server 5192 --bind 127.0.0.1 --directory demo
+~~~
 
-此前已完成的探针、发行准备和本机环境修复命令保存在[操作索引归档](docs/archive/2026-10-06/readme-before-doc-refresh.md)，只供定位旧证据。旧命令与阶段描述不覆盖当前status，也不要求新用户重现本机事故。
+访问 [http://127.0.0.1:5192/talos.html](http://127.0.0.1:5192/talos.html)。demo 全部为模拟数据，只证明视觉。
+
+## 检查命令
+
+| 命令 | 实际用途与限制 |
+| --- | --- |
+| npm run check:env | 查看宿主与 CLI 定位；不是生成测试 |
+| npm run spike:initialize | 启动真实 Studio 并握手；不能证明对话或画面，不是日常接手必跑项 |
+| npm run typecheck | 现有 tsc 配置；入口为 spike 及其导入依赖，并非所有产品/测试文件 |
+| npm run test:core | package.json 明确列出的离线测试；含 mock，不证明真实引擎 |
+| npm run check:demo | 静态范本结构检查，不证明产品画面 |
+| npm run check:handoff | 当前文档链接、交接字段、demo 快照等检查 |
+| npm run check:all | 上述类型、核心测试、demo、handoff 串行聚合；前项失败后续不执行 |
+
+R1 的首轮定向检查可以用已安装 Vitest，执行者按实际影响调整清单并记录理由：
+
+~~~powershell
+npm exec -- vitest run test/studio-helpers.test.ts test/session-history.test.ts test/timeline-fact-store.test.ts test/engine-events-fact-store.test.ts
+~~~
+
+实现后的候选按 plan 跑适用检查。某项已经在同一候选通过且没有新影响，不重复跑。环境拒绝启动不等于断言失败；应记录退出码与未运行范围，不能宣称全绿。需要越过工具沙箱时走工具授权，不通过删检查规避。
+
+仅文档改动：
+
+~~~powershell
+npm run check:handoff
+git diff --check
+~~~
+
+本机参考 PNG 按资产约定不入 Git；新 checkout 如缺少所需参考，按 [design](docs/design.md) 处理，不能把缺图当当前渲染已经验收。
+
+## 产品交付与分发
+
+当前没有可交付安装包。Tauri 的条件见 [桌面交付边界](docs/tauri-shell.md)，具体实施只由当前任务启动。
+
+字体许可与本地参考图使用范围见 [design](docs/design.md#资产与分发)。源码保存、用户验收、推送和公开发布是不同动作，不能互相代替。

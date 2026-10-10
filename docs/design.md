@@ -1,64 +1,37 @@
-# Talos 视觉地图
+# Talos Desktop 视觉正本
 
-## 先分清三个对象
+## 已确认资产
 
-| 称呼 | 实际内容 | 用途 |
-| --- | --- | --- |
-| GUI 网页 demo | 本仓库 `demo/talos.html`，Endfield 风格网页 | GUI 视觉正本；不接引擎，产品实现位于 `app/`，两者不能混称 |
-| TUI 文本示意图 | `docs/references/tui-*.txt` | 等宽文本构图参考；不是终端程序，不证明滚动、按键或权限行为 |
-| 真实 TUI 欢迎页 | 相邻 `Talos-CLI` 的欢迎组件 | 实际终端中的 `TALOS` 字标与三六边形标识；不代表整个 TUI 的设计范围 |
+用户已明确满意现有视觉。本轮工作是把引擎接入该视觉，不重新设计。
 
-验收状态只看 [status](status.md)。讨论时说清对象和部位，避免只说“范本”“接线”或“通过”。
+1. 正本：[demo/talos.html](../demo/talos.html)、[CSS](../demo/talos.css)、[JS](../demo/talos.js)。这是已验收的模拟数据交互范本。
+2. 本地参考：[newend1](references/newend1.png)、[newend2](references/newend2.png)、[newend3](references/newend3.png)、[newend4](references/newend4.png)、[newend5](references/newend5.png)、[newend6](references/newend6.png)。使用边界见 [参考说明](references/README.md)。
+3. 产品壳：[app/index.html](../app/index.html)、[app/product.css](../app/product.css)、[app/product-motion.css](../app/product-motion.css)。与 demo 共用基础样式；有真实数据接驳不等于已通过产品验收。
 
-## 正本与参考层级
+历史来源为 C:/DEV/develop/tmp/OPUS5-5，后整理到 tmp/T3rra-C0d3-Talos；文件已带入本仓，临时目录不是当前依赖。
 
-1. 当前可运行正本：[demo/talos.html](../demo/talos.html)、[CSS](../demo/talos.css)、[JS](../demo/talos.js)。它是已验收的小型交互范本，包含最后一次疏密调整。
-2. 提供的游戏图：[newend1](references/newend1.png)、[newend2](references/newend2.png)、[newend3](references/newend3.png)、[newend4](references/newend4.png)、[newend5](references/newend5.png)、[newend6](references/newend6.png)。主要取材为 newend5 的装配站工作区层次、newend1 的任务列表、newend3 的工业浮窗。
-3. 历史来源是 `C:\DEV\develop\tmp\OPUS5-5`，随后独立整理到 `C:\DEV\develop\tmp\T3rra-C0d3-Talos`。现有文件已完整带入本项目；历史位置只是来源说明，不是日后启动或改版的必需依赖。
+## 需要保留的视觉结果
 
-不使用旧 `end.html` 覆盖当前正本，也不混入 Rhodes 的 ARK 令牌。产品首次实现优先保留这里的空间关系；风格名不能替代实际 HTML/CSS。
+浅灰结构顶栏、石墨阅读区、黄色主操作；顶栏与两侧提供方向，中间记录是主要阅读面。具体数值以 CSS 为准，不复制第二套 token 表。
 
-## 已定的视觉方向
+保留已确认的顶栏/标题/输入区高度、侧栏宽度、阅读留白、右栏信息密度、长标题省略。本地字体、进场、会话切换、浮窗、控件反馈及 reduced-motion 降级均属正本。
 
-浅灰结构顶栏、石墨阅读区、黄色主操作、稳定的工作台构图。顶栏与两侧提供方向，中间记录是主要阅读面。具体数值以 CSS 为准，不另抄一份令牌表制造分叉。
+消息修复可以更正内容和必要 DOM 接线，不能顺手改颜色、重排三栏或增加装饰。新状态使用现有视觉语言；容纳不下时先说明产品取舍，不能把阅读区挤满。
 
-最后一轮降低顶栏、标题区与输入区高度，收窄侧栏，增加记录区留白，减少右栏重复状态，长标题单行省略。这些改动已通过；产品接入不要因多画几个状态又把空白挤满。
+## 产品接入
 
-保留本地字体、全局进场与会话切换动效、浮窗开合、控件反馈和 reduced-motion 降级。交互节奏比堆装饰更重要。新组件类名要有归属，避免不同组件复用泛名引起布局冲突。
+demo 的计划、用量、文件、模式、模型、会话与审批是模拟数据。产品数据来自 Studio 或宿主；没有来源就保留诚实空态和恢复入口，不补造读数。
 
-## demo 与产品不是一回事
+工具过程默认摘要、详情按需展开。删除、覆盖等确认使用壳内同视觉的对话框，不以浏览器 alert/confirm 充当已完成产品交互。新增/改变控件更新现有 app/ui-manifest.json；登记只证明接线意图，不证明运行和渲染。
 
-样张的计划、usage、文件、模式、模型、会话、审批和完成态全部为演示。它只证明布局意图，不能证明 MiniMax 支持对应字段；其中的允许补充指令也不构成产品排队策略。
+流式更新不得反复触发进场、抢输入焦点或强迫阅读位置跳动。局部视觉回归按改动场景检查；没有视觉改动和新失败，不重做整套视觉验收。
 
-产品接驳前按可见元素列数据来源与缺失行为。能追到真实事件的接入；无源的保留结构但写明缺失或暂不显示，不能伪造读数。删除大块样张内容时要重新平衡布局，不能退回空洞细线 HUD。
-
-工单保持摘要 + 按需详情；审批的选项、作用域、实际 I/O 必须由契约决定。新建、模型切换、目录选择等按钮在产品里要有真实结果或可见错误。演示用场景按钮不能直接作为生产控制留在发布包。
-
-## TUI 设计讨论
-
-TUI 采用对话流式终端方向：主阅读区留给连续对话和代码，工具详情与菜单按需展开。不要照搬 GUI 三栏或预设常驻侧栏；GUI 的已验收范本不因此改动。
-
-当前欢迎页保留已验收的六行 Unicode `TALOS` 字标；右侧改用 GUI demo 顶栏的三六边形标识，以纯 ASCII 绘制，窄屏有简版。字标是静态字符资产，不在运行时加载 ANSI Shadow 字体。真实终端的验收记录统一见 status；GUI demo 本身不改。
-
-此前 03 装配机械臂的 [字符稿](references/tui-arm.txt) 和 [文本示意图](references/tui-frames.md) 仅供历史构图参考，已不作为真实欢迎页标识。游戏参考目录 `C:\DEV\develop\tmp\Manuel-ref-image` 的素材仅用于设计比对，不是发布资产。
-
-原生 TUI 已有对话、工具、审批与 provider 交互。视觉调整复用这些组件；文本示意图中的动态选项、Esc 和“仅一次”文案不能直接作为行为规范。真实边界见 [talos-engine](adapters/talos-engine.md)，不要把 GUI 的批准卡片契约移植成另一套 TUI 业务逻辑。
-
-旧机械臂本机预览位于忽略目录 `.talos/tui-art/`，不能作为当前欢迎页依据。真实图案以相邻引擎 `packages/tui/src/tui/shell/welcome/design.ts` 为准；代码断言不能替代终端目视。整体配色、密度、菜单、输入区仍需分别验收；图案通过不等于整个 TUI 通过。
-
-### TUI 主题小轮
-
-沿用 GUI 的工业黄灰语言，转换为终端现有语义颜色；不搬 GUI 三栏或背景面板布局。首轮只交付可选 Talos 配色，不声称单靠换色完成所有设计。
-
-- 暗色：主强调色参考 `demo/talos.css:3` 的 `#f4eb16`，正文参考 `#e9e9e3`，辅助文字参考 `#9b9b9a`；用户消息底色采用克制的石墨灰。实际值要满足现有对比度测试，可在同一色相方向微调。
-- 黄色用于选中项、输入/操作强调和关键标题；正文以中性白灰为主，不把每一行都染黄。减少界面装饰性色彩，保留代码语法的可辨识性。
-- 浅色终端用可读的深金/深灰，不把亮黄直接作为浅底正文。终端整体背景由用户终端控制，不承诺主题会改全屏背景。
-- 成功绿、错误红、警告琥珀及 diff 增删保持含义；不为统一品牌抹掉状态差异。16 色/无色环境保留已有文字和标记，不能只靠颜色辨别状态。
+TUI 视觉与验收归相邻 CLI，本仓不再维护一套 TUI 开发计划。旧字符稿仅在 [历史参考](references/tui-frames.md) 留存。
 
 ## 资产与分发
 
-字体是随 demo 搬迁的 HarmonyOS Sans SC Regular / Bold，文件在 `demo/fonts/`；系统字体仅引用，不复制 Windows 字体文件。旧项目已知未附 HarmonyOS 授权原文，本轮也未核验：本地范本沿用，公开分发前需取得原许可或由用户指定替代，不把“免费商用”当完整许可证据。
+HarmonyOS Sans SC Regular / Bold 位于 demo/fonts 与 app/fonts。既有资料未附完整许可原文；本轮未核验，公开分发前需取得许可或由用户指定替代。不能从“免费商用”推断已履行再分发义务。
 
-六张参考图为提供的游戏界面，仅本地设计比对；不声明拥有游戏素材，不默认随公开源码或产品分发。本地 Git 已忽略参考 PNG，但文档与目录说明保留；若将来做可移植的公开交接，先处理可分发参考物，不留断链冒充完整。
+六张游戏参考 PNG 仅本地设计比对，已忽略，不默认进入源码或产品包。不删除现有本地参考；新 checkout 缺参考时报告缺项，不能从相近图片编造视觉验收。
 
-预览、复验动作统一见 [README](../README.md)；验收结论只在 [status](status.md)。
+启动命令只见 [README](../README.md#仅看视觉)，验收结果只见 [status](status.md)。重构前设计全文已保存于 [归档](archive/2026-10-10-workflow-reset/README.md)。

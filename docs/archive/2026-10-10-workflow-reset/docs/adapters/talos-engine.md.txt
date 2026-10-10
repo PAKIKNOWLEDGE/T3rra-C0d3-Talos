@@ -1,0 +1,63 @@
+# Talos 引擎接驳（Desktop ↔ `talos studio`）
+
+曾用文件名 `minimax-code.md`；见 [迁移说明](minimax-code.md)。
+
+此页是 **GUI 侧接驳地图**，不是引擎协议正本。引擎方法表、版本与通知以 Talos-CLI 为准：
+
+- [studio-protocol.md](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/studio-protocol.md)（本地 `C:\DEV\develop\Talos-CLI\docs\studio-protocol.md`）
+- [studio-parity.md](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/studio-parity.md)（协议版本 **2**）
+
+引擎发行与待办见 CLI [docs/status.md](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/status.md)。名字见 [词汇表](../glossary.md)。现状只见本仓 [status](../status.md)。
+
+## 对接契约（【文档】引擎 0.1.4 / studio v2）
+
+| 项 | 事实 |
+| --- | --- |
+| 启动 | 子进程 **`talos studio`**，cwd = 用户工作区；stdio、换行分隔 JSON-RPC 2.0 |
+| 握手 | `studio/initialize`（可选绝对 `cwd`），`protocolVersion` = 2，`name` = `talos-studio` |
+| 引擎面 | 与 TUI 同一套 `CliService`（`surface: studio`） |
+| 实现 | 引擎 `packages/tui/src/studio/` |
+| 不接 | 不 import 引擎内部模块；不把编辑器客户端协议当产品门面；不接 vendored `pi --mode rpc` |
+
+## 用户动作 → studio 方法
+
+| 用户动作 | 方法 |
+| --- | --- |
+| 列这个文件夹里的活 | `session/list` |
+| 新建活 | `session/create` |
+| 点开旧活（带记录） | `session/load` |
+| 刷新后附着、不重刷记录 | `session/resume` |
+| 关掉附着 | `session/close` |
+| 从列表去掉 | `session/delete` |
+| 改名 / 归档 | `session/rename`、`session/archive` |
+| 分叉 | `session/fork`、`session/forkOptions` |
+| 发指令 | `turn/start` → 通知 `turn/event`，结束 `turn/completed` |
+| 停止 / 中途加话 | `turn/cancel`、`turn/steer` |
+| 斜杠目录 | `commands/list` |
+| 模式 | `session/setMode` |
+| 模型、思考档、权限档 | `config/options`、`config/set` |
+| 工具批准 | `permission/list`、`permission/reply` |
+| 用量 / 上下文 / 压缩 | `inspection/usage`、`inspection/context`、`inspection/compact` |
+| 技能 / MCP 只读 | `inspection/skills`、`inspection/mcp` |
+| 模型列表 / 账号 | `models/list`、`account/status` |
+| 工作区文件树 / 搜索 | `workspace/files/list`、`workspace/files/search`（runtime 有 port 时） |
+| 运行时事件 | `runtime/events/subscribe` → `runtime/event` |
+
+完整行表只维护在引擎 `studio-parity.md`。本仓不复制第二套。
+
+## 本仓代码现状（2026-10-10）
+
+【源码】观察服务已 spawn **`talos studio`**（`src/host/talos-studio-process.ts`、`src/adapter/talos-studio.ts`）。旧 ACP 适配文件仍保留供单测与对照，**产品运行时不再 spawn 旧入口**。
+
+【实测 2026-10-10】`npm run spike:initialize`：`protocolVersion` 2、`serverName` `talos-studio`、CLI `0.1.4`。GUI 绑定：`session/resume` 优先、`load` 回退（`workspace-session.ts`）；`usage/commits/subscribe` + `inspection/usageSummary` 可选合并；`@` 空查询走 `workspace/files/list`；studio 进程退出前 `session/close`。带 0–5 全链路目视【未验】。
+
+【实测 2026-10-10】本机 PATH 已有全局 `@pakiknowledge/tal0s-code@0.1.4`，`talos studio --help` 可用。宿主【源码】已 spawn **`talos studio`**（见 `talos-studio-process.ts`）。握手探针：`npm run spike:initialize`（曾报 v2 / `talos-studio`）；**GUI 全链路 + 付费对话质量【未验】**，见 [handoff-honest-2026-10-10.md](../handoff-honest-2026-10-10.md)。
+
+## 宿主可做、协议不做
+
+| 项 | 谁做 |
+| --- | --- |
+| 起停子进程、stderr、崩溃文案 | Desktop 宿主 |
+| 窗体、选文件夹、字体、动效 | Desktop / 日后 Tauri |
+| `talos login` / `provider` / `plugin` | 仍是 CLI 终端子命令（[studio-parity 不在 studio 表](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/studio-parity.md)） |
+| 云同步、手机遥控、Codex app-server | 不做 |

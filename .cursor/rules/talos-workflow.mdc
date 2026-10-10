@@ -1,0 +1,8 @@
+---
+description: Talos Desktop repository workflow entry
+alwaysApply: true
+---
+
+先读仓库根 AGENTS.md 和 docs/status.md，再读当前任务指向的 docs/plan.md 小节；首次接手读 docs/workflow.md。
+
+本文件仅是 Cursor 的规则入口。任务、授权、范围和停止点以这些文件及用户最新指令为准，不在这里复制第二套状态或待办。默认作为执行者完成当前获授权任务的实现、自验、本地保存与交付记录，然后停在待技术复核。

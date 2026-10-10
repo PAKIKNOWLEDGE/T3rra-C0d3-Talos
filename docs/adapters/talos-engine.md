@@ -1,63 +1,69 @@
-# Talos 引擎接驳（Desktop ↔ `talos studio`）
+# Talos Desktop 与 Studio 的接驳证据
 
-曾用文件名 `minimax-code.md`；见 [迁移说明](minimax-code.md)。
+本页记录源码依据和桌面消费差异，不记录进度。任务见 [plan](../plan.md)，验收见 [status](../status.md)。协议正本是相邻 CLI 的 docs/studio-protocol.md 与 docs/studio-parity.md；本页不复制完整 RPC 表。
 
-此页是 **GUI 侧接驳地图**，不是引擎协议正本。引擎方法表、版本与通知以 Talos-CLI 为准：
+## 版本与证据边界
 
-- [studio-protocol.md](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/studio-protocol.md)（本地 `C:\DEV\develop\Talos-CLI\docs\studio-protocol.md`）
-- [studio-parity.md](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/studio-parity.md)（协议版本 **2**）
+2026-10-10 本聊天只读核对：
 
-引擎发行与待办见 CLI [docs/status.md](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/status.md)。名字见 [词汇表](../glossary.md)。现状只见本仓 [status](../status.md)。
-
-## 对接契约（【文档】引擎 0.1.4 / studio v2）
-
-| 项 | 事实 |
+| 对象 | 版本与范围 |
 | --- | --- |
-| 启动 | 子进程 **`talos studio`**，cwd = 用户工作区；stdio、换行分隔 JSON-RPC 2.0 |
-| 握手 | `studio/initialize`（可选绝对 `cwd`），`protocolVersion` = 2，`name` = `talos-studio` |
-| 引擎面 | 与 TUI 同一套 `CliService`（`surface: studio`） |
-| 实现 | 引擎 `packages/tui/src/studio/` |
-| 不接 | 不 import 引擎内部模块；不把编辑器客户端协议当产品门面；不接 vendored `pi --mode rpc` |
+| CLI 源码 | d045efc92408fd444487098da9a7c04318365882；C:/DEV/develop/Talos-CLI；工作树干净 |
+| 桌面源码 | 94c02ec WIP 恢复点；该提交保存此前工作树，未完成产品验收 |
+| Studio 契约 | 【源码】protocol.ts 的 STUDIO_PROTOCOL_VERSION = 2 |
+| 实际安装版 | 本次未核验；旧文档记录 0.1.4，不等同于本次实测或 npm latest |
+| 真实模型/画面 | 本次未运行；用户已报告正文粘连和 JSON 噪音 |
 
-## 用户动作 → studio 方法
+CLI 的 status 尚保留旧 ACP/0.1.3 交接记录，与当前 Studio 源码不是同一时间切面。不得因此把 Desktop 改回 ACP，也不得把源码 HEAD 等同于用户 PATH 中的可执行文件。本轮只读引擎，不替引擎修改状态卡。
 
-| 用户动作 | 方法 |
+下面 CLI 位置均相对 C:/DEV/develop/Talos-CLI；对应上述 SHA。行号随版本改变，实施时核对符号和实际文件。
+
+## 已存在的运行入口
+
+| CLI 位置 | 【源码】结论 |
 | --- | --- |
-| 列这个文件夹里的活 | `session/list` |
-| 新建活 | `session/create` |
-| 点开旧活（带记录） | `session/load` |
-| 刷新后附着、不重刷记录 | `session/resume` |
-| 关掉附着 | `session/close` |
-| 从列表去掉 | `session/delete` |
-| 改名 / 归档 | `session/rename`、`session/archive` |
-| 分叉 | `session/fork`、`session/forkOptions` |
-| 发指令 | `turn/start` → 通知 `turn/event`，结束 `turn/completed` |
-| 停止 / 中途加话 | `turn/cancel`、`turn/steer` |
-| 斜杠目录 | `commands/list` |
-| 模式 | `session/setMode` |
-| 模型、思考档、权限档 | `config/options`、`config/set` |
-| 工具批准 | `permission/list`、`permission/reply` |
-| 用量 / 上下文 / 压缩 | `inspection/usage`、`inspection/context`、`inspection/compact` |
-| 技能 / MCP 只读 | `inspection/skills`、`inspection/mcp` |
-| 模型列表 / 账号 | `models/list`、`account/status` |
-| 工作区文件树 / 搜索 | `workspace/files/list`、`workspace/files/search`（runtime 有 port 时） |
-| 运行时事件 | `runtime/events/subscribe` → `runtime/event` |
+| packages/tui/src/cli/run-studio-command.ts:64 | 以 surface: studio 创建运行时 |
+| packages/tui/src/studio/runtime.ts:4 | StudioRuntime = TuiRuntime |
+| packages/tui/src/studio/server.ts:136 | turn/event 携带外层 sessionId、turnId 和 TuiStreamEvent |
+| packages/tui/src/studio/server.ts:411 | session/messages 调用 runtime.listMessagePage |
+| packages/tui/src/studio/server.ts:462 | turn/start 进入 executeTuiInteractiveTurn，沿用交互回合执行 |
+| packages/tui/src/studio/server.ts:531 | turn/watch 接运行时 watchSessionTurn；通知与恢复结局仍需桌面正确消费 |
+| packages/tui/src/runtime/stream-events.ts:104 | TuiStreamEvent 定义 delta、message、generic、替换/回退、错误等 |
+| packages/tui/src/runtime/stream-events.ts:574 | readString 保留字符串内容，不 trim 正文 |
 
-完整行表只维护在引擎 `studio-parity.md`。本仓不复制第二套。
+【源码】桌面 [宿主](../../src/host/talos-studio-process.ts) 已启动 studio，并由 [适配器](../../src/adapter/talos-studio.ts) 消费 JSON-RPC。应在这条路线修正消费语义；没有从已确认故障推出更换协议的依据。
 
-## 本仓代码现状（2026-10-10）
+## 消息语义与桌面差异
 
-【源码】观察服务已 spawn **`talos studio`**（`src/host/talos-studio-process.ts`、`src/adapter/talos-studio.ts`）。旧 ACP 适配文件仍保留供单测与对照，**产品运行时不再 spawn 旧入口**。
+| 项 | CLI/TUI 源码依据 | 桌面当前差异 |
+| --- | --- | --- |
+| 增量正文 | turn-live-projection.ts:47、301，原片段进入 queueTextDelta | studio-stream.ts 调 acp-text.ts 的 trimStart；FactStore 丢纯空白片段 |
+| 完整消息 | turn-live-projection.ts:57、312，按消息 ID 更新内容 | TurnStreamProjector 看到 streamedMessageIds 就跳过完整正文 |
+| 历史顺序 | turn-history-projection.ts:83，顺序遍历 parts，分别处理 thinking/tool/text | session-history.ts 分组拼接思考/正文后再追加工具，parts 中 tool 未按位置消费 |
+| 身份 | 实时通过 turn/message 关联，历史通过 message/part 关联 | FactStore 与历史投影含按正文相同去重；不同消息可能被合并/丢弃 |
+| 通用事件 | turn-projection.ts:164，对有明确用途的 todo_updated 投影，其余不作为聊天通知展示 | generic 默认 stream.notice，并以 JSON.stringify 补正文 |
+| 完整记录替换 | turn-projection.ts:142、146，移除受影响回合并 hydrate 新记录 | 替换、回退、重同步仅生成“请重新加载”通知 |
+| 错误 | stream-events.ts:107 / turn-projection.ts:154 使用 message | 桌面 StreamEvent 读取 errorMessage，与实际字段不同 |
 
-【实测 2026-10-10】`npm run spike:initialize`：`protocolVersion` 2、`serverName` `talos-studio`、CLI `0.1.4`。GUI 绑定：`session/resume` 优先、`load` 回退（`workspace-session.ts`）；`usage/commits/subscribe` + `inspection/usageSummary` 可选合并；`@` 空查询走 `workspace/files/list`；studio 进程退出前 `session/close`。带 0–5 全链路目视【未验】。
+表中 TUI 投影文件位于 packages/tui/src/tui/controller/projection/。以上是源码对照，不声称已在当前安装包复现每项差异。
 
-【实测 2026-10-10】本机 PATH 已有全局 `@pakiknowledge/tal0s-code@0.1.4`，`talos studio --help` 可用。宿主【源码】已 spawn **`talos studio`**（见 `talos-studio-process.ts`）。握手探针：`npm run spike:initialize`（曾报 v2 / `talos-studio`）；**GUI 全链路 + 付费对话质量【未验】**，见 [handoff-honest-2026-10-10.md](../handoff-honest-2026-10-10.md)。
+### 消费边界
 
-## 宿主可做、协议不做
+- 引擎拥有会话、回合、工具执行、权限与持久记录；桌面拥有显示投影、用户选择与宿主生命周期。
+- 文本与身份先无损保留，再按视觉格式化。思考、正文、工具、系统事件各按语义消费，不能为了适配旧气泡模型丢字段。
+- 完整 message 与 delta 是不同操作；去重依赖身份与已核实的重放语义。不能用“之前出现过相同文字”消除记录。
+- TUI 投影是语义参考，不直接把其内部模块导入桌面，不把整个 TUI 源码复制成第二个运行时。
+- 未知事件可留脱敏开发诊断；进入用户界面需要明确用途和文案。保留数据不等于默认显示 JSON。
+- 启动、重连、取消受理和真实终态分开记录；不能从请求成功或按钮消失推断业务已结束。
 
-| 项 | 谁做 |
-| --- | --- |
-| 起停子进程、stderr、崩溃文案 | Desktop 宿主 |
-| 窗体、选文件夹、字体、动效 | Desktop / 日后 Tauri |
-| `talos login` / `provider` / `plugin` | 仍是 CLI 终端子命令（[studio-parity 不在 studio 表](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/studio-parity.md)） |
-| 云同步、手机遥控、Codex app-server | 不做 |
+## 基本路径的其他具体发现
+
+【源码】talos-studio.ts 的 loadSession 先 await emitSessionBundle，再 hydrateSessionHistory；emitSessionBundle 继续 await refreshSessionAuxiliary，其中包含技能、MCP、诊断、上下文、后台任务、插件与目标等读取。这形成辅助查询阻塞历史加载的路径。尚未测量实际延迟，不将其写成已复现性能事故。
+
+【源码】宿主、JSON-RPC pending 与超时/退出恢复是否满足桌面候选要求，应在涉及这些路径的任务内核对；本页不宣称整层已可靠，也不派发泛化全库审计。
+
+## 如何补证
+
+改动涉及哪个语义，就补哪条来源、映射和有损项。合成 fixture 标注来源 SHA 和输入形状；真实运行另记 executable、版本、工作区条件及是否调用模型。脱敏后只留下可复现的最小事件和结果，不提交私人会话。
+
+动作与 RPC 查询入口见 [fulfillment-matrix](../fulfillment-matrix.md)。现有测试文件是线索，不是引擎契约权威；先核源码，再更新与本轮相关的断言。
