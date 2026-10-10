@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { EngineEvent } from '../core/types.js';
-import { sanitizeAssistantDisplay } from './acp-text.js';
+import { stripRedactedThinkingBlocks } from './studio-message-text.js';
 
 type StreamMessage = {
   id?: string;
@@ -20,7 +20,7 @@ type StreamMessage = {
 type StreamEvent = {
   type?: string;
   turnId?: string;
-  message?: StreamMessage;
+  message?: StreamMessage | string;
   messageId?: string;
   role?: string;
   content?: string;
@@ -55,20 +55,22 @@ function toolPatch(tool: NonNullable<StreamEvent['toolCalls']>[number]) {
 }
 
 function sanitizeThoughtDisplay(text: string): string {
-  return text.replace(/<\/?redacted_thinking>/gi, '').trim();
+  return stripRedactedThinkingBlocks(text).trim();
 }
 
 function assistantTextFromMessage(message: StreamMessage): string | undefined {
   if (Array.isArray(message.parts)) {
     const chunks: string[] = [];
     for (const part of message.parts) {
-      if (part?.type === 'text' && typeof part.content === 'string' && part.content) {
+      if (part?.type === 'text' && typeof part.content === 'string') {
         chunks.push(part.content);
       }
     }
-    if (chunks.length) return chunks.join('');
+    if (chunks.length) return stripRedactedThinkingBlocks(chunks.join(''));
   }
-  if (typeof message.content === 'string' && message.content) return message.content;
+  if (typeof message.content === 'string' && message.content) {
+    return stripRedactedThinkingBlocks(message.content);
+  }
   return undefined;
 }
 
@@ -103,12 +105,14 @@ function pushThought(
   });
 }
 
-/** Tracks streamed assistant message ids so final `message` frames do not duplicate deltas. */
+const INTERNAL_GENERIC_EVENTS = new Set(['query_collapse_view']);
+
+/** Projects turn/event payloads into engine events. */
 export class TurnStreamProjector {
-  private readonly streamedMessageIds = new Set<string>();
+  private readonly streamedThoughtKeys = new Set<string>();
 
   reset(): void {
-    this.streamedMessageIds.clear();
+    this.streamedThoughtKeys.clear();
   }
 
   project(processEpoch: number, sessionId: string, rawEvent: unknown): EngineEvent[] {
@@ -121,18 +125,16 @@ export class TurnStreamProjector {
       const { messageId, thoughtId } = streamIds(event);
       if (typeof event.thinking === 'string' && event.thinking) {
         pushThought(events, processEpoch, sessionId, thoughtId, event.thinking);
-        this.streamedMessageIds.add(messageId);
+        this.streamedThoughtKeys.add(`${thoughtId}:${sanitizeThoughtDisplay(event.thinking)}`);
       }
-      const text = typeof event.content === 'string' ? event.content : undefined;
-      if (text) {
+      if (typeof event.content === 'string') {
         events.push({
           kind: 'assistant.delta',
           processEpoch,
           sessionId,
           messageId,
-          text: sanitizeAssistantDisplay(text),
+          text: stripRedactedThinkingBlocks(event.content),
         });
-        this.streamedMessageIds.add(messageId);
       }
       for (const tool of event.toolCalls ?? []) {
         const mapped = toolPatch(tool);
@@ -147,7 +149,7 @@ export class TurnStreamProjector {
       return events;
     }
 
-    if (type === 'message' && event.message) {
+    if (type === 'message' && event.message && typeof event.message === 'object') {
       const message = event.message;
       const messageId = message.id ?? `msg-${randomUUID()}`;
       if (message.role === 'user') {
@@ -163,22 +165,21 @@ export class TurnStreamProjector {
         }
       } else if (message.role === 'assistant') {
         const { thoughtId } = streamIds(event, messageId);
-        const alreadyStreamed = this.streamedMessageIds.has(messageId);
-        if (!alreadyStreamed) {
-          for (const chunk of thoughtChunksFromMessage(message)) {
-            pushThought(events, processEpoch, sessionId, thoughtId, chunk);
-          }
-          const text = assistantTextFromMessage(message);
-          if (text) {
-            events.push({
-              kind: 'assistant.delta',
-              processEpoch,
-              sessionId,
-              messageId,
-              text: sanitizeAssistantDisplay(text),
-            });
-          }
-          this.streamedMessageIds.add(messageId);
+        for (const chunk of thoughtChunksFromMessage(message)) {
+          const key = `${thoughtId}:${sanitizeThoughtDisplay(chunk)}`;
+          if (this.streamedThoughtKeys.has(key)) continue;
+          pushThought(events, processEpoch, sessionId, thoughtId, chunk);
+          this.streamedThoughtKeys.add(key);
+        }
+        const text = assistantTextFromMessage(message);
+        if (text !== undefined) {
+          events.push({
+            kind: 'assistant.replace',
+            processEpoch,
+            sessionId,
+            messageId,
+            text,
+          });
         }
         for (const tool of message.toolCalls ?? []) {
           const mapped = toolPatch(tool);
@@ -194,44 +195,51 @@ export class TurnStreamProjector {
       return events;
     }
 
-  if (type === 'error') {
-    events.push({
-      kind: 'error',
-      processEpoch,
-      sessionId,
-      message: event.errorMessage ?? 'Turn stream failed.',
-    });
+    if (type === 'error') {
+      const message =
+        typeof event.message === 'string'
+          ? event.message
+          : typeof event.errorMessage === 'string'
+            ? event.errorMessage
+            : 'Turn stream failed.';
+      events.push({
+        kind: 'error',
+        processEpoch,
+        sessionId,
+        message,
+      });
+      return events;
+    }
+
+    if (type === 'generic') {
+      const label = typeof event.eventType === 'string' ? event.eventType : 'runtime';
+      if (INTERNAL_GENERIC_EVENTS.has(label)) return events;
+      const detail =
+        event.data && typeof event.data.message === 'string'
+          ? event.data.message
+          : JSON.stringify(event.data ?? {});
+      events.push({
+        kind: 'stream.notice',
+        processEpoch,
+        sessionId,
+        noticeId: `notice-${randomUUID()}`,
+        text: `${label}: ${detail}`,
+      });
+      return events;
+    }
+
+    if (type === 'messages-replaced' || type === 'messages-rewound' || type === 'resync-required') {
+      events.push({
+        kind: 'session.history_resync',
+        processEpoch,
+        sessionId,
+        reason: type,
+      });
+      return events;
+    }
+
     return events;
   }
-
-  if (type === 'generic') {
-    const label = typeof event.eventType === 'string' ? event.eventType : 'runtime';
-    const detail =
-      event.data && typeof event.data.message === 'string'
-        ? event.data.message
-        : JSON.stringify(event.data ?? {});
-    events.push({
-      kind: 'stream.notice',
-      processEpoch,
-      sessionId,
-      noticeId: `notice-${randomUUID()}`,
-      text: `${label}: ${detail}`,
-    });
-    return events;
-  }
-
-  if (type === 'messages-replaced' || type === 'messages-rewound' || type === 'resync-required') {
-    events.push({
-      kind: 'stream.notice',
-      processEpoch,
-      sessionId,
-      noticeId: `notice-${randomUUID()}`,
-      text: `会话记录已变更（${type}），请重新加载会话以同步。`,
-    });
-  }
-
-  return events;
-}
 }
 
 export function engineEventsFromTurnStream(

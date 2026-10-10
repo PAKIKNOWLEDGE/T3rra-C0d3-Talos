@@ -83,6 +83,19 @@ export type EngineEvent =
       text: string;
     }
   | {
+      kind: 'assistant.replace';
+      processEpoch: number;
+      sessionId: string;
+      messageId: string;
+      text: string;
+    }
+  | {
+      kind: 'session.history_resync';
+      processEpoch: number;
+      sessionId: string;
+      reason: string;
+    }
+  | {
       kind: 'thought.delta';
       processEpoch: number;
       sessionId: string;

@@ -205,22 +205,14 @@ export class FactStore {
       case 'thought.delta':
         this.appendTimelineThought(event.thoughtId, event.text);
         break;
-      case 'assistant.delta': {
-        const trimmed = event.text.trim();
-        if (!trimmed) break;
-        const existing = this.state.messages.find((message) => message.messageId === event.messageId);
-        if (existing) {
-          existing.text += event.text;
-        } else if (
-          !this.state.messages.some(
-            (message) => message.role === 'assistant' && message.text.trim() === trimmed,
-          )
-        ) {
-          this.appendMessage({ messageId: event.messageId, role: 'assistant', text: event.text });
-        }
-        this.appendTimelineAssistant(event.messageId, event.text);
+      case 'assistant.delta':
+        this.appendAssistantDelta(event.messageId, event.text);
         break;
-      }
+      case 'assistant.replace':
+        this.replaceAssistantMessage(event.messageId, event.text);
+        break;
+      case 'session.history_resync':
+        break;
       case 'tool.update':
         this.upsertTool(event.toolCallId, event.patch);
         break;
@@ -270,44 +262,79 @@ export class FactStore {
     else this.state.messages.push(structuredClone(message));
   }
 
+  private appendAssistantDelta(messageId: string, text: string) {
+    if (!text) return;
+    const existing = this.state.messages.find(
+      (message) => message.messageId === messageId && message.role === 'assistant',
+    );
+    if (existing) existing.text += text;
+    else this.state.messages.push({ messageId, role: 'assistant', text });
+    this.appendTimelineAssistantDelta(messageId, text);
+  }
+
+  private replaceAssistantMessage(messageId: string, text: string) {
+    const existing = this.state.messages.find(
+      (message) => message.messageId === messageId && message.role === 'assistant',
+    );
+    if (existing) existing.text = text;
+    else this.state.messages.push({ messageId, role: 'assistant', text });
+    this.replaceTimelineAssistant(messageId, text);
+  }
+
+  private timelineAssistantEntry(messageId: string) {
+    for (let index = this.state.timeline.length - 1; index >= 0; index -= 1) {
+      const item = this.state.timeline[index];
+      if (item?.kind === 'assistant' && item.messageId === messageId) return item;
+    }
+    return undefined;
+  }
+
   private appendTimelineUser(messageId: string, text: string) {
-    const trimmed = text.trim();
+    if (!text) return;
     const last = this.state.timeline.at(-1);
     if (last?.kind === 'user' && last.messageId === messageId) {
       last.text += text;
       return;
     }
-    if (trimmed && last?.kind === 'user' && last.text.trim() === trimmed) return;
     this.state.timeline.push({ kind: 'user', messageId, text });
   }
 
   private appendTimelineThought(thoughtId: string, text: string) {
-    const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!text) return;
     const last = this.state.timeline.at(-1);
     if (last?.kind === 'thought' && last.thoughtId === thoughtId) {
       last.text += text;
       return;
     }
-    if (this.state.timeline.some((item) => item.kind === 'thought' && item.text.trim() === trimmed)) {
-      return;
-    }
     this.state.timeline.push({ kind: 'thought', thoughtId, text });
   }
 
-  private appendTimelineAssistant(messageId: string, text: string) {
-    const trimmed = text.trim();
-    if (!trimmed) return;
+  private appendTimelineAssistantDelta(messageId: string, text: string) {
+    if (!text) return;
     const last = this.state.timeline.at(-1);
     if (last?.kind === 'assistant' && last.messageId === messageId) {
       last.text += text;
       return;
     }
-    if (last?.kind === 'assistant' && last.text.trim() === trimmed) return;
-    if (this.state.timeline.some((item) => item.kind === 'assistant' && item.text.trim() === trimmed)) {
+    const entry = this.timelineAssistantEntry(messageId);
+    if (entry) {
+      entry.text += text;
       return;
     }
     this.state.timeline.push({ kind: 'assistant', messageId, text });
+  }
+
+  private replaceTimelineAssistant(messageId: string, text: string) {
+    const entry = this.timelineAssistantEntry(messageId);
+    if (entry) {
+      entry.text = text;
+      return;
+    }
+    if (text) this.state.timeline.push({ kind: 'assistant', messageId, text });
+  }
+
+  private appendTimelineAssistant(messageId: string, text: string) {
+    this.appendAssistantDelta(messageId, text);
   }
 
   private upsertListedSession(item: SessionIndexItem) {

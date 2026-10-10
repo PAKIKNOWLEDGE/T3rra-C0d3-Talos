@@ -112,6 +112,10 @@ export class TalosStudioAdapter {
       const sessionId = typeof record.sessionId === 'string' ? record.sessionId : '';
       if (!sessionId) return;
       for (const event of this.turnProjector.project(this.processEpoch, sessionId, record.event)) {
+        if (event.kind === 'session.history_resync') {
+          void this.hydrateSessionHistory(sessionId);
+          continue;
+        }
         this.emit(event);
       }
       void this.pollPermissions();

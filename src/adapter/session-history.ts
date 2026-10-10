@@ -1,20 +1,28 @@
 import { randomUUID } from 'node:crypto';
 import type { MessageFact, TimelineItem, ToolFact } from '../core/types.js';
-import { sanitizeAssistantDisplay } from './acp-text.js';
+import { stripRedactedThinkingBlocks } from './studio-message-text.js';
+
+type HistoryToolCall = {
+  id?: string;
+  name?: string;
+  status?: string | number;
+  input?: unknown;
+  output?: unknown;
+};
+
+type HistoryPart = {
+  type?: string;
+  content?: string;
+  toolCall?: HistoryToolCall;
+};
 
 type HistoryMessage = {
   id?: string;
   role?: string;
   content?: string;
   thinking?: string;
-  parts?: Array<{ type?: string; content?: string }>;
-  toolCalls?: Array<{
-    id?: string;
-    name?: string;
-    status?: string | number;
-    input?: unknown;
-    output?: unknown;
-  }>;
+  parts?: HistoryPart[];
+  toolCalls?: HistoryToolCall[];
 };
 
 function userText(message: HistoryMessage): string | undefined {
@@ -27,78 +35,107 @@ function userText(message: HistoryMessage): string | undefined {
   return typeof message.content === 'string' ? message.content : undefined;
 }
 
-function assistantText(message: HistoryMessage): string | undefined {
-  if (Array.isArray(message.parts)) {
-    const chunks = message.parts
-      .filter((part) => part?.type === 'text' && typeof part.content === 'string')
-      .map((part) => part.content as string);
-    if (chunks.length) return sanitizeAssistantDisplay(chunks.join(''));
-  }
-  if (typeof message.content === 'string' && message.content) {
-    return sanitizeAssistantDisplay(message.content);
-  }
-  return undefined;
-}
-
-function thoughtTexts(message: HistoryMessage): string[] {
-  const chunks: string[] = [];
-  if (Array.isArray(message.parts)) {
-    for (const part of message.parts) {
-      if (part?.type === 'thinking' && typeof part.content === 'string' && part.content.trim()) {
-        chunks.push(part.content.replace(/<\/?redacted_thinking>/gi, '').trim());
-      }
-    }
-  }
-  if (typeof message.thinking === 'string' && message.thinking.trim()) {
-    chunks.push(message.thinking.replace(/<\/?redacted_thinking>/gi, '').trim());
-  }
-  return chunks.filter(Boolean);
-}
-
 function pushThought(timeline: TimelineItem[], thoughtId: string, text: string) {
-  const trimmed = text.trim();
-  if (!trimmed) return;
-  if (timeline.some((item) => item.kind === 'thought' && item.text.trim() === trimmed)) return;
-  timeline.push({ kind: 'thought', thoughtId, text: trimmed });
+  if (!text) return;
+  const last = timeline.at(-1);
+  if (last?.kind === 'thought' && last.thoughtId === thoughtId) {
+    last.text += text;
+    return;
+  }
+  timeline.push({ kind: 'thought', thoughtId, text });
 }
 
-function pushAssistant(
+function pushAssistantSegment(
   timeline: TimelineItem[],
-  messages: MessageFact[],
   messageId: string,
   text: string,
+  combinedText: { value: string },
 ) {
-  const trimmed = text.trim();
-  if (!trimmed) return;
-  if (timeline.some((item) => item.kind === 'assistant' && item.text.trim() === trimmed)) return;
-  timeline.push({ kind: 'assistant', messageId, text: trimmed });
-  messages.push({ messageId, role: 'assistant', text: trimmed });
+  if (!text) return;
+  combinedText.value += text;
+  const last = timeline.at(-1);
+  if (last?.kind === 'assistant' && last.messageId === messageId) {
+    last.text += text;
+    return;
+  }
+  timeline.push({ kind: 'assistant', messageId, text });
 }
 
 function pushUser(timeline: TimelineItem[], messages: MessageFact[], messageId: string, text: string) {
-  const trimmed = text.trim();
-  if (!trimmed) return;
-  timeline.push({ kind: 'user', messageId, text: trimmed });
-  messages.push({ messageId, role: 'user', text: trimmed });
+  if (!text) return;
+  timeline.push({ kind: 'user', messageId, text });
+  messages.push({ messageId, role: 'user', text });
 }
 
-function pushTool(
-  timeline: TimelineItem[],
-  tools: ToolFact[],
-  tool: NonNullable<HistoryMessage['toolCalls']>[number],
-) {
+function pushTool(timeline: TimelineItem[], tools: ToolFact[], tool: HistoryToolCall) {
   const toolCallId =
     typeof tool.id === 'string' && tool.id.trim() ? tool.id.trim() : `hist-tool-${randomUUID()}`;
-  if (tools.some((row) => row.toolCallId === toolCallId)) return;
-  const fact: ToolFact = {
-    toolCallId,
-    ...(tool.name ? { title: tool.name, kind: tool.name } : {}),
-    ...(tool.status !== undefined ? { status: String(tool.status) } : {}),
-    ...(tool.input !== undefined ? { rawInput: tool.input } : {}),
-    ...(tool.output !== undefined ? { rawOutput: tool.output } : {}),
-  };
-  tools.push(fact);
-  timeline.push({ kind: 'tool', toolCallId });
+  let fact = tools.find((row) => row.toolCallId === toolCallId);
+  if (!fact) {
+    fact = {
+      toolCallId,
+      ...(tool.name ? { title: tool.name, kind: tool.name } : {}),
+      ...(tool.status !== undefined ? { status: String(tool.status) } : {}),
+      ...(tool.input !== undefined ? { rawInput: tool.input } : {}),
+      ...(tool.output !== undefined ? { rawOutput: tool.output } : {}),
+    };
+    tools.push(fact);
+  } else {
+    Object.assign(fact, {
+      ...(tool.name ? { title: tool.name, kind: tool.name } : {}),
+      ...(tool.status !== undefined ? { status: String(tool.status) } : {}),
+      ...(tool.input !== undefined ? { rawInput: tool.input } : {}),
+      ...(tool.output !== undefined ? { rawOutput: tool.output } : {}),
+    });
+  }
+  if (!timeline.some((item) => item.kind === 'tool' && item.toolCallId === toolCallId)) {
+    timeline.push({ kind: 'tool', toolCallId });
+  }
+}
+
+function mapAssistantMessage(
+  timeline: TimelineItem[],
+  messages: MessageFact[],
+  tools: ToolFact[],
+  message: HistoryMessage,
+  messageId: string,
+) {
+  const thoughtId = `thought-${messageId}`;
+  const combined = { value: '' };
+
+  if (Array.isArray(message.parts) && message.parts.length) {
+    for (const part of message.parts) {
+      if (part?.type === 'thinking' && typeof part.content === 'string') {
+        const cleaned = stripRedactedThinkingBlocks(part.content);
+        if (cleaned) pushThought(timeline, thoughtId, cleaned);
+        continue;
+      }
+      if (part?.type === 'text' && typeof part.content === 'string') {
+        const cleaned = stripRedactedThinkingBlocks(part.content);
+        pushAssistantSegment(timeline, messageId, cleaned, combined);
+        continue;
+      }
+      if (part?.type === 'tool' && part.toolCall) {
+        pushTool(timeline, tools, part.toolCall);
+      }
+    }
+  } else {
+    if (typeof message.thinking === 'string' && message.thinking) {
+      const cleaned = stripRedactedThinkingBlocks(message.thinking);
+      if (cleaned) pushThought(timeline, thoughtId, cleaned);
+    }
+    if (typeof message.content === 'string' && message.content) {
+      const cleaned = stripRedactedThinkingBlocks(message.content);
+      pushAssistantSegment(timeline, messageId, cleaned, combined);
+    }
+    for (const tool of message.toolCalls ?? []) {
+      pushTool(timeline, tools, tool);
+    }
+  }
+
+  if (combined.value) {
+    messages.push({ messageId, role: 'assistant', text: combined.value });
+  }
 }
 
 export function mapStudioHistoryMessages(source: unknown[]): {
@@ -114,22 +151,13 @@ export function mapStudioHistoryMessages(source: unknown[]): {
     const message = raw as HistoryMessage;
     const messageId =
       typeof message.id === 'string' && message.id.trim() ? message.id.trim() : `hist-${randomUUID()}`;
-    const role = message.role === 'user' ? 'user' : message.role === 'assistant' ? 'assistant' : undefined;
-    if (role === 'user') {
+    if (message.role === 'user') {
       const text = userText(message);
       if (text) pushUser(timeline, messages, messageId, text);
       continue;
     }
-    if (role === 'assistant') {
-      const thoughtId = `thought-${messageId}`;
-      for (const chunk of thoughtTexts(message)) {
-        pushThought(timeline, thoughtId, chunk);
-      }
-      const text = assistantText(message);
-      if (text) pushAssistant(timeline, messages, messageId, text);
-      for (const tool of message.toolCalls ?? []) {
-        pushTool(timeline, tools, tool);
-      }
+    if (message.role === 'assistant') {
+      mapAssistantMessage(timeline, messages, tools, message, messageId);
     }
   }
   return { messages, timeline, tools };

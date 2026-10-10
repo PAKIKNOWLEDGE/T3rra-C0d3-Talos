@@ -43,4 +43,19 @@ describe('mapStudioHistoryMessages', () => {
     expect(timeline.map((item) => item.kind)).toEqual(['assistant', 'tool']);
     expect(tools[0]?.toolCallId).toBe('t1');
   });
+
+  it('interleaves text and tool parts in parts order', () => {
+    const { timeline } = mapStudioHistoryMessages([
+      {
+        id: 'a1',
+        role: 'assistant',
+        parts: [
+          { type: 'text', content: 'a' },
+          { type: 'tool', toolCall: { id: 't1', name: 'grep' } },
+          { type: 'text', content: 'b' },
+        ],
+      },
+    ]);
+    expect(timeline.map((item) => item.kind)).toEqual(['assistant', 'tool', 'assistant']);
+  });
 });

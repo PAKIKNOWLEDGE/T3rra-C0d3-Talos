@@ -37,7 +37,7 @@ describe('studio stream mapping', () => {
     expect(events[0]).toMatchObject({ kind: 'assistant.delta', text: 'hello' });
   });
 
-  it('does not repeat assistant text from a final message frame after deltas', () => {
+  it('replaces assistant text from a final message frame after deltas', () => {
     const turnId = 'turn-1';
     const projector = new TurnStreamProjector();
     const deltaEvents = projector.project(1, 's1', {
@@ -49,11 +49,13 @@ describe('studio stream mapping', () => {
     const messageEvents = projector.project(1, 's1', {
       type: 'message',
       turnId,
-      message: { id: 'm1', role: 'assistant', content: 'hello', thinking: 'reason' },
+      message: { id: 'm1', role: 'assistant', content: 'hello!', thinking: 'reason' },
     });
     expect(deltaEvents.some((event) => event.kind === 'assistant.delta')).toBe(true);
-    expect(messageEvents.some((event) => event.kind === 'assistant.delta')).toBe(false);
-    expect(messageEvents.some((event) => event.kind === 'thought.delta')).toBe(false);
+    expect(messageEvents.some((event) => event.kind === 'assistant.replace')).toBe(true);
+    expect(messageEvents.find((event) => event.kind === 'assistant.replace')).toMatchObject({
+      text: 'hello!',
+    });
   });
 
   it('emits assistant text from a message-only frame when no deltas streamed', () => {
@@ -63,7 +65,7 @@ describe('studio stream mapping', () => {
     });
     expect(events).toEqual([
       {
-        kind: 'assistant.delta',
+        kind: 'assistant.replace',
         processEpoch: 1,
         sessionId: 's1',
         messageId: 'solo',

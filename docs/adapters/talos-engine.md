@@ -37,13 +37,13 @@ CLI 的 status 尚保留旧 ACP/0.1.3 交接记录，与当前 Studio 源码不�
 
 | 项 | CLI/TUI 源码依据 | 桌面当前差异 |
 | --- | --- | --- |
-| 增量正文 | turn-live-projection.ts:47、301，原片段进入 queueTextDelta | studio-stream.ts 调 acp-text.ts 的 trimStart；FactStore 丢纯空白片段 |
-| 完整消息 | turn-live-projection.ts:57、312，按消息 ID 更新内容 | TurnStreamProjector 看到 streamedMessageIds 就跳过完整正文 |
-| 历史顺序 | turn-history-projection.ts:83，顺序遍历 parts，分别处理 thinking/tool/text | session-history.ts 分组拼接思考/正文后再追加工具，parts 中 tool 未按位置消费 |
-| 身份 | 实时通过 turn/message 关联，历史通过 message/part 关联 | FactStore 与历史投影含按正文相同去重；不同消息可能被合并/丢弃 |
-| 通用事件 | turn-projection.ts:164，对有明确用途的 todo_updated 投影，其余不作为聊天通知展示 | generic 默认 stream.notice，并以 JSON.stringify 补正文 |
-| 完整记录替换 | turn-projection.ts:142、146，移除受影响回合并 hydrate 新记录 | 替换、回退、重同步仅生成“请重新加载”通知 |
-| 错误 | stream-events.ts:107 / turn-projection.ts:154 使用 message | 桌面 StreamEvent 读取 errorMessage，与实际字段不同 |
+| 增量正文 | turn-live-projection.ts:47、301，原片段进入 queueTextDelta | 【源码 R1】studio-message-text.ts 仅剥 thinking 块；delta 原样追加；空格片段保留 |
+| 完整消息 | turn-live-projection.ts:57、312，按消息 ID 更新内容 | 【源码 R1】assistant.replace 按 messageId 覆盖正文，不重复 delta |
+| 历史顺序 | turn-history-projection.ts:83，顺序遍历 parts | 【源码 R1】session-history.ts 按 parts 顺序投影 text/tool/text |
+| 身份 | 实时通过 turn/message 关联 | 【源码 R1】FactStore 仅按 messageId 合并；不以正文相等去重 |
+| 通用事件 | turn-projection.ts:164 | 【源码 R1】query_collapse_view 不进入 UI；其余 generic 仍可能 JSON |
+| 完整记录替换 | turn-projection.ts:142、146 | 【源码 R1】messages-replaced/rewound/resync-required 触发 session/messages 重载 |
+| 错误 | stream-events.ts:107 使用 message | 【源码 R1】error 帧读取 message 字段 |
 
 表中 TUI 投影文件位于 packages/tui/src/tui/controller/projection/。以上是源码对照，不声称已在当前安装包复现每项差异。
 
