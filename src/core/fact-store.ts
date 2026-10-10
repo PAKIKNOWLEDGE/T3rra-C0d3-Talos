@@ -111,6 +111,12 @@ export class FactStore {
       const active = this.state.session.sessionId;
       if (active && scoped.sessionId !== active) return false;
     }
+    if (event.kind === 'turn.finished') {
+      if (!scoped.turnId || !this.state.turn.turnId || scoped.turnId !== this.state.turn.turnId) {
+        return false;
+      }
+      if (this.state.turn.status !== 'running') return false;
+    }
     if (scoped.turnId) {
       if (STREAM_TURN_SCOPED_KINDS.has(event.kind)) {
         if (this.state.turn.status !== 'running') return false;
@@ -171,11 +177,12 @@ export class FactStore {
         break;
       case 'session.history':
         if (this.state.session.sessionId === event.sessionId) {
-          if (this.pendingHistoryResyncCount > 0 && this.liveStreamFactsDuringResync) {
-            break;
-          }
+          const skipBecauseLiveFacts = this.liveStreamFactsDuringResync;
           if (this.pendingHistoryResyncCount > 0) {
             this.pendingHistoryResyncCount -= 1;
+          }
+          if (skipBecauseLiveFacts) {
+            break;
           }
           this.liveStreamFactsDuringResync = false;
           this.state.messages = structuredClone(event.messages);

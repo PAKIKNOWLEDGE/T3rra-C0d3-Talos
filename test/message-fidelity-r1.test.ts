@@ -250,6 +250,70 @@ describe('desktop-message-fidelity r1', () => {
     expect(store.snapshot().messages[0]?.text).toBe('NEW');
   });
 
+  it('H1 consumes skipped stale history so a later retry can apply fresh history', () => {
+    const store = new FactStore('svc');
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: '/tmp' });
+    store.apply({ kind: 'session.history_resync', processEpoch: 1, sessionId: 's1', reason: 'resync-required' });
+    store.apply({
+      kind: 'assistant.delta',
+      processEpoch: 1,
+      sessionId: 's1',
+      messageId: 'm1',
+      text: 'live',
+    });
+    store.apply({
+      kind: 'session.history',
+      processEpoch: 1,
+      sessionId: 's1',
+      messages: [{ messageId: 'm1', role: 'assistant', text: 'OLD SNAPSHOT' }],
+      timeline: [{ kind: 'assistant', messageId: 'm1', text: 'OLD SNAPSHOT' }],
+      tools: [],
+    });
+    expect(store.snapshot().messages[0]?.text).toBe('live');
+    store.apply({ kind: 'session.history_resync', processEpoch: 1, sessionId: 's1', reason: 'resync-required' });
+    store.apply({
+      kind: 'session.history',
+      processEpoch: 1,
+      sessionId: 's1',
+      messages: [{ messageId: 'm1', role: 'assistant', text: 'fresh retry' }],
+      timeline: [{ kind: 'assistant', messageId: 'm1', text: 'fresh retry' }],
+      tools: [],
+    });
+    expect(store.snapshot().messages[0]?.text).toBe('fresh retry');
+  });
+
+  it('H1 ignores tardy stale history after pending was already consumed', () => {
+    const store = new FactStore('svc');
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: '/tmp' });
+    store.apply({ kind: 'session.history_resync', processEpoch: 1, sessionId: 's1', reason: 'resync-required' });
+    store.apply({
+      kind: 'assistant.delta',
+      processEpoch: 1,
+      sessionId: 's1',
+      messageId: 'm1',
+      text: 'live',
+    });
+    store.apply({
+      kind: 'session.history',
+      processEpoch: 1,
+      sessionId: 's1',
+      messages: [{ messageId: 'm1', role: 'assistant', text: 'OLD SNAPSHOT' }],
+      timeline: [{ kind: 'assistant', messageId: 'm1', text: 'OLD SNAPSHOT' }],
+      tools: [],
+    });
+    store.apply({
+      kind: 'session.history',
+      processEpoch: 1,
+      sessionId: 's1',
+      messages: [{ messageId: 'm1', role: 'assistant', text: 'OLDER LATE' }],
+      timeline: [{ kind: 'assistant', messageId: 'm1', text: 'OLDER LATE' }],
+      tools: [],
+    });
+    expect(store.snapshot().messages[0]?.text).toBe('live');
+  });
+
   it('F3 ignores stale history snapshots after live deltas during resync', () => {
     const store = new FactStore('svc');
     store.apply({ kind: 'connected', processEpoch: 1 });
@@ -320,6 +384,54 @@ describe('desktop-message-fidelity r1', () => {
     expect(store.snapshot().messages[0]?.text).toBe('live');
     expect(store.snapshot().tools).toEqual([]);
     expect(store.snapshot().timeline.some((item) => item.kind === 'notice')).toBe(false);
+  });
+
+  it('H2 rejects late turn.finished for a previous turn while a new turn is running', () => {
+    const store = new FactStore('svc');
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: '/tmp' });
+    store.apply({ kind: 'turn.started', processEpoch: 1, sessionId: 's1', turnId: 't1', prompt: 'a' });
+    store.apply({ kind: 'turn.started', processEpoch: 1, sessionId: 's1', turnId: 't2', prompt: 'b' });
+    store.apply({
+      kind: 'assistant.delta',
+      processEpoch: 1,
+      sessionId: 's1',
+      messageId: 'm2',
+      text: 'current',
+      turnId: 't2',
+    });
+    store.apply({
+      kind: 'turn.finished',
+      processEpoch: 1,
+      sessionId: 's1',
+      turnId: 't1',
+      stopReason: 'end_turn',
+    });
+    const snap = store.snapshot();
+    expect(snap.turn).toMatchObject({ status: 'running', turnId: 't2' });
+    expect(snap.messages[0]?.text).toBe('current');
+  });
+
+  it('H2 rejects duplicate terminal turn.finished for the same turn', () => {
+    const store = new FactStore('svc');
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: '/tmp' });
+    store.apply({ kind: 'turn.started', processEpoch: 1, sessionId: 's1', turnId: 't1', prompt: 'hi' });
+    store.apply({
+      kind: 'turn.finished',
+      processEpoch: 1,
+      sessionId: 's1',
+      turnId: 't1',
+      stopReason: 'end_turn',
+    });
+    store.apply({
+      kind: 'turn.finished',
+      processEpoch: 1,
+      sessionId: 's1',
+      turnId: 't1',
+      stopReason: 'end_turn',
+    });
+    expect(store.snapshot().turn).toMatchObject({ status: 'completed', turnId: 't1' });
   });
 
   it('G2 drops stream events from a previous turn after a new turn completed', () => {
