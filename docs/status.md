@@ -7,14 +7,14 @@
 | 字段 | 值 |
 | --- | --- |
 | 任务标识 / 修订 | desktop-message-fidelity / r1 |
-| 阶段 | **待技术复核** |
-| 本轮角色 / 来源 | Cursor 力工；修复 Codex 二次复核 G1–G2 |
+| 阶段 | **执行中（第三次技术复核退回）** |
+| 本轮角色 / 来源 | Codex 技术复核；用户要求复核当前候选 |
 | 目标 / 方案入口 | [R1 对话记录忠实接驳](plan.md#下一小轮r1-对话记录忠实接驳) |
 | 允许范围 | 同 R1；`fact-store` 重同步/回合边界 + 定向回归 |
 | 禁止范围 | R2+、Talos-CLI、视觉、Tauri、宣称产品/画面通过 |
-| 验收 / 停止点 | 新候选已提交；**停于此，等 Codex 三次复核** |
+| 验收 / 停止点 | 修复下方 H1–H2，提交新候选并停在待技术复核；本候选不进入用户验收 |
 | 完成证据 | 见「实施交付」；**未**用户验收、**未**真实引擎付费复现 |
-| 下一接手 / 就绪性 | Codex：复核候选 `0be98d8` |
+| 下一接手 / 就绪性 | Cursor：继续同一 R1 的 H1–H2；不得推进 R2 |
 
 ## 触发与已确认决定
 
@@ -51,7 +51,16 @@ Codex 二次复核 `78529b9` 不通过（`d581c46` 记账 G1–G2）；用户授
 
 ## Codex 技术复核
 
-**待三次复核。** 请用 `78529b9..0be98d8` 核对 G1–G2 最小反例已关；可跑 `npm exec -- vitest run test/message-fidelity-r1.test.ts` 与 `npm run check:all`。`78529b9` 已失效。
+**2026-10-10：第三次技术复核未通过。** 候选 `0be98d8`；相对 `78529b9` 的产品修改只涉及 `src/core/fact-store.ts` 与 `test/message-fidelity-r1.test.ts`。G1 的“无实时事实可应用历史”和 G2 的“结束后拒绝流片段”已改善；本次定向 `npm exec -- vitest run test/message-fidelity-r1.test.ts` 退出 0（15 tests）。CLI 源码仍为 `d045efc` 且工作树干净。未启动引擎、调用模型或做浏览器验收。
+
+直接装载生产 `FactStore` 的最小回放 `.talos/review-r1-third.cjs`：`node --check` 与 `node` 均退出 0；输出证明以下两项仍违反 R1。脚本在忽略目录，只作诊断观察，不把退出 0 当通过。
+
+| 编号 / 优先级 | 位置 | 输入与实际结果 | 修复与定向复验 |
+| --- | --- | --- | --- |
+| H1 / P1 | `src/core/fact-store.ts:174` | resync → 实时正文 `live` → 旧历史响应 → 用户重试得到新权威历史 `fresh retry`。代码在 `liveStreamFactsDuringResync` 为 true 时直接 break，未消费/清理该请求；第二次正常历史仍被跳过，记录永久停在 `live` | 每个历史请求有可区分的身份或代次；忽略旧响应时也结束该次 pending，之后重试能应用新历史。补连续两次响应、旧响应乱序与新实时事实交错的生产路径回归 |
+| H2 / P1 | `src/core/fact-store.ts:119` | 当前 `t2` 已 `turn.started`，迟到的 `t1 turn.finished` 因生命周期 kind 绕过 turnId 检查，将 `t2` 改为 completed，且 turnId 回退到 `t1` | 生命周期事件也必须核对当前会话和回合身份；旧 finish 不得结束新 turn。补 `t1 finished` 在 `t2 running` 期间到达及重复 terminal 通知的回归 |
+
+上述复现均是合成回放，不是安装版实测。Cursor 只需修 H1–H2，保留当前已通过的正文、布局、generic、思考、斜杠与 G1/G2 其他场景。新候选再由 Codex 复核后才进入用户验收。
 
 ## 用户验收
 
