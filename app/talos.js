@@ -53,6 +53,7 @@ const ui = {
   planEmpty: '暂无计划',
   planEmptyHint: '有步骤时会显示在这里',
   usageEmpty: '暂无用量数据',
+  usageUnreported: '引擎未报告用量',
   pathUnknown: '—',
   fileTag: '相关文件',
   approvalTitle: '需要你的确认',
@@ -586,6 +587,72 @@ function scrollLogToEnd() {
   if (log) log.scrollTop = log.scrollHeight;
 }
 
+function applyInlineMarkdown(escaped) {
+  let out = escaped.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  out = out.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  out = out.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em>$1</em>');
+  return out;
+}
+
+function renderTextBlock(text) {
+  const lines = text.split('\n');
+  const parts = [];
+  let listItems = [];
+  const flushList = () => {
+    if (!listItems.length) return;
+    parts.push(`<ul>${listItems.map((item) => `<li>${applyInlineMarkdown(escapeHtml(item))}</li>`).join('')}</ul>`);
+    listItems = [];
+  };
+  for (const line of lines) {
+    const bullet = /^[-*]\s+(.+)$/.exec(line);
+    if (bullet) {
+      listItems.push(bullet[1]);
+      continue;
+    }
+    flushList();
+    if (!line.trim()) continue;
+    parts.push(`<p>${applyInlineMarkdown(escapeHtml(line))}</p>`);
+  }
+  flushList();
+  return parts.join('');
+}
+
+function renderAssistantMessageHtml(text) {
+  const segments = [];
+  const pattern = /```([^\n`]*)\n([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match;
+  while ((match = pattern.exec(text)) !== null) {
+    if (match.index > lastIndex) segments.push(renderTextBlock(text.slice(lastIndex, match.index)));
+    segments.push(`<pre><code>${escapeHtml(match[2].replace(/\n$/, ''))}</code></pre>`);
+    lastIndex = pattern.lastIndex;
+  }
+  if (lastIndex < text.length) segments.push(renderTextBlock(text.slice(lastIndex)));
+  return segments.join('') || '<p></p>';
+}
+
+function renderUserMessageHtml(text) {
+  const trimmed = String(text).trim();
+  if (!trimmed) return '<p></p>';
+  return trimmed
+    .split(/\n{2,}/)
+    .map((block) => `<p>${escapeHtml(block).replace(/\n/g, '<br>')}</p>`)
+    .join('');
+}
+
+function messageBodyHtml(message) {
+  const text = formatMessageText(message.text);
+  return message.role === 'user' ? renderUserMessageHtml(text) : renderAssistantMessageHtml(text);
+}
+
+function usageBarWidth(context) {
+  const used = context?.usageUsed;
+  const size = context?.usageSize;
+  if (used == null || size == null || size <= 0) return '0';
+  const pct = Math.min(100, Math.max(0, (used / size) * 100));
+  return `${pct}%`;
+}
+
 function renderContent() {
   const snapshot = state.snapshot;
   if (state.view === 'events') {
@@ -605,7 +672,7 @@ function renderContent() {
   const messages = snapshot.messages
     .map(
       (message) =>
-        `<article class="message"><div class="message-label"><b>${message.role === 'user' ? '你' : 'TALOS'}</b><span>${message.role === 'user' ? '指令' : '回复'}</span></div><div class="${message.role === 'user' ? 'user-message' : 'assistant-message'}"><pre>${escapeHtml(formatMessageText(message.text))}</pre></div></article>`,
+        `<article class="message"><div class="message-label"><b>${message.role === 'user' ? '你' : 'TALOS'}</b><span>${message.role === 'user' ? '指令' : '回复'}</span></div><div class="${message.role === 'user' ? 'user-message' : 'assistant-message'}">${messageBodyHtml(message)}</div></article>`,
     )
     .join('');
   const tools = snapshot.tools.length
@@ -626,10 +693,17 @@ function renderSummary() {
   $('planCount').textContent = '—';
   $('plan').innerHTML =
     `<li><span class="node">—</span><span>${ui.planEmpty}<small>${ui.planEmptyHint}</small></span></li>`;
+  const hasUsage = ctx.usageUsed != null && ctx.usageSize != null && ctx.usageSize > 0;
   const usage = ctx.usageLabel;
-  $('usageValue').innerHTML = usage ? escapeHtml(usage) : '—';
-  $('usageCap').textContent = ctx.usageCapLabel ?? (usage ? '' : ui.usageEmpty);
-  $('usageBar').style.width = usage ? '42%' : '0';
+  $('usageValue').innerHTML = hasUsage && usage ? escapeHtml(usage) : '—';
+  if (hasUsage) {
+    $('usageCap').textContent = ctx.usageCapLabel ?? '';
+  } else if (snapshot?.session?.sessionId) {
+    $('usageCap').textContent = ui.usageUnreported;
+  } else {
+    $('usageCap').textContent = ui.usageEmpty;
+  }
+  $('usageBar').style.width = usageBarWidth(ctx);
   const locations = [...new Set(tools.flatMap((tool) => tool.locations ?? []))];
   $('fileCount').textContent = String(locations.length).padStart(2, '0');
   $('files').innerHTML = locations.length

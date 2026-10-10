@@ -4,6 +4,7 @@ import type { EngineEvent } from '../core/types.js';
 import { sanitizeAssistantDisplay, textFromSessionUpdate } from './acp-text.js';
 import { extractSessionContext } from './session-control.js';
 import { parseAvailableCommands } from './slash-commands.js';
+import { mapUsageUpdateToContext } from './usage-from-acp.js';
 import { listPageLimit, nextListCursor, parseSessionIndex } from './session-index.js';
 
 export type MinimaxEventSink = (event: EngineEvent) => void;
@@ -276,6 +277,16 @@ export class MinimaxAcpAdapter {
           context: { availableCommands },
         });
       }
+      return;
+    }
+    if (update.sessionUpdate === 'usage_update' && 'used' in update && 'size' in update) {
+      const payload = update as { used: number; size: number; cost?: { amount: number; currency: string } | null };
+      this.emit({
+        kind: 'session.context',
+        processEpoch: this.processEpoch,
+        sessionId,
+        context: mapUsageUpdateToContext(payload.used, payload.size, payload.cost),
+      });
       return;
     }
     if (update.sessionUpdate === 'tool_call' || update.sessionUpdate === 'tool_call_update') {

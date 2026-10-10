@@ -4,6 +4,36 @@
   font-size: calc(22px * var(--text-scale));
 }
 
+.log .message .user-message,
+.log .message .assistant-message {
+  font-size: calc(14px * var(--text-scale));
+  line-height: 1.85;
+}
+
+.log .message .assistant-message pre {
+  margin: 12px 0 0;
+  max-height: none;
+}
+
+.log .message .assistant-message code {
+  font: 12px/1.6 var(--mono);
+  background: #1d1f1c55;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.log .message .assistant-message pre code {
+  display: block;
+  padding: 12px 14px;
+  background: #1d1f1c;
+  border: 1px solid #ffffff12;
+}
+
+.log .message .assistant-message ul {
+  margin: 8px 0 8px 18px;
+  padding: 0;
+}
+
 .inspector .plan li,
 .inspector .files li,
 .session-name {

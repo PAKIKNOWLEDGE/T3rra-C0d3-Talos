@@ -104,6 +104,8 @@ export type SessionContext = {
   modelLabel?: string;
   usageLabel?: string;
   usageCapLabel?: string;
+  usageUsed?: number;
+  usageSize?: number;
   currentModeId?: string;
   availableModes?: SessionModeOption[];
   modelConfigId?: string;
