@@ -43,6 +43,7 @@ export type EngineEvent =
       kind: 'session.history';
       processEpoch: number;
       sessionId: string;
+      historyRequestId?: number;
       messages: MessageFact[];
       timeline: TimelineItem[];
       tools: ToolFact[];
@@ -106,6 +107,7 @@ export type EngineEvent =
       processEpoch: number;
       sessionId: string;
       reason: string;
+      historyRequestId?: number;
     }
   | {
       kind: 'thought.delta';

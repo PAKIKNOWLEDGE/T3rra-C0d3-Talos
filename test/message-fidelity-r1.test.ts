@@ -2,10 +2,12 @@
  * Synthetic fixtures for desktop-message-fidelity / r1.
  * CLI semantics source: Talos-CLI d045efc92408fd444487098da9a7c04318365882
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { FactStore } from '../src/core/fact-store.js';
 import { mapStudioHistoryMessages } from '../src/adapter/session-history.js';
 import { TurnStreamProjector } from '../src/adapter/studio-stream.js';
+import { TalosStudioAdapter } from '../src/adapter/talos-studio.js';
+import { StudioJsonRpcClient } from '../src/adapter/studio-jsonrpc.js';
 import { TalosService } from '../src/service/talos-service.js';
 
 const CLI_EVIDENCE_SHA = 'd045efc92408fd444487098da9a7c04318365882';
@@ -221,6 +223,7 @@ describe('desktop-message-fidelity r1', () => {
       kind: 'session.history',
       processEpoch: 1,
       sessionId: 's1',
+      historyRequestId: 1,
       messages: [{ messageId: 'm1', role: 'assistant', text: 'NEW' }],
       timeline: [{ kind: 'assistant', messageId: 'm1', text: 'NEW' }],
       tools: [],
@@ -243,6 +246,7 @@ describe('desktop-message-fidelity r1', () => {
       kind: 'session.history',
       processEpoch: 1,
       sessionId: 's1',
+      historyRequestId: 1,
       messages: [{ messageId: 'm1', role: 'assistant', text: 'NEW' }],
       timeline: [{ kind: 'assistant', messageId: 'm1', text: 'NEW' }],
       tools: [],
@@ -266,6 +270,7 @@ describe('desktop-message-fidelity r1', () => {
       kind: 'session.history',
       processEpoch: 1,
       sessionId: 's1',
+      historyRequestId: 1,
       messages: [{ messageId: 'm1', role: 'assistant', text: 'OLD SNAPSHOT' }],
       timeline: [{ kind: 'assistant', messageId: 'm1', text: 'OLD SNAPSHOT' }],
       tools: [],
@@ -276,6 +281,7 @@ describe('desktop-message-fidelity r1', () => {
       kind: 'session.history',
       processEpoch: 1,
       sessionId: 's1',
+      historyRequestId: 2,
       messages: [{ messageId: 'm1', role: 'assistant', text: 'fresh retry' }],
       timeline: [{ kind: 'assistant', messageId: 'm1', text: 'fresh retry' }],
       tools: [],
@@ -299,6 +305,7 @@ describe('desktop-message-fidelity r1', () => {
       kind: 'session.history',
       processEpoch: 1,
       sessionId: 's1',
+      historyRequestId: 1,
       messages: [{ messageId: 'm1', role: 'assistant', text: 'OLD SNAPSHOT' }],
       timeline: [{ kind: 'assistant', messageId: 'm1', text: 'OLD SNAPSHOT' }],
       tools: [],
@@ -330,11 +337,143 @@ describe('desktop-message-fidelity r1', () => {
       kind: 'session.history',
       processEpoch: 1,
       sessionId: 's1',
+      historyRequestId: 1,
       messages: [{ messageId: 'm1', role: 'assistant', text: 'OLD SNAPSHOT' }],
       timeline: [{ kind: 'assistant', messageId: 'm1', text: 'OLD SNAPSHOT' }],
       tools: [],
     });
     expect(store.snapshot().messages[0]?.text).toBe('NEW TEXT');
+  });
+
+  it('I1 rejects out-of-order history when a newer request already applied', () => {
+    const store = new FactStore('svc');
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: '/tmp' });
+    store.apply({
+      kind: 'session.history_resync',
+      processEpoch: 1,
+      sessionId: 's1',
+      reason: 'resync-required',
+      historyRequestId: 1,
+    });
+    store.apply({
+      kind: 'session.history_resync',
+      processEpoch: 1,
+      sessionId: 's1',
+      reason: 'resync-required',
+      historyRequestId: 2,
+    });
+    store.apply({
+      kind: 'session.history',
+      processEpoch: 1,
+      sessionId: 's1',
+      historyRequestId: 2,
+      messages: [{ messageId: 'm1', role: 'assistant', text: 'NEW' }],
+      timeline: [{ kind: 'assistant', messageId: 'm1', text: 'NEW' }],
+      tools: [],
+    });
+    store.apply({
+      kind: 'session.history',
+      processEpoch: 1,
+      sessionId: 's1',
+      historyRequestId: 1,
+      messages: [{ messageId: 'm1', role: 'assistant', text: 'OLD' }],
+      timeline: [{ kind: 'assistant', messageId: 'm1', text: 'OLD' }],
+      tools: [],
+    });
+    expect(store.snapshot().messages[0]?.text).toBe('NEW');
+  });
+
+  it('I1 keeps live stream text when parallel resync histories return out of order', () => {
+    const store = new FactStore('svc');
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: '/tmp' });
+    store.apply({
+      kind: 'session.history_resync',
+      processEpoch: 1,
+      sessionId: 's1',
+      reason: 'resync-required',
+      historyRequestId: 1,
+    });
+    store.apply({
+      kind: 'session.history_resync',
+      processEpoch: 1,
+      sessionId: 's1',
+      reason: 'resync-required',
+      historyRequestId: 2,
+    });
+    store.apply({
+      kind: 'assistant.delta',
+      processEpoch: 1,
+      sessionId: 's1',
+      messageId: 'm1',
+      text: 'live',
+    });
+    store.apply({
+      kind: 'session.history',
+      processEpoch: 1,
+      sessionId: 's1',
+      historyRequestId: 2,
+      messages: [{ messageId: 'm1', role: 'assistant', text: 'STALE SNAPSHOT' }],
+      timeline: [{ kind: 'assistant', messageId: 'm1', text: 'STALE SNAPSHOT' }],
+      tools: [],
+    });
+    store.apply({
+      kind: 'session.history',
+      processEpoch: 1,
+      sessionId: 's1',
+      historyRequestId: 1,
+      messages: [{ messageId: 'm1', role: 'assistant', text: 'OLDER' }],
+      timeline: [{ kind: 'assistant', messageId: 'm1', text: 'OLDER' }],
+      tools: [],
+    });
+    expect(store.snapshot().messages[0]?.text).toBe('live');
+  });
+
+  it('I1 studio resync path tags hydrate responses and rejects stale out-of-order history', async () => {
+    const store = new FactStore('svc');
+    let adapter!: TalosStudioAdapter;
+    let messagesCall = 0;
+    let releaseFirstHydrate: (() => void) | undefined;
+    const rpc = new StudioJsonRpcClient(
+      () => {},
+      (method, params) => adapter.handleNotification(method, params),
+    );
+    adapter = TalosStudioAdapter.attach(rpc, 1, (event) => {
+      store.apply(event);
+    });
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: '/tmp' });
+    vi.spyOn(rpc, 'request').mockImplementation(async (method) => {
+      if (method !== 'session/messages') return { messages: [], hasMore: false };
+      messagesCall += 1;
+      if (messagesCall === 1) {
+        await new Promise<void>((resolve) => {
+          releaseFirstHydrate = resolve;
+        });
+        return {
+          messages: [{ id: 'm1', role: 'assistant', content: 'OLD' }],
+          hasMore: false,
+        };
+      }
+      return {
+        messages: [{ id: 'm1', role: 'assistant', content: 'NEW' }],
+        hasMore: false,
+      };
+    });
+    adapter.handleNotification('turn/event', {
+      sessionId: 's1',
+      event: { type: 'resync-required' },
+    });
+    adapter.handleNotification('turn/event', {
+      sessionId: 's1',
+      event: { type: 'resync-required' },
+    });
+    await vi.waitFor(() => expect(store.snapshot().messages[0]?.text).toBe('NEW'));
+    releaseFirstHydrate?.();
+    await vi.waitFor(() => expect(messagesCall).toBe(2));
+    expect(store.snapshot().messages[0]?.text).toBe('NEW');
+    adapter.close();
   });
 
   it('G2 drops late stream events after the turn has finished', () => {

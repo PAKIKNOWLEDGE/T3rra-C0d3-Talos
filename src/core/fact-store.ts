@@ -32,7 +32,10 @@ const TURN_LIFECYCLE_KINDS = new Set<EngineEvent['kind']>(['turn.started', 'turn
 
 export class FactStore {
   private readonly state: ServiceSnapshot;
-  private pendingHistoryResyncCount = 0;
+  private historyRequestSeq = 0;
+  private maxAppliedHistoryRequestId = 0;
+  private readonly pendingHistoryRequestIds = new Set<number>();
+  private readonly liveFactSkipHistoryRequestIds = new Set<number>();
   private liveStreamFactsDuringResync = false;
 
   constructor(serviceEpoch: string) {
@@ -82,8 +85,7 @@ export class FactStore {
     this.state.queue = [];
     this.state.inspection = { skillNames: [], mcpServerNames: [] };
     this.state.inputSummaries = [];
-    this.pendingHistoryResyncCount = 0;
-    this.liveStreamFactsDuringResync = false;
+    this.resetHistoryRequestState();
     this.state.revision += 1;
   }
 
@@ -99,9 +101,16 @@ export class FactStore {
     this.state.queue = [];
     this.state.inspection = { skillNames: [], mcpServerNames: [] };
     this.state.inputSummaries = [];
-    this.pendingHistoryResyncCount = 0;
-    this.liveStreamFactsDuringResync = false;
+    this.resetHistoryRequestState();
     this.state.revision += 1;
+  }
+
+  private resetHistoryRequestState() {
+    this.historyRequestSeq = 0;
+    this.maxAppliedHistoryRequestId = 0;
+    this.pendingHistoryRequestIds.clear();
+    this.liveFactSkipHistoryRequestIds.clear();
+    this.liveStreamFactsDuringResync = false;
   }
 
   private shouldApply(event: EngineEvent): boolean {
@@ -132,10 +141,58 @@ export class FactStore {
     return true;
   }
 
+  private applySessionHistory(
+    event: Extract<EngineEvent, { kind: 'session.history' }>,
+  ): void {
+    const requestId = event.historyRequestId ?? 0;
+    if (requestId > 0) {
+      if (requestId < this.maxAppliedHistoryRequestId) {
+        this.pendingHistoryRequestIds.delete(requestId);
+        this.liveFactSkipHistoryRequestIds.delete(requestId);
+        return;
+      }
+      const skipBecauseLiveFacts = this.liveFactSkipHistoryRequestIds.has(requestId);
+      this.pendingHistoryRequestIds.delete(requestId);
+      this.liveFactSkipHistoryRequestIds.delete(requestId);
+      if (skipBecauseLiveFacts) {
+        return;
+      }
+      this.maxAppliedHistoryRequestId = Math.max(this.maxAppliedHistoryRequestId, requestId);
+      this.liveStreamFactsDuringResync = false;
+      this.state.messages = structuredClone(event.messages);
+      this.state.timeline = structuredClone(event.timeline);
+      this.state.tools = structuredClone(event.tools);
+      this.state.session = { ...this.state.session, historyLoadError: undefined };
+      return;
+    }
+    const skipBecauseLiveFacts = this.liveStreamFactsDuringResync;
+    if (this.pendingHistoryRequestIds.size > 0) {
+      const oldest = this.pendingHistoryRequestIds.values().next().value;
+      if (oldest !== undefined) {
+        this.pendingHistoryRequestIds.delete(oldest);
+        this.liveFactSkipHistoryRequestIds.delete(oldest);
+      }
+    }
+    if (skipBecauseLiveFacts) {
+      return;
+    }
+    this.liveStreamFactsDuringResync = false;
+    this.state.messages = structuredClone(event.messages);
+    this.state.timeline = structuredClone(event.timeline);
+    this.state.tools = structuredClone(event.tools);
+    this.state.session = { ...this.state.session, historyLoadError: undefined };
+  }
+
   apply(event: EngineEvent): boolean {
     if (!this.shouldApply(event)) return false;
-    if (this.pendingHistoryResyncCount > 0 && LIVE_FACT_DURING_RESYNC_KINDS.has(event.kind)) {
+    if (
+      this.pendingHistoryRequestIds.size > 0 &&
+      LIVE_FACT_DURING_RESYNC_KINDS.has(event.kind)
+    ) {
       this.liveStreamFactsDuringResync = true;
+      for (const requestId of this.pendingHistoryRequestIds) {
+        this.liveFactSkipHistoryRequestIds.add(requestId);
+      }
     }
     if (event.processEpoch > this.state.connection.processEpoch) {
       this.state.connection.processEpoch = event.processEpoch;
@@ -177,18 +234,7 @@ export class FactStore {
         break;
       case 'session.history':
         if (this.state.session.sessionId === event.sessionId) {
-          const skipBecauseLiveFacts = this.liveStreamFactsDuringResync;
-          if (this.pendingHistoryResyncCount > 0) {
-            this.pendingHistoryResyncCount -= 1;
-          }
-          if (skipBecauseLiveFacts) {
-            break;
-          }
-          this.liveStreamFactsDuringResync = false;
-          this.state.messages = structuredClone(event.messages);
-          this.state.timeline = structuredClone(event.timeline);
-          this.state.tools = structuredClone(event.tools);
-          this.state.session = { ...this.state.session, historyLoadError: undefined };
+          this.applySessionHistory(event);
         }
         break;
       case 'session.history_error':
@@ -284,10 +330,15 @@ export class FactStore {
       case 'assistant.layout':
         this.applyAssistantLayout(event.messageId, event.timeline, event.tools, event.combinedText);
         break;
-      case 'session.history_resync':
-        this.pendingHistoryResyncCount += 1;
+      case 'session.history_resync': {
+        const requestId = event.historyRequestId ?? ++this.historyRequestSeq;
+        if (event.historyRequestId) {
+          this.historyRequestSeq = Math.max(this.historyRequestSeq, event.historyRequestId);
+        }
+        this.pendingHistoryRequestIds.add(requestId);
         this.liveStreamFactsDuringResync = false;
         break;
+      }
       case 'tool.update':
         this.upsertTool(event.toolCallId, event.patch);
         break;

@@ -48,6 +48,7 @@ export type StudioInitializeResult = {
 };
 
 export class TalosStudioAdapter {
+  private historyRequestSeq = 0;
   private turnCounter = 0;
   private readonly activeTurnBySession = new Map<string, string>();
   private readonly turnWaiters = new Map<string, TurnWaiter>();
@@ -119,8 +120,9 @@ export class TalosStudioAdapter {
         turnId,
       )) {
         if (event.kind === 'session.history_resync') {
-          this.emit(event);
-          void this.hydrateSessionHistory(sessionId);
+          const historyRequestId = this.allocateHistoryRequestId();
+          this.emit({ ...event, historyRequestId });
+          void this.hydrateSessionHistory(sessionId, historyRequestId);
           continue;
         }
         this.emit(event);
@@ -634,7 +636,13 @@ export class TalosStudioAdapter {
     }
   }
 
-  private async hydrateSessionHistory(sessionId: string) {
+  private allocateHistoryRequestId(): number {
+    this.historyRequestSeq += 1;
+    return this.historyRequestSeq;
+  }
+
+  private async hydrateSessionHistory(sessionId: string, historyRequestId?: number) {
+    const requestId = historyRequestId ?? this.allocateHistoryRequestId();
     try {
       const pages: unknown[][] = [];
       const seenCursors = new Set<string>();
@@ -655,6 +663,7 @@ export class TalosStudioAdapter {
         kind: 'session.history',
         processEpoch: this.processEpoch,
         sessionId,
+        historyRequestId: requestId,
         messages,
         timeline,
         tools,
