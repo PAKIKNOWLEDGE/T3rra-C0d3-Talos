@@ -6,27 +6,38 @@
 
 | 字段 | 值 |
 | --- | --- |
-| 任务标识 / 修订 | `talos-desktop-usage-restore` / r1 |
-| 阶段 | **待用户验收**：用量 + 回复阅读面（从 archive **拆回** `main`，不含思考/时间线） |
-| 本轮角色 | Astra：危机处理。未验收代码仍禁 merge |
-| 触发依据 | 整包 archive 把你验过的用量一并埋掉；必须拆开，不能再当一团 |
-| 允许 | 仅用量通道 + 气泡 markdown/字体。**禁止**思考强度、时间线、Tauri |
-| 停止点 | 机读已绿。**你目视用量数字 + 回复非等宽** 后说通过。不自动开阶段 1 |
-| 完成证据 | 机读 `typecheck` + `test:core` **38/38**。产品待你验 |
-| 下一接手 | **已就绪：主人验收用量/阅读面。** 通过后再说「推进」才做思考强度 |
+| 任务标识 / 修订 | `talos-desktop-pre-tauri` / **g2（诚实接手）** |
+| 阶段 | **产品未验收、基线未发布**；主人要求下一位接手；**默认停功能扩张** |
+| 本轮角色 / 来源 | 文档收口；代码以工作树为准，**无干净 release commit** |
+| 目标 / 方案入口 | 困境全文 **[handoff-honest-2026-10-10.md](handoff-honest-2026-10-10.md)**；合同 [plan](plan.md)、[fulfillment-matrix](fulfillment-matrix.md) |
+| 允许范围 | 主人点名缺陷（**P0 正文粘连** 等）；修完须附 repro + 目视步骤 |
+| 禁止范围 | 无人值守加测试凑绿、扩带 6、未授权改 Talos-CLI、宣称「已验收」 |
+| 验收 / 停止点 | 主人 `dev:product` 目视带 0 起；说「通过」前不算完成 |
+| 完成证据 | **无**。机读曾在某轮报绿 ≠ 当前树；**首条付费 turn 已失败**（粘连词 + ENGINE JSON 噪音） |
+| 下一接手 | 先读 [诚实接手说明](handoff-honest-2026-10-10.md) → `check:all` 自证 → 修 P0 → 再带 0 目视 8 步 |
 
-## 代码现在分两处（可控）
+## 触发依据
 
-| 在哪 | 有什么 |
-| --- | --- |
-| **`main` 工作区** | 带 1 + **用量 `usage_update`** + **回复 markdown/Harmony**。无思考胶囊、无时间线 |
-| **`archive/unverified-harness-2026-10-10` (`afbac94`)** | 思考强度 + 时间线 + 删确认 dialog 的未验收混合物。**禁止 merge** |
+主人对代理轮次失望：付费首句即 UI 大失败；判定为屎山接手，要求把从头到尾的困境写入 docs。
 
-## 你怎么验（只验拆回来的）
+## 已知阻塞（比 plan 更急）
 
-1. `npm run dev:product -- --cwd <绝对路径>`
-2. 发一条短指令（或刷新已有会话）
-3. 右栏有 `12.3k / 1M` 这类数，或明确「引擎未报告用量」
-4. 回复是正文，不是整段等宽 `<pre>`，`**粗体**` 能显示为粗体
+| 优先级 | 项 | 状态 |
+| --- | --- | --- |
+| P0 | 助手回复英文 **单词粘连**（空格丢失） | **未修**，见诚实接手 §6 |
+| P1 | `query_collapse_view` 等 **裸 JSON** 进时间线 | **未修** |
+| P2 | **大量 WIP 未提交**（studio 迁接主体在未跟踪/已改文件） | 接手者定基线 |
 
-通过 / 不通过 回一句即可。
+## Git 事实（2026-10-10）
+
+- 分支 `main` 比 `origin/main` **超前 5 commit**。  
+- 另有 **大范围 modified + untracked**（`talos-studio.ts`、`studio-*.ts`、`fulfillment-matrix.md`、多份 `test/studio-*.ts` 等）。  
+- **不能** 用「main 已 push」描述当前完成度。
+
+## 你怎么启动
+
+`npm run dev:product -- --cwd <绝对路径>` → `http://127.0.0.1:5193/`
+
+## 同质化根因（仍有效）
+
+换 spawn 不等于换合同。每改一行查 [fulfillment-matrix](fulfillment-matrix.md)：用户动作 → studio 方法 → FactStore → 诚实 UI。内建斜杠走 `execute_slash`，**禁止** `turn/start`。

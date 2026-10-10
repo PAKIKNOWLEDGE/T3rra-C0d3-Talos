@@ -1,13 +1,48 @@
-import type { SessionContext, SessionModeOption, SessionModelOption } from '../core/types.js';
+import type {
+  SessionContext,
+  SessionModeOption,
+  SessionModelOption,
+  SessionThinkingOption,
+} from '../core/types.js';
 import { parseAvailableCommands } from './slash-commands.js';
+
+/** Talos ACP wire id for `thought_level` select (`control-state.ts`). */
+export const THINKING_EFFORT_CONFIG_ID = 'thinkingEffort';
 
 type ModeEntry = { id?: string; name?: string; description?: string };
 type ConfigOption = {
+  id?: string;
   category?: string;
   name?: string;
   currentValue?: string;
   options?: Array<{ value?: string; name?: string }>;
 };
+
+function isModelConfigOption(option: ConfigOption): boolean {
+  const key = String(option.id ?? option.category ?? option.name ?? '').toLowerCase();
+  return key === 'model' || key.includes('model');
+}
+
+function isPermissionConfigOption(option: ConfigOption): boolean {
+  const id = String(option.id ?? '').toLowerCase();
+  const category = String(option.category ?? '').toLowerCase();
+  return id === 'permissionmode' || category.includes('permission');
+}
+
+/**
+ * Any engine-advertised thought / thinking select (effort levels or on-off values).
+ * Talos-CLI publishes one option: id `thinkingEffort`, category `thought_level`.
+ */
+export function isThoughtLevelConfigOption(option: ConfigOption): boolean {
+  if (isModelConfigOption(option) || isPermissionConfigOption(option)) return false;
+  const id = String(option.id ?? '').toLowerCase();
+  if (id === THINKING_EFFORT_CONFIG_ID.toLowerCase()) return true;
+  const category = String(option.category ?? '').toLowerCase();
+  if (category === 'thought_level' || category.includes('thought')) return true;
+  const name = String(option.name ?? '').toLowerCase();
+  if (name.includes('thinking')) return true;
+  return false;
+}
 
 /** Talos ACP returns `modes` as SessionModeState (`currentModeId` + `availableModes`), not a bare array. */
 function modeLabelFromModes(modes: unknown): string | undefined {
@@ -98,6 +133,32 @@ function extractModelOptions(configOptions: unknown): Pick<
   return out;
 }
 
+function extractThinkingOptions(configOptions: unknown): Pick<
+  SessionContext,
+  'thinkingConfigId' | 'currentThinkingValue' | 'thinkingOptions' | 'thinkingLabel'
+> {
+  const out: Pick<
+    SessionContext,
+    'thinkingConfigId' | 'currentThinkingValue' | 'thinkingOptions' | 'thinkingLabel'
+  > = {};
+  for (const option of configOptionList(configOptions)) {
+    if (!isThoughtLevelConfigOption(option)) continue;
+    out.thinkingConfigId = option.id ?? THINKING_EFFORT_CONFIG_ID;
+    out.currentThinkingValue = option.currentValue;
+    const options: SessionThinkingOption[] = (option.options ?? [])
+      .filter((item) => item.value)
+      .map((item) => ({
+        value: item.value!,
+        name: item.name ?? item.value!,
+      }));
+    if (options.length) out.thinkingOptions = options;
+    const display = displayValueForConfigOption(option);
+    if (display) out.thinkingLabel = display;
+    break;
+  }
+  return out;
+}
+
 export function extractSessionContext(result: unknown): SessionContext | undefined {
   if (!result || typeof result !== 'object') return undefined;
   const payload = result as { modes?: unknown; configOptions?: unknown; availableCommands?: unknown };
@@ -105,12 +166,17 @@ export function extractSessionContext(result: unknown): SessionContext | undefin
   const context: SessionContext = {
     ...extractModeOptions(payload.modes),
     ...extractModelOptions(payload.configOptions),
+    ...extractThinkingOptions(payload.configOptions),
     ...(availableCommands ? { availableCommands } : {}),
   };
   for (const option of configOptionList(payload.configOptions)) {
     const display = displayValueForConfigOption(option);
     if (!display) continue;
     const key = String(option.id ?? option.category ?? option.name ?? '').toLowerCase();
+    if (isThoughtLevelConfigOption(option)) {
+      if (!context.thinkingLabel) context.thinkingLabel = display;
+      continue;
+    }
     if (key === 'model' || key.includes('model')) {
       if (!context.modelLabel) context.modelLabel = display;
       continue;

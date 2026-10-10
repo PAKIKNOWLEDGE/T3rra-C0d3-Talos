@@ -1,6 +1,6 @@
-# Tauri 2 外壳（阶段 G）
+# Tauri 2 外壳（plan 带 6）
 
-Talos Desktop 当前以 **Vite 产品壳 + 观察服务**（`npm run dev:product`）开发。Tauri 2 是 **发行形态**，排在控制面可用之后（见 [plan](plan.md) 阶段表）。
+Talos Desktop 当前以 **Vite 产品壳 + 观察服务**（`npm run dev:product`）开发。Tauri 2 是 **发行形态**（[plan 带 6](plan.md)）。门禁是带 0 目视过，不跟 fork / 插件 / 附件绑死。
 
 ## 进入 Tauri 前的产品门禁（非探针）
 
@@ -18,5 +18,5 @@ Talos Desktop 当前以 **Vite 产品壳 + 观察服务**（`npm run dev:product
 ## 明确不在 Tauri 首轮
 
 - 改 demo 构图。
-- 把引擎模块打进二进制绕过 ACP。
+- 把引擎模块打进二进制绕过 `talos studio`。
 - 用空壳安装包掩盖未接线的控制台控件。

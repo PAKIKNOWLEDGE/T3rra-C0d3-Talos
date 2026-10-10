@@ -133,6 +133,48 @@ describe('session context extraction', () => {
     expect(context?.modelConfigId).toBe('model');
   });
 
+  it('extracts thought_level select (effort) from configOptions', () => {
+    const context = extractSessionContext({
+      modes: { currentModeId: 'default', availableModes: [{ id: 'default', name: 'Default' }] },
+      configOptions: [
+        {
+          id: 'thinkingEffort',
+          category: 'thought_level',
+          currentValue: 'medium',
+          options: [
+            { value: 'low', name: '低' },
+            { value: 'medium', name: '中' },
+            { value: 'high', name: '高' },
+          ],
+        },
+      ],
+    });
+    expect(context?.thinkingConfigId).toBe('thinkingEffort');
+    expect(context?.currentThinkingValue).toBe('medium');
+    expect(context?.thinkingOptions).toHaveLength(3);
+    expect(context?.thinkingLabel).toBe('中');
+  });
+
+  it('extracts thought_level on/off values from configOptions', () => {
+    const context = extractSessionContext({
+      configOptions: [
+        {
+          id: 'thinkingEffort',
+          category: 'thought_level',
+          name: 'Thinking effort',
+          currentValue: 'true',
+          options: [
+            { value: 'false', name: 'False' },
+            { value: 'true', name: 'True' },
+          ],
+        },
+      ],
+    });
+    expect(context?.thinkingConfigId).toBe('thinkingEffort');
+    expect(context?.currentThinkingValue).toBe('true');
+    expect(context?.thinkingOptions?.map((o) => o.value)).toEqual(['false', 'true']);
+  });
+
   it('reads Talos SessionModeState shape for modes', () => {
     const context = extractSessionContext({
       modes: {
@@ -152,6 +194,9 @@ describe('fact store messages and context', () => {
   it('appends user and assistant chunks by messageId', () => {
     const service = new TalosService(new FactStore('s'), {
       sendPrompt: async () => {},
+      executeSlash: async () => {},
+      renameSession: async () => {},
+      archiveSession: async () => {},
       cancel: async () => {},
       replyApproval: async () => {},
       setMode: async () => {},
@@ -159,6 +204,22 @@ describe('fact store messages and context', () => {
       createSession: async () => {},
       loadSession: async () => {},
       deleteSession: async () => {},
+      replyQuestionnaire: async () => {},
+      dismissQuestionnaire: async () => {},
+      searchWorkspaceFiles: async () => [],
+      steerTurn: async () => {},
+      enqueueMessage: async () => {},
+      deleteQueueItem: async () => {},
+      continueQueue: async () => {},
+      previewRewind: async () => 'preview',
+      rewindSession: async () => {},
+      steerQueueItem: async () => {},
+      getForkOptions: async () => ({ canFork: false }),
+      forkSession: async () => 's2',
+      editSessionMessage: async () => {},
+      updateQueueItem: async () => {},
+      retrySessionHistory: async () => {},
+      listWorkspaceFiles: async () => [],
     });
     service.apply({ kind: 'connected', processEpoch: 1 });
     service.apply({
@@ -195,9 +256,12 @@ describe('fact store messages and context', () => {
     ]);
   });
 
-  it('merges session.context into snapshot', () => {
+  it('keeps thought chunks on the timeline separate from assistant text', () => {
     const service = new TalosService(new FactStore('s'), {
       sendPrompt: async () => {},
+      executeSlash: async () => {},
+      renameSession: async () => {},
+      archiveSession: async () => {},
       cancel: async () => {},
       replyApproval: async () => {},
       setMode: async () => {},
@@ -205,6 +269,74 @@ describe('fact store messages and context', () => {
       createSession: async () => {},
       loadSession: async () => {},
       deleteSession: async () => {},
+      replyQuestionnaire: async () => {},
+      dismissQuestionnaire: async () => {},
+      searchWorkspaceFiles: async () => [],
+      steerTurn: async () => {},
+      enqueueMessage: async () => {},
+      deleteQueueItem: async () => {},
+      continueQueue: async () => {},
+      previewRewind: async () => 'preview',
+      rewindSession: async () => {},
+      steerQueueItem: async () => {},
+      getForkOptions: async () => ({ canFork: false }),
+      forkSession: async () => 's2',
+      editSessionMessage: async () => {},
+      updateQueueItem: async () => {},
+      retrySessionHistory: async () => {},
+      listWorkspaceFiles: async () => [],
+    });
+    service.apply({ kind: 'connected', processEpoch: 1 });
+    service.apply({
+      kind: 'thought.delta',
+      processEpoch: 1,
+      sessionId: 's1',
+      thoughtId: 'thought-a1',
+      text: 'reason',
+    });
+    service.apply({
+      kind: 'assistant.delta',
+      processEpoch: 1,
+      sessionId: 's1',
+      messageId: 'a1',
+      text: 'hi',
+    });
+    expect(service.snapshot().timeline).toEqual([
+      { kind: 'thought', thoughtId: 'thought-a1', text: 'reason' },
+      { kind: 'assistant', messageId: 'a1', text: 'hi' },
+    ]);
+    expect(service.snapshot().messages).toEqual([{ messageId: 'a1', role: 'assistant', text: 'hi' }]);
+  });
+
+  it('merges session.context into snapshot', () => {
+    const service = new TalosService(new FactStore('s'), {
+      sendPrompt: async () => {},
+      executeSlash: async () => {},
+      renameSession: async () => {},
+      archiveSession: async () => {},
+      cancel: async () => {},
+      replyApproval: async () => {},
+      setMode: async () => {},
+      setConfigOption: async () => {},
+      createSession: async () => {},
+      loadSession: async () => {},
+      deleteSession: async () => {},
+      replyQuestionnaire: async () => {},
+      dismissQuestionnaire: async () => {},
+      searchWorkspaceFiles: async () => [],
+      steerTurn: async () => {},
+      enqueueMessage: async () => {},
+      deleteQueueItem: async () => {},
+      continueQueue: async () => {},
+      previewRewind: async () => 'preview',
+      rewindSession: async () => {},
+      steerQueueItem: async () => {},
+      getForkOptions: async () => ({ canFork: false }),
+      forkSession: async () => 's2',
+      editSessionMessage: async () => {},
+      updateQueueItem: async () => {},
+      retrySessionHistory: async () => {},
+      listWorkspaceFiles: async () => [],
     });
     service.apply({ kind: 'connected', processEpoch: 1 });
     service.apply({
@@ -220,6 +352,49 @@ describe('fact store messages and context', () => {
       context: { usageLabel: '9k' },
     });
     expect(service.snapshot().context).toEqual({ modelLabel: 'm1', usageLabel: '9k' });
+  });
+
+  it('derives thinkingLabel from thinkingOptions on session.context', () => {
+    const service = new TalosService(new FactStore('s'), {
+      sendPrompt: async () => {},
+      executeSlash: async () => {},
+      renameSession: async () => {},
+      archiveSession: async () => {},
+      cancel: async () => {},
+      replyApproval: async () => {},
+      setMode: async () => {},
+      setConfigOption: async () => {},
+      createSession: async () => {},
+      loadSession: async () => {},
+      deleteSession: async () => {},
+      replyQuestionnaire: async () => {},
+      dismissQuestionnaire: async () => {},
+      searchWorkspaceFiles: async () => [],
+      steerTurn: async () => {},
+      enqueueMessage: async () => {},
+      deleteQueueItem: async () => {},
+      continueQueue: async () => {},
+      previewRewind: async () => 'preview',
+      rewindSession: async () => {},
+      steerQueueItem: async () => {},
+      getForkOptions: async () => ({ canFork: false }),
+      forkSession: async () => 's2',
+      editSessionMessage: async () => {},
+      updateQueueItem: async () => {},
+      retrySessionHistory: async () => {},
+      listWorkspaceFiles: async () => [],
+    });
+    service.apply({ kind: 'connected', processEpoch: 1 });
+    service.apply({
+      kind: 'session.context',
+      processEpoch: 1,
+      sessionId: 's1',
+      context: {
+        currentThinkingValue: 'low',
+        thinkingOptions: [{ value: 'low', name: '低' }, { value: 'high', name: '高' }],
+      },
+    });
+    expect(service.snapshot().context?.thinkingLabel).toBe('低');
   });
 });
 

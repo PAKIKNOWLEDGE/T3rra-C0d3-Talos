@@ -1,0 +1,180 @@
+# 诚实接手说明（2026-10-10）
+
+**读者**：下一位维护者（人或代理）。  
+**语气**：不粉饰。机读绿 ≠ 产品可用。主人第一次付费模型调用已在 UI 上明显失败。
+
+**执行入口仍从 [status.md](status.md) 读交接卡**；本文是「从头到尾 + 当前困境」长文，避免把历史塞进 status 逐日日志。
+
+---
+
+## 1. 这个项目本来要做什么
+
+| 层 | 事实 |
+| --- | --- |
+| 产品 | **Talos Desktop**：Windows 优先的「工作室」窗口，Endfield 族视觉；静态正本 [demo/talos.html](../demo/talos.html)，浏览器产品壳在 [app/](../app/)。 |
+| 引擎 | 相邻仓 **Talos-CLI**（`C:\DEV\develop\Talos-CLI`），用户安装全局 CLI `@pakiknowledge/tal0s-code`（本机曾测 **0.1.4**）。桌面 **只** 通过子进程 **`talos studio`** + JSON-RPC v2 对话，不 import 引擎源码。 |
+| 北星 | 对标 Codex / pi-desktop 的「活目录 + 记录 + 检视 + 底栏投料」；**Tauri 真窗口是带 6**，当前目标是在 Tauri 前把 **带 0–5** 做成诚实产品。 |
+| 纪律 | [fulfillment-matrix.md](fulfillment-matrix.md)：每个用户动作必须对应 studio 方法 → `EngineEvent` → `FactStore` → UI；禁止把内建斜杠塞进 `turn/start`。 |
+
+Rhodes 老仓 `t3rra-C0d3` 只作经验只读，不是运行时依赖。
+
+---
+
+## 2. 时间线（简史）
+
+1. **视觉先行**：`demo/talos.html` 已验收的静态交互（模拟数据），是视觉正本；`app/` 共用 `demo/talos.css` + `app/product.css`。
+2. **第一版接驳**：早期桌面曾沿 **ACP / 旧 spawn 路径** 接引擎（`minimax-acp.ts`、`usage-from-acp.ts` 等文件名仍留着）。主人明确要求吸取「换 spawn 不换合同」的教训。
+3. **Studio 迁接（2026-10 集中开发）**：大量新文件落在 `src/adapter/talos-studio.ts` 及 `studio-*.ts` 切片、`src/host/talos-studio-process.ts`；计划见 [plan.md](plan.md) 各「带」。
+4. **机读扩张**：在主人未目视签字前，代理轮次持续增加 **vitest 桩**（`studio-band0`…`band5`、`band-acceptance`、`ui-manifest` 等），`test:core` 脚本里列了 **二十余个** 测试文件；`npm run check:all` 曾在某轮报告为绿，**不代表** 真机付费对话质量过关。
+5. **2026-10-10 主人验收**：第一次真实 prompt（`hello who are you`）后，助手正文出现 **单词粘连**（如 `inthe`、`I'mhere`、`tohelp`）；时间线里还有 **`query_collapse_view` 原始 JSON** 的「事件 ENGINE」条。主人判定为付费大失败，并要求停止「左右脑互搏」（一边说等目视、一边继续加测试）。
+
+---
+
+## 3. 仓库现在长什么样（架构）
+
+```
+浏览器 app/talos.js + index.html
+        │ WebSocket
+        ▼
+src/service/ws-server.ts → talos-service.ts（动作派发）
+        │
+        ▼
+src/core/fact-store.ts（EngineEvent 归一状态 + timeline）
+        ▲
+        │ EngineEvent
+src/adapter/talos-studio.ts（JSON-RPC 编排，~900+ 行）
+        ├── studio-jsonrpc.ts
+        ├── studio-stream.ts（turn/event → assistant/thought/tool/notice）
+        ├── session-history.ts（session/messages → 历史）
+        ├── studio-slash.ts / slash-prompt.ts
+        └── studio-inspection.ts、studio-fork.ts、…（带 4–5 切片）
+        ▲
+        │ stdio JSON-RPC
+子进程: talos studio  （src/host/talos-studio-process.ts）
+```
+
+- **UI**：`app/talos.js` 是大型单文件视图（渲染、composer、斜杠、`@`、队列条带等）；`app/ui-manifest.json` 登记控件 wired/static。
+- **类型合同**：`src/core/types.ts`（消息、时间线、队列、检视等）。
+- **遗留**：`minimax-acp.ts` 等仍参与 **单测**；`startTalosAcpProcess` 在 `talos-studio-process.ts` 里 **别名** 到 studio 启动，易误导读者以为还在跑 ACP 子进程。
+
+---
+
+## 4. 声称交付 vs 真实状态
+
+| 声称（文档/机读） | 真实（2026-10-10） |
+| --- | --- |
+| 带 0 studio 迁接完成 | 源码路径已切 `talos studio`；【源码】大量 RPC 在 adapter 内实现；【**未验**】主人全链路目视带 0–5。 |
+| `npm run check:all` 绿 | 仅证明 typecheck + 选定 vitest + demo 结构脚本 + handoff 脚本；【**未验**】接手者当前工作树是否仍绿（见下节 Git）。 |
+| 履约矩阵行闭合 | 矩阵是 **设计合同** + 部分桩测；**不是** 每条都在真引擎上跑过。 |
+| plan「带 N 未绿不开 N+1」 | 代码上已提前铺了带 3–5 的 UI/动作/测试，与严格分期 **不一致**；接手需自己划清「能点的」和「仅桩过」的边界。 |
+| 产品可收费使用 | **否**。首条付费回复即出现正文质量/排版级失败（粘连词）。 |
+
+---
+
+## 5. 为什么主人说这是「屎山」（客观清单）
+
+1. **工作树巨大且未收口**  
+   - `main` 相对 `origin/main` **ahead 5**；另有 **大量已改未提交 + 未跟踪** 文件（整目录 `studio-*.ts`、`fulfillment-matrix.md`、多份 `test/studio-*.ts` 等）。  
+   - 没有一条「已发布 / 已验收」的干净基线 commit 对应当前文档描述的完成度。  
+   - Windows 工作区有时出现 **同文件正反斜杠重复** 的 git 显示，增加合并与审查成本。
+
+2. **测试替代了产品证明**  
+   - 测试普遍 **mock JSON-RPC**，不跑真实 `talos studio` 流式回合。  
+   - `ui-manifest.test.ts` 只检查 DOM id 登记，不检查渲染是否正确。  
+   - 代理轮次在主人不在时仍扩 `test:core` 列表，制造「完成感」，触发主人愤怒。
+
+3. **双轨历史（ACP 名 + Studio 实）**  
+   - 文件名、测试名仍带 `acp`/`minimax`；新接手者易误判运行时协议。  
+   - `docs/adapters/talos-engine.md` 内曾并存 **互相矛盾** 的句子（一边说握手未验，一边说 0.1.4 已测）；以 **本文 + 你亲自 `spike:initialize`** 为准。
+
+4. **单文件膨胀**  
+   - `talos-studio.ts`、`app/talos.js` 体量过大，边界是「能跑」而非「可维护」。  
+   - `FactStore` 的 timeline 追加逻辑（`appendTimelineAssistant` 等与 notice/流式交错）难推理，**粘连 bug 未定位未修**。
+
+5. **产品诚实度缺口**  
+   - 引擎 `generic` 事件（如 `query_collapse_view`）被投影成用户可见 **ENGINE 事件卡 + 原始 JSON**，像调试泄露，不像工作室产品。  
+   - 「认了」项（假登录、插件市场等）需持续核对 UI 是否仍偷跑假按钮。
+
+6. **流程失信**  
+   - status 曾写「停改代码、待主人目视」，同时会话仍继续改代码/加测试。  
+   - 下一位必须：**主人说「通过」之前，默认只修明确报障项，不扩 scope。**
+
+---
+
+## 6. 已确认缺陷（接手优先）
+
+### P0：助手正文单词粘连（主人已复现）
+
+- **现象**：助手气泡内英文词边界空格消失（截图 2026-10-10 Session 001）。  
+- **状态**：**未修**；会话内只做了源码浏览，无合并修复。  
+- **建议调查顺序**（不保证根因）：  
+  1. WebSocket 快照里 `timeline` / `messages` 中 `assistant` 的 `text` 是否已无空格（区分数据 vs 渲染）。  
+  2. `src/adapter/studio-stream.ts`：`turn/event` 的 `delta` 是否只读 `content` 而忽略 `parts`；引擎若按 token 切块是否缺前导空格。  
+  3. `src/core/fact-store.ts`：`assistant.delta` 与 `appendTimelineAssistant` 在 **notice 插入时间线** 后是否错误分叉/去重。  
+  4. `app/talos.js`：`renderAssistantMessageHtml` / `applyInlineMarkdown` 是否误伤空格（目前看概率低于数据层）。  
+  5. `sanitizeAssistantDisplay` 对每个 delta `trimStart()` 是否在与无空格 token 拼接时放大问题。
+
+### P1：时间线 ENGINE 噪音
+
+- **现象**：`query_collapse_view: {"query_collapse_view":{...}}` 整段 JSON 展示给用户。  
+- **位置**：`studio-stream.ts` `generic` → `stream.notice` → UI `message-notice`。  
+- **期望**：过滤内部视图事件，或折叠为一句人话；需产品决定，但至少不应默认裸 JSON。
+
+### P2：Git / 发布基线不存在
+
+- 接手者应先决定：**WIP 一次大提交** vs **按带拆分提交** vs **丢弃部分未跟踪**。  
+- 在主人未确认前，**不要 force push**，不要假装已发布。
+
+---
+
+## 7. 机读闸（接手后自证）
+
+```powershell
+cd C:\DEV\develop\T3rra-C0d3-Talos
+npm run check:env
+npm run typecheck
+npm run test:core
+npm run check:all
+npm run spike:initialize
+npm run dev:product -- --cwd <你的工作区绝对路径>
+```
+
+- 浏览器：`http://127.0.0.1:5193/`  
+- **目视清单**：[plan.md § 带 0 目视](plan.md#下一小轮带-0-目视验收)（8 步）；带 1–5 抽检见 plan 与 matrix。  
+- **禁止**：用 Puppeteer/Playwright 代替主人目视（见 [workflow.md](workflow.md)）。
+
+---
+
+## 8. 文档地图（别全读，按任务读）
+
+| 文件 | 何时读 |
+| --- | --- |
+| [AGENTS.md](../AGENTS.md) | 冷启动必读 |
+| [status.md](status.md) | 每轮唯一交接卡 |
+| **本文** | 接屎山、懂困境 |
+| [plan.md](plan.md) | 带 0–6 合同与目视步骤 |
+| [fulfillment-matrix.md](fulfillment-matrix.md) | 改 UI/适配前查动作链 |
+| [adapters/talos-engine.md](adapters/talos-engine.md) | 动引擎行为前记证据 |
+| [design.md](design.md) | 动视觉前 |
+| Talos-CLI `docs/studio-protocol.md` | 协议正本 |
+
+---
+
+## 9. 给下一位的执行原则（主人意志）
+
+1. **先 repro，再改**：P0 粘连用一条最便宜的真实 turn 固定证据（快照 JSON + 屏录），再动刀。  
+2. **机读为奴，目视为王**：绿测试不能关 Goal；主人「通过」才能写完成。  
+3. **最小 diff**：禁止再「顺手」加十个 vitest 文件冒充进度。  
+4. **Studio only**：产品路径不得回退成 ACP 形状假设。  
+5. **两仓**：改引擎行为要去 Talos-CLI，并更新 adapter 证据表；默认只改本仓。
+
+---
+
+## 10. 本文撰写时的工作区事实
+
+- 撰写日：**2026-10-10**。  
+- Git：`main` ahead of origin **5 commits**；另有大规模 **未提交** 修改与 **未跟踪** 新文件（studio 迁接主体多在未跟踪区）。  
+- 机读：`check:all` **未在撰写本轮重新执行**；接手者必须以自己的工作树为准。  
+- 主人目视带 0–5：**未通过**；首条付费对话：**失败**。
+
+若你只读一篇就开工：读完 [status.md](status.md) 交接卡 → 本文 §6 P0 → `spike:initialize` + 一条真实 turn → 再谈功能。

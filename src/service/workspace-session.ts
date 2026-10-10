@@ -1,11 +1,15 @@
 import { writeSessionBinding, readSessionBinding } from '../host/session-binding.js';
-import type { MinimaxAcpAdapter } from '../adapter/minimax-acp.js';
+import type { TalosStudioAdapter } from '../adapter/talos-studio.js';
 
-export async function bindGuiSession(adapter: MinimaxAcpAdapter, workspaceDir: string) {
+export async function bindGuiSession(adapter: TalosStudioAdapter, workspaceDir: string) {
   const binding = readSessionBinding(workspaceDir);
   if (binding?.cwd === workspaceDir && binding.sessionId) {
     try {
-      await adapter.loadSession(binding.sessionId, workspaceDir);
+      try {
+        await adapter.resumeSession(binding.sessionId, workspaceDir);
+      } catch {
+        await adapter.loadSession(binding.sessionId, workspaceDir);
+      }
       writeSessionBinding(workspaceDir, { sessionId: binding.sessionId, cwd: workspaceDir });
       try {
         await adapter.listSessions(workspaceDir);

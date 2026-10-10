@@ -5,15 +5,19 @@ const MAX_PAGES = 20;
 type RawSession = {
   sessionId?: string;
   cwd?: string;
+  workspaceDir?: string;
   title?: string;
   updatedAt?: string;
+  archived?: boolean;
 };
 
 function itemFromRaw(raw: unknown): SessionIndexItem | undefined {
   if (!raw || typeof raw !== 'object') return undefined;
   const row = raw as RawSession;
   const sessionId = typeof row.sessionId === 'string' ? row.sessionId.trim() : '';
-  const cwd = typeof row.cwd === 'string' ? row.cwd.trim() : '';
+  const cwd =
+    (typeof row.cwd === 'string' ? row.cwd.trim() : '') ||
+    (typeof row.workspaceDir === 'string' ? row.workspaceDir.trim() : '');
   if (!sessionId || !cwd) return undefined;
   const title = typeof row.title === 'string' ? row.title.trim() : '';
   const updatedAt = typeof row.updatedAt === 'string' ? row.updatedAt.trim() : '';
@@ -22,6 +26,7 @@ function itemFromRaw(raw: unknown): SessionIndexItem | undefined {
     cwd,
     ...(title ? { title } : {}),
     ...(updatedAt ? { updatedAt } : {}),
+    ...(row.archived === true ? { archived: true } : {}),
   };
 }
 

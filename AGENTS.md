@@ -12,10 +12,10 @@ Talos 由两个相邻仓库组成，**各有一张状态卡**（split-strict）�
 
 | 仓库 | 路径 | 写什么 |
 | --- | --- | --- |
-| **本仓（桌面）** | `C:\DEV\develop\T3rra-C0d3-Talos` | GUI demo、`app/`、视觉、Tauri 路线、GUI 侧 ACP 证据；[docs/status.md](docs/status.md) |
+| **本仓（桌面）** | `C:\DEV\develop\T3rra-C0d3-Talos` | GUI demo、`app/`、视觉、Tauri 路线、GUI 侧 studio 接驳；[docs/status.md](docs/status.md) |
 | **引擎** | `C:\DEV\develop\Talos-CLI` | CLI/TUI、`talos`、provider、发行与验证；`docs/status.md` |
 
-冷启动：读本仓 AGENTS + 本仓 status；动引擎再读 Talos-CLI 的 AGENTS + status。两仓经 ACP 对接，不用子模块，GUI 不直接导入引擎内部模块。名字见 [docs/glossary.md](docs/glossary.md)。
+冷启动：读本仓 AGENTS + 本仓 status；动引擎再读 Talos-CLI 的 AGENTS + status。两仓经 **`talos studio`** 对接，不用子模块，GUI 不直接导入引擎内部模块。名字见 [docs/glossary.md](docs/glossary.md)。
 
 ## 任务准入：先证明为什么要做
 
@@ -63,7 +63,7 @@ Windows 优先的 Talos **桌面**控制台（Endfield 族视觉、Tauri 2 外�
 | [docs/design.md](docs/design.md) | Talos 的视觉正本、参考层级、demo 到产品的边界 |
 | [docs/lessons.md](docs/lessons.md) | Rhodes 反复踩过的坑及迁移时如何避开 |
 | [docs/glossary.md](docs/glossary.md) | Talos / CLI / 上游名字分层 |
-| [docs/adapters/talos-engine.md](docs/adapters/talos-engine.md) | 引擎 ACP/TUI 证据（按需查阅） |
+| [docs/adapters/talos-engine.md](docs/adapters/talos-engine.md) | 引擎 `talos studio` 接驳地图（按需查阅） |
 | [demo/talos.html](demo/talos.html) | 已验收静态交互 demo，不接后端 |
 
-仓库边界：`C:\DEV\develop\Talos-CLI` 是本项目相邻的自有引擎 fork；`C:\DEV\develop\t3rra-C0d3` 仍是只读的 Rhodes 经验来源。引擎 fork 的代码、CLI/TUI、provider、凭据与数据目录属于引擎仓库；Talos 只通过 ACP 和固定的启动参数使用它。新项目视觉已带入本地，不再以临时目录为正本。
+仓库边界：`C:\DEV\develop\Talos-CLI` 是本项目相邻的自有引擎 fork；`C:\DEV\develop\t3rra-C0d3` 仍是只读的 Rhodes 经验来源。引擎 fork 的代码、CLI/TUI、provider、凭据与数据目录属于引擎仓库；Talos 只通过 **`talos studio`** 和固定的启动参数使用它。新项目视觉已带入本地，不再以临时目录为正本。

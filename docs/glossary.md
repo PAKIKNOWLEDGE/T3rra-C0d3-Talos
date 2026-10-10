@@ -5,12 +5,13 @@
 | 术语 | 指什么 | 文档里怎么用 |
 | --- | --- | --- |
 | **Talos** | 对外产品品牌。终端 CLI 已发行；桌面 GUI 尚未发行。 | 面向用户的说明、安装与视觉叙事 |
-| **Talos CLI** | 相邻引擎仓 `C:\DEV\develop\Talos-CLI`：TUI、`talos` 命令、headless、`talos acp`、provider、`~/.talos` | 命令、验证、发行、引擎待办见该仓 [status](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/status.md)（本地路径同上） |
-| **Talos 桌面 / 本仓** | `T3rra-C0d3-Talos`：`demo/`、`app/`、未来 Tauri 外壳 | Endfield 视觉工作台；**宿主**启动本机 `talos acp`，不进口引擎模块；与 CLI **互补**，不取代 TUI |
-| **Desktop 宿主** | `dev:product` 或日后 Tauri 内嵌的观察服务 + WebView | 须 PATH 上可执行 `talos`（或安装包捆绑同一份 CLI）；未安装则可见失败 |
+| **Talos CLI** | 相邻引擎仓 `C:\DEV\develop\Talos-CLI`：TUI、`talos` 命令、headless、**`talos studio`**、provider、`~/.talos` | 命令、验证、发行、引擎待办见该仓 [status](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/status.md)（本地路径同上） |
+| **Talos 桌面 / 本仓** | `T3rra-C0d3-Talos`：`demo/`、`app/`、未来 Tauri 外壳 | Endfield 视觉工作台；**宿主**启动本机 `talos studio`，不进口引擎模块；与 CLI **互补**，不取代 TUI |
+| **studio 协议** | `talos studio` JSON-RPC（stdio，版本 2） | Desktop 唯一引擎门面；正本在 CLI `docs/studio-protocol.md` |
+| **Desktop 宿主** | `dev:product` 或日后 Tauri 内嵌的观察服务 + WebView | 须 PATH 上可执行 `talos`（或安装包捆绑同一份 CLI），子进程为 `talos studio`；未安装则可见失败 |
 | **Perlica** | 模型可见的默认人格与显示名；不是供应商或型号声明 | 与「当前连接的模型」分开写 |
 | **mavis** 等 | 内部 agent 键、技能门控、存储字段；调度用 | 标为「内部路由」，不得当文档作者或对用户的产品名 |
-| **MiniMax Code** | 上游血缘、NOTICE/LICENSE 署名、部分 ACP/协议字段化石 | 不写「请安装 MiniMax Code」作为当前产品 |
+| **MiniMax Code** | 上游血缘、NOTICE/LICENSE 署名、部分内部字段化石 | 不写「请安装 MiniMax Code」作为当前产品 |
 | **Rhodes / T3rra** | 只读经验来源与历史仓库名 | 不进用户安装路径 |
 | **Endfield** | 视觉参考族，不是产品名 | 仅 [design](design.md) |
 

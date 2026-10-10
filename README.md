@@ -1,20 +1,22 @@
 # Talos GUI 与项目文档
 
-本仓库维护GUI范本、ACP接驳与项目文档。可安装的终端产品在[独立CLI仓库](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI)，本地源码目录为C:/DEV/develop/Talos-CLI。两仓库相邻独立，不使用子模块，也不互相导入内部实现。
+本仓库维护GUI范本、`talos studio` 接驳与项目文档。可安装的终端产品在[独立CLI仓库](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI)，本地源码目录为C:/DEV/develop/Talos-CLI。两仓库相邻独立，不使用子模块，也不互相导入内部实现。
 
 ## 接手地图
 
-先读[AGENTS.md](AGENTS.md)与[桌面状态](docs/status.md)；动引擎再读 Talos-CLI 的 `docs/status.md`。再按需读[计划](docs/plan.md)、[工作流](docs/workflow.md)、[词汇表](docs/glossary.md)或[引擎证据](docs/adapters/talos-engine.md)。
+先读[AGENTS.md](AGENTS.md)与[桌面状态](docs/status.md)；**接屎山或换人手**时必读 **[诚实接手说明（2026-10-10）](docs/handoff-honest-2026-10-10.md)**。动引擎再读 Talos-CLI 的 `docs/status.md`。再按需读[计划](docs/plan.md)、[工作流](docs/workflow.md)、[词汇表](docs/glossary.md)或[引擎证据](docs/adapters/talos-engine.md)。
 
 | 文档 | 用途 |
 | --- | --- |
+| [handoff-honest-2026-10-10](docs/handoff-honest-2026-10-10.md) | 项目简史、架构、屎山原因、P0 缺陷、接手原则 |
 | [status](docs/status.md) | 当前结果、限制和下一入口 |
 | [plan](docs/plan.md) | 本轮范围与后续方向 |
 | [workflow](docs/workflow.md) | 实施、验收、Git与文档规则 |
 | [design](docs/design.md) | 已验收视觉正本与素材来源 |
 | [lessons](docs/lessons.md) | 可迁移经验 |
 | [glossary](docs/glossary.md) | 产品名与引擎名分层 |
-| [talos-engine](docs/adapters/talos-engine.md) | 引擎 ACP/TUI 证据（按需） |
+| [talos-engine](docs/adapters/talos-engine.md) | 引擎 `talos studio` 接驳（按需） |
+| [fulfillment-matrix](docs/fulfillment-matrix.md) | 用户动作 → studio 方法 → UI（Tauri 前全产品） |
 
 ## CLI安装与使用
 
@@ -71,6 +73,8 @@ npm run dev:product -- --cwd C:/path/to/your/workspace
 ```
 
 浏览器打开 http://127.0.0.1:5193/ ，底栏应显示已连接。侧栏可**输入另一绝对路径**并点「切换工作区」以更换项目（浏览器版无系统文件夹对话框；安装版以后由 Tauri 提供）。发 prompt 会消耗 provider 配额。可选 `npm run spike:initialize` 仅握手。见 [status](docs/status.md)。
+
+**带 0–5 产品签字**（studio 全链路，非 demo）：按 [plan 目视清单](docs/plan.md#下一小轮带-0-目视验收) 顺序操作；机读对照见 [fulfillment-matrix 机读证据](docs/fulfillment-matrix.md#机读证据非目视替代)。
 
 若启动报 `EADDRINUSE` / 5194 占用，说明上一次的 `dev:product` 仍在后台（常见于**直接关终端窗口**、或崩溃后未退出）。先释放端口：
 

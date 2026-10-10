@@ -34,6 +34,47 @@
   padding: 0;
 }
 
+.log .message-thought .thought-block {
+  border: 1px solid #ffffff14;
+  border-radius: 6px;
+  background: #1d1f1c66;
+  margin: 4px 0 12px;
+}
+
+.log .message-thought summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  font-size: calc(12px * var(--text-scale));
+  color: #a8aaa6;
+  user-select: none;
+}
+
+.log .message-thought summary::-webkit-details-marker {
+  display: none;
+}
+
+.log .message-thought .thought-hint {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: #7a7c78;
+}
+
+.log .message-thought .thought-block[open] .thought-hint::before {
+  content: '· 收起';
+}
+
+.log .message-thought .thought-body {
+  padding: 8px 12px 12px;
+  color: #9b9d99;
+  font-size: calc(13px * var(--text-scale));
+  line-height: 1.7;
+  border-top: 1px solid #ffffff0d;
+}
+
 .inspector .plan li,
 .inspector .files li,
 .session-name {
@@ -66,12 +107,25 @@
   min-width: 0;
 }
 
-.session-delete {
+.session-row-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.session-row-running .session-meta {
+  color: #f4eb16;
+}
+
+.session-delete,
+.session-rename,
+.session-archive {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 36px;
-  min-height: 68px;
+  min-height: 20px;
+  flex: 1;
   padding: 0;
   border: 1px solid #ffffff14;
   border-radius: 3px;
@@ -292,6 +346,54 @@
   display: none !important;
 }
 
+.composer-bottom .thinking-switch {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: #232422;
+  border-radius: 18px;
+  flex-shrink: 0;
+  max-width: min(240px, 42vw);
+  overflow-x: auto;
+}
+
+.composer-bottom .thinking-switch #thinkingButtonsHost {
+  display: contents;
+}
+
+.composer-bottom .thinking-switch button {
+  border: 0;
+  border-radius: 15px;
+  padding: 4px 10px;
+  background: transparent;
+  color: #a5a7a3;
+  font-size: 10px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.composer-bottom .thinking-switch button[aria-pressed='true'] {
+  background: #d3d4d2;
+  color: #2e2f2d;
+}
+
+.composer-bottom .thinking-switch button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.composer-bottom .thinking-switch .thinking-readonly {
+  display: block;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #a5a7a3;
+  white-space: nowrap;
+}
+
+.composer-bottom .thinking-switch .thinking-readonly[hidden] {
+  display: none !important;
+}
+
 .composer-field {
   position: relative;
 }
@@ -352,6 +454,104 @@
   display: none !important;
 }
 
+.composer-bottom .steer-toggle {
+  font-size: 0.72rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 4px;
+  border: 1px solid var(--line-soft, rgba(255, 255, 255, 0.12));
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.composer-bottom .steer-toggle[aria-pressed='true'] {
+  border-color: var(--accent, #7eb8ff);
+  color: var(--accent, #7eb8ff);
+}
+
+.queue-strip {
+  margin: 0.35rem 0 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px dashed var(--line-soft, rgba(255, 255, 255, 0.12));
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+.queue-strip ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.queue-strip .queue-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.queue-strip li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+}
+
+.queue-strip .queue-actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.edit-message-input {
+  width: 100%;
+  min-height: 8rem;
+  font: inherit;
+  color: inherit;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--line-soft, rgba(255, 255, 255, 0.12));
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+
+.session-fork {
+  font-size: 0.85rem;
+}
+
+.inspection-blurb {
+  font-size: 0.78rem;
+  opacity: 0.85;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.inspection-detail-btn {
+  width: 100%;
+  margin-bottom: 0.25rem;
+}
+
+.anchor-list li button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.2rem 0;
+  font: inherit;
+}
+
+.message-actions {
+  margin-top: 0.35rem;
+}
+
+.dialog-footer .dialog-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-right: auto;
+}
+
 .composer-field .slash-menu .slash-empty {
   display: block;
   padding: 10px 12px;
@@ -382,4 +582,8 @@
 .engine-icon {
   font-size: 12px;
   letter-spacing: 0.06em;
+}
+
+.usage-track.is-empty > i {
+  width: 0 !important;
 }

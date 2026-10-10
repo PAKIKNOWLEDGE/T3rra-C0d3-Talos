@@ -1,34 +1,36 @@
 # Talos 桌面计划
 
-本页是 **Talos Desktop 工作室** 的产品脊骨与实现带划分。引擎待办见 Talos-CLI [docs/status.md](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/status.md)。执行入口见 [status](status.md)。
+本页是 **Talos Desktop 工作室** 相对 `talos studio` v2 的完整脊骨。执行入口只看 [status](status.md)。协议正本在引擎 [studio-protocol.md](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/studio-protocol.md) 与 [studio-parity.md](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI/blob/main/docs/studio-parity.md)。引擎待办在 Talos-CLI `docs/status.md`。对标用户结果见 [desktop-codex-parity](desktop-codex-parity.md)。视觉正本见 [design](design.md)。
+
+**只展开即将执行的一轮**：文末 [下一小轮：带 0 目视验收](#下一小轮带-0-目视验收)。下面各带是分期合同，不是并行待办。
 
 ## 北星：工作室，对标 Codex / pi-desktop
 
-Talos Desktop = 给本机 **Talos CLI** 配的 **工作室窗口**（Endfield 视觉，[design](design.md)、[demo/talos.html](../demo/talos.html)）。与 TUI **互补，不取代**；不是网页客服，也不是第二套 agent。
-
-用户得到的是一间工作室：
+Talos Desktop = 给本机 **Talos CLI** 配的 **工作室窗口**（Endfield 视觉，[demo/talos.html](../demo/talos.html)）。与 TUI **互补，不取代**。不是网页客服，也不是第二套 agent。
 
 | 区域 | 用户得到什么 |
 | --- | --- |
 | 左 | **活的目录**：这个项目里有哪些活；新建；点开继续；正在跑的能看出来 |
 | 中 | **这一件活的记录**：对话、工具、停、斜杠、模式/模型 |
-| 右 | **这一件活的后果**：改了哪些文件、待批准、用量；以后才是完整 diff 审查台 |
-| 底 | **投料**：打字、`/`、以后 `@` 与附件 |
+| 右 | **这一件活的后果**：改了哪些文件、待批准、用量；完整 diff 审查台后置 |
+| 底 | **投料**：打字、`/`，其后 `@` 与附件 |
 | 壳 | **真窗口**（Tauri 后置）；现在浏览器跑，不假装已是安装版 |
 
-现状诚实句：能换项目、侧栏 **活目录**（列/新建/点开/删除，talos ≥0.1.3）；仍 **单通道** 生成；审查台、附件、Tauri 未做。
+现状诚实句：产品宿主已 spawn **`talos studio` v2**（`src/adapter/talos-studio.ts`）；机读桩与矩阵在仓内写了大量合同与测试，但 **工作树大量 WIP 未提交**，**主人目视未通过**，**首条付费对话已出现正文粘连（P0）**。困境见 [handoff-honest-2026-10-10.md](handoff-honest-2026-10-10.md)。本机 PATH CLI **0.1.4**【实测 2026-10-10】。
 
-## 选型站规：先 Codex 设计，ACP 碰壁再撤
+## 选型站规
 
-1. **设计时**按成熟桌面（Codex、Claude Code Desktop、pi-desktop 类）画交互与信息架构，不因「ACP 套壳」先画瘦。
-2. **实现时**只经 `talos acp` 调引擎；ACP/引擎没有的，从本轮交付撤，写入 [认了](#认了acp-或引擎边界)，界面不装有。
-3. **宿主可做**：起停子进程、布局、窗体、选文件夹、空态与错误文案（不冒充 Codex app-server）。
+1. **设计时**按成熟桌面画交互，不因「协议套壳」先画瘦。
+2. **实现时**只经 **`talos studio`** 调引擎。parity 没有的，本轮交付撤走，写入 [认了](#认了)，界面不装有。
+3. **宿主可做**：起停子进程、布局、窗体、选文件夹、空态与错误文案。
 4. **禁止**：假按钮；未授权改 Talos-CLI 内核；把云端通宵、手机派活当近期承诺。
+5. **侧栏每种引擎对象**必须写清 **列 / 开 / 建 / 退役**。协议没有退役就停，记「CLI 开门」或「界面诚实不能删」。
+6. **有协议、无已验收构图**：不做入口，不发明第二套设置页。
 
 ```mermaid
 flowchart LR
-  design[Design_like_Codex]
-  wire[Try_ACP_or_host]
+  design[Design_like_studio]
+  wire[Try_studio_or_host]
   ship[Ship_real_UI]
   retreat[Honest_retreat_table]
   design --> wire
@@ -36,154 +38,153 @@ flowchart LR
   wire -->|no| retreat
 ```
 
+## 协议门
+
+| 项 | 事实 |
+| --- | --- |
+| 启动 | 子进程 `talos studio`，cwd = 用户工作区 |
+| 帧 | stdio、换行分隔 JSON-RPC 2.0 |
+| 握手 | `studio/initialize`（可选绝对 `cwd`），协议版本 2，`name` = `talos-studio` |
+| 引擎 | 与 TUI 同一 `CliService`（`surface: studio`） |
+| 本机 CLI | 【实测 2026-10-10】`@pakiknowledge/tal0s-code@0.1.4` 已在 PATH；迁接改宿主 spawn，不先装 CLI |
+| 通知 | `turn/event`、`turn/completed`；订阅后还有 `runtime/event`、`usage/commit` |
+
+CLI 终端独留、studio **不接**（宿主用 OS/Tauri 或让用户去终端）：交互 TUI、`talos exec`、`login` / `logout` / `update`、`provider` / `plugin` / `telemetry`、`talos init`。
+
 ## 产品结构合同
 
-| 工作室要给人 | 现在 | 实现带 |
+| 工作室要给人 | 现在 | 落地带 |
 | --- | --- | --- |
-| 项目归属 | 能换 cwd | 已有 |
-| 活的目录与回来 | 列/新建/load/删（切换非并行） | **带 1 已完成** |
-| 多件活并排 | 一条通道 | 带 1 先 **切换**；真并行受单连接约束，见探针 |
-| 审查与信任 | 聊天里读字 + 批准卡片 | **带 2** |
-| 投料 `@`/附件 | 打字 + `/` | **带 3** |
-| 真窗口 | 浏览器 | **带 4** |
-| 货架能力 | 无 | 设计记得，不承诺 |
+| 项目归属 | 能换 cwd | 带 0 后仍宿主换目录再 `studio/initialize`；带 6 换成系统选夹 |
+| 活的目录与回来 | 列/新建/load/删（旧适配已目视） | **带 0** 同能力迁 studio；**带 1** 改名/归档/在跑标记 |
+| 一条生成通道 | 旧入口发/停 | **带 0** `turn/start` `cancel` |
+| 斜杠与配置 | 旧适配补全 + 思考胶囊 | **带 0** `commands/list` `config/*` `session/setMode` |
+| 批准 | 卡片（旧适配） | **带 0** 能选能拒；**带 2** 记忆与工具行 |
+| 记录长什么样 | 流式出字；思考默认折叠 | **带 0** 思考块折叠；**带 2** 全时间线（工具、计划） |
+| 投料 `@`/附件/插话 | 打字 + `/` | **带 3** |
+| 分叉 / 回退 / 改历史 | 无 | **带 4** |
+| 技能 / MCP / 插件只读 | 无产品入口 | **带 5**；市场与登录仍 CLI |
+| 真窗口 | 浏览器 | **带 6**，门禁是带 0 目视过，不跟带 4–5 绑死 |
 
-旧 A–G（换目录、模式/模型、斜杠等）是已落地的 **控制面零件**，不是脊骨。thinking effort、permissionMode、`/provider`、假计划栏：仍不造假。
+## 实现带（studio 全表落点）
 
-## 实现带
+带 **N 未绿**，不开带 **N+1** 的用户可见入口。带 6（Tauri）例外：门禁见 [tauri-shell](tauri-shell.md)，与带 3–5 不互为前置。
 
-| 带 | 内容 | 状态 |
-| --- | --- | --- |
-| 0 | 文书：站规、脊骨、探针、带 1 设计 | **已完成**（2026-10-09） |
-| 1 | 活的目录：列表 / 新建 / load / 删除 | **已完成**（2026-10-09，主人目视通过） |
-| 2 | 审查台与批准记忆 | 未开始 |
-| 3 | 投料（`@`/附件） | 未开始 |
-| 4 | Tauri 2 外壳 | 未开始 |
+### 带 0 — 换门（机读已过，目视见 status/plan 下一小轮）
 
-## 带 1 设计：活的目录
+用户仍能完成已目视过的壳：连上、活目录列/建/开/删、发指令、停、斜杠、模式/模型/思考、批准、用量。引擎面换成 studio。
 
-对标 Codex 侧栏 **按项目的线程列表**（不是 demo 里假会话样张）。贴 [demo/talos.html](../demo/talos.html) 左侧栏布局与 Endfield 色，替换 `#sessionList` / `#currentSessionBadge` 的 static 语义。
+| 方法 | 用户结果 |
+| --- | --- |
+| `studio/initialize` | 连上或失败可读；不再 spawn 旧入口 |
+| `session/list` `create` `load` `resume` `close` `delete` | 列、新建、点开、附着、关掉、删除 |
+| `turn/start` `turn/cancel`；通知 `turn/event` `turn/completed` | 发、停；思考进折叠块，正文不进思考 |
+| `turn/watch` | 重连时能跟上未结束的回合，不丢停按钮 |
+| `commands/list` | `/` 补全；`/new` 仍宿主走 `session/create`，不把引擎废话打进对话 |
+| `config/options` `config/set`；`session/setMode` | 模式、模型、思考档 |
+| `models/list` | 模型菜单有引擎给的名单 |
+| `permission/list` `permission/reply` | 卡片可选、可拒绝 |
+| `inspection/usage`；有则 `inspection/usageSummary`、`usage/commits/subscribe` | 右栏数字，无免责声明 |
+| `account/status` | 只读；未登录则可见失败，不画假登录页 |
 
-### 用户动作与结果
+落地（授权编码时）：`src/host/` 启动参数改为 `studio`；`src/adapter/` 改接 studio JSON-RPC；`src/core/types.ts`、`src/service/`；`app/` 保持 UI 合同。机读重写握手/会话桩。
 
-| 动作 | 用户应看到 | 引擎/宿主行为（设计） |
-| --- | --- | --- |
-| 打开 / 换工作区 | 侧栏列出 **该 cwd** 下的历史活（标题或时间）；当前项高亮 | `session/list` + `cwd`；分页用 `nextCursor` |
-| 点一条活 | 中间记录切到该会话；可继续发指令 | `session/load` + 更新 `.talos/gui-session.json` |
-| 新建活 | 新一行出现在列表；中间空记录或欢迎态 | `session/new`；绑定新 `sessionId` |
-| 正在跑 | 当前活有运行态（与顶栏 phase 一致） | 沿用现有 `turn` 快照；列表项显示「运行中」 |
-| 列表空 | 文案 +「新建第一个活」 | 不伪造历史 |
-| 引擎未连 | 侧栏说明未连接，不假装有列表 | 诚实空态 |
+### 带 1 — 活目录齐
 
-### 不做（带 1 范围外）
+| 方法 | 用户结果 |
+| --- | --- |
+| `session/rename` `session/archive` | 侧栏改名、归档；退役路径写清 |
+| `session/activeRun` | 正在跑的活看得出来；跑着不能假装切走成功 |
+| `runtime/events/subscribe` → `runtime/event` | 列表与底栏跟 runtime 事件，不靠假轮询 |
 
-- 会话内 fork 树（ACP 有 fork，产品另开）
-- 真并行两路 prompt（见探针：单 client 连接）
-- 归档 UI（list 可含 archived，首版可只显示不过滤）
-- Tauri 选文件夹（带 4）
+### 带 2 — 记录与信任
 
-### 落地文件（授权编码时）
+| 方法 | 用户结果 |
+| --- | --- |
+| `turn/event` 全形状 | 时间线按到达顺序：文本、思考、工具、计划；未知记事件，不丢 |
+| `session/messages` | 点开旧活看见记录，不只当前这一轮 |
+| `questionnaire/getPending` `getPlanReview` `dismiss` | 计划审查/问卷有真卡片，无则不装有 |
+| `inspection/context` `inspection/compact` | 上下文可见；压缩是用户动作，有结果或失败 |
+| `workspace/git` | 右栏路径跟 git 元数据，**不称审查台** |
 
-- [app/index.html](../app/index.html)、[app/talos.js](../app/talos.js)、[app/ui-manifest.json](../app/ui-manifest.json)
-- [src/adapter/minimax-acp.ts](../src/adapter/minimax-acp.ts)、[src/service/talos-service.ts](../src/service/talos-service.ts)、[src/core/types.ts](../src/core/types.ts)、[src/service/workspace-session.ts](../src/service/workspace-session.ts)
-- 机读：`test/` 增加 list/load 与 snapshot 合并用例；`npm run typecheck` + `test:core`
+### 带 3 — 投料与队列
 
-## ACP 边界探针（带 1，【源码】Talos-CLI）
+| 方法 | 用户结果 |
+| --- | --- |
+| `workspace/files/list` `search`；有则 `candidates` `searchCandidates` | `@` 能搜工作区文件 |
+| `turn/start` 内容块（先核协议再画） | 附件入口；未核类型则无拖图按钮 |
+| `turn/steer` | 回合中途加话，不是新开一条活 |
+| `queue/list` `enqueue` `update` `delete` `steer` `continue` | 一条通道上的排队，不假装双跑 |
+| `questionnaire/reply` | 问卷能答 |
 
-相邻引擎 `C:\DEV\develop\Talos-CLI`，路径相对该根。桌面带 1 已接 `session/list`（绑定/切换/新建后刷新）。
+### 带 4 — 会话手术
 
-| 能力 | 引擎事实 | Desktop 今天 | 带 1 结论 |
-| --- | --- | --- | --- |
-| `initialize` → `loadSession` | `agent.ts` ~442 `loadSession: true` | 已用 | 继续 |
-| `sessionCapabilities.list` | `agent.ts` ~452–456 | 未用 | **接 list**，不撤目录 |
-| `session/list` | `agent.ts` ~625–638，`runtime.listSessionPage` | 未接 | **带 1 必接** |
-| `session/new` | 已有 | 换工作区时隐式 new | 显式「新建活」 |
-| `session/load` | 已有；回放经 `session/update` | 仅绑定一条 | 点列表项 load |
-| `session/fork` | 已实现，能力广告 `fork: {}` | 无 | **带 1 不做**；登记带 2+ |
-| `promptCapabilities` image/embed | initialize 均为 false | 无附件 | **带 3** 再探，现撤 |
-| 单 ACP 连接 | `agent.ts` ~357–360 每进程仅一 client | 单 WS | **多件活 = 切换附着**，非双 prompt 并行 |
-| 活跃 prompt 互斥 | `agent.ts` ~1068 拒绝并发普通 prompt | 单 turn | UI 不承诺双活同时跑 |
+| 方法 | 用户结果 |
+| --- | --- |
+| `session/fork` `session/forkOptions` | 从某条活分叉；无构图前不做树形浏览 |
+| `session/rewindPreview` `session/rewind` | 回到某条之前，预览后再执行 |
+| `session/editMessage` | 改已发送的用户话并重跑（引擎给什么桌面才有什么） |
+| `session/inputSummaries` | 长记录摘要导航 |
 
-证据摘录见 [talos-engine 工作室带 1 探针](adapters/talos-engine.md#工作室带-1-acp-探针2026-10-09)。
+### 带 5 — 检视与扩展（只读优先）
 
-## 认了（ACP 或引擎边界）
+无已验收构图则只做只读或诚实空态，不造第二套 CLI 管理 UI。
 
-| 项 | 状态 | 用户看到什么 |
-| --- | --- | --- |
-| Prompt 图片/嵌入上下文 | 引擎 `promptCapabilities` 全 false | 带 3 前无拖图/嵌入；不假装有 |
-| 会话 fork 树 | 协议/产品未做 | 无 fork 菜单 |
-| 双会话同时跑 | 单连接 + 单活跃 prompt | 可切换会话，不能两路同时生成 |
-| Codex 式 app-server / 云端 thread | 非 Talos 架构 | 无 `/app`、无云同步；CLI 与 Desktop 各连 `talos acp` |
-| 统一 diff 审查台 | 无宿主 diff RPC | 带 2 前只有路径列表 + 详情弹窗，不称「审查台」 |
-| 云端通宵 / 手机派活 | 未承诺 | 无相关入口 |
+| 方法 | 用户结果 |
+| --- | --- |
+| `inspection/skills` `inspection/mcp` `inspection/projectMcp` | 只读：这个活用了哪些技能/MCP |
+| `inspection/instructionSources` `inspection/diagnostics` | 出问题能看来源和诊断，不冒充健康仪表盘 |
+| `session/mcp/configure` `session/mcp/clear` | 有明确产品位置才接线；否则继续 CLI |
+| `goal/*` `delegation/*` | 引擎开目标时再做入口；未开则不画 |
+| `backgroundTasks/list` | runtime 有 port 才列出后台任务 |
+| `plugins/listInstalled` | 只读已装；**不画市场**（`listMarketplace` `mutate` `refresh` 不进桌面） |
+| `feedback/prepare` `submit` `cancel`；`checkin/run` | 后置；无入口优于假按钮 |
 
-## 带 2–4（同一站规，另授权）
+### 带 6 — 真窗口
 
-| 带 | 对标 Codex 什么 | 先设计再接线；碰壁写入上表 |
-| --- | --- | --- |
-| 2 | 侧栏 diff、行评、stage/commit、批准 remember | 工具 update + `request_permission` 已有；diff 台与记忆规则待核 |
-| 3 | `@` 自动完成、附件 | 依赖 `promptCapabilities` / 引擎；现全 false |
-| 4 | 安装包、系统选文件夹、通知 | Tauri 2；不改引擎 |
+不接新的 studio 方法。见 [tauri-shell](tauri-shell.md)。
 
-## 两仓串行与漏项门禁
+- WebView 加载与现 `app/` 等价的资产。
+- 系统文件夹选择器替换手填路径。
+- 可选 sidecar 捆绑同一份 `talos`。
+- 禁止把引擎模块打进二进制绕过 `talos studio`。
 
-主人 2026-10-09：CLI 是 mcode fork、独立 npm，迭代必须走 **CLI 自己的流**，不可与桌面并行赶同一能力。桌面清不掉会话，是 ACP 门面没开删除，不是桌面忘了画按钮。
+## 认了
 
-**不是三线全崩。** 上游 mcode 只读参考；Talos-CLI 一条引擎线；本仓一条 GUI 线。缺删除 = 引擎 ACP 未广告 `session/delete`（协议 schema 有，fork 未开门）。TUI `/archive` 也不清桌面列表（`list` 含 archived）。
+| 项 | 用户看到什么 |
+| --- | --- |
+| `talos login` / `logout` / `update` / `provider` / `plugin` / `telemetry` / `init` | 仍在终端 CLI，桌面不画假设置页 |
+| `plugins/listMarketplace` `mutate` `refresh` | 无桌面商店 |
+| Codex 云线程 / 定时任务 / 手机遥控 | 无入口 |
+| 内嵌终端 | 不做（TUI 仍是终端产品） |
+| 统一 Git 审查台（行评、commit/PR） | 带 2 前只有路径列表；带 2 起仍不称审查台，除非另立项 |
+| 并行双跑两条生成 | studio 仍按会话附着；队列 ≠ 双通道 |
+| 拖图进 prompt | 未核 `turn/start` 内容类型前无入口 |
 
-### 漏这个漏那个怎么办
+## 两仓串行
 
-根因不是「没对照 Codex」，而是把 **退役** 当成货架功能。parity 写了「钉/归档/改名不做」，等于允许做出「能新建的活目录」却没有退出。
+上游引擎只读参考；Talos-CLI 一条引擎线；本仓一条 GUI 线。studio 方法以 **已发布 CLI 0.1.4（本机 PATH 已有）** 为准。本仓不与引擎并行发明方法。发现漏项：冻本仓功能 → 欠账写在 CLI 仓 → 发布后再接。
 
-门禁（带 2 起，带 1 补退役时也遵守）：侧栏每露出一种引擎对象，计划里必须写 **列 / 开 / 建 / 退役** 四格；ACP 没有退役就 **先停**，记「CLI 开门」或「界面诚实不能删」，禁止中途加假按钮、禁止借漏项开下一带。
-
-发现漏项：冻本仓功能 → 一张欠账（哪条 ACP、CLI 有无内部能力）→ 若必须有，**下一张卡只在 CLI 仓**。不在桌面补洞、不并行改两仓。
-
-### 现在怎么走（串行）
-
-1. **本仓停功能。** 总线（工作室脊骨）仍有效；带 1 未闭合的是退役，不是推翻带 1。带 2–4 不开。
-2. **要清列表：只开工 CLI。** 读 Talos-CLI `docs/status.md`，按它的方案/闸/发布做 `session/delete`（或等价、且 list 不再把已删/归档塞给桌面）。这是 fork 相对上游的切割点，**在 CLI 线完成**，不是桌面线。
-3. **CLI 发布进 PATH 的 `talos` 之后**，本仓再开「侧栏删除」小轮，只接已发布 ACP，不跟 CLI 源码并行。
-4. 日常维护：GUI 只读本仓 status；动引擎只读 CLI status；跨能力时两张卡都写「谁阻塞谁」，同时只允许 **一个仓在执行**。
-
-## 引擎侧
-
-Provider 仍走 TUI `/provider` 或 CLI。本仓不改 Talos-CLI，除非主人在 **引擎仓** 按 CLI 流另开任务（不与本仓并行）。
-
-## Codex 对标与第一期预期（Astra 收紧）
-
-主人 2026-10-09 接受 [parity](desktop-codex-parity.md) 7 条。Astra **不加项**：fork、thinking、并行、diff、终端、附件一律不进本轮。
-
-## 下一小轮：活的目录（带 1）
+## 下一小轮：带 0 目视验收
 
 | 项 | 内容 |
 | --- | --- |
-| 标识 | `talos-desktop-studio-nav` / r1 |
-| 角色 | **Astra**：收计划（本段写完即停）→ **Luna**：实现与机读 |
-| 目标 | [parity 第一期 7 条](desktop-codex-parity.md#第一期就这些7-条给-astra-收) |
-| 不做 | 并行双跑、worktree/云、diff 台、终端、MCP 页、附件、fork、Tauri、归档钉住、计划栏造真、thinking 下拉 |
-| Luna 停止点 | `npm run typecheck` + `npm run test:core` 绿；`ui-manifest` 登记新建/列表；status 写完成证据；主人 7 条目视 |
+| 标识 | `talos-desktop-studio-migrate` / r3 |
+| 角色 | **主人** 目视；Luna 只修本轮失败 |
+| 目标 | 确认带 0 表内动作在浏览器产品壳可用 |
+| 前置 | `npm run typecheck`、`npm run test:core`、`npm run spike:initialize` 已绿；【实测】studio 握手 v2 |
+| 停止点 | 主人说「通过」→ status 收口带 0；说「推进」→ 开带 1 |
+| 不做 | 带 1–6 新功能；不重复全库审计 |
 
-### Astra r1 交付（到此为止，不写代码）
+### 目视清单（顺序）
 
-主人已接受 parity **7 条**为第一期唯一用户结果；本带只服务「活的目录」，不借历史会话扩成客服单窗或货架功能。
+1. `npm run dev:product -- --cwd <你的工作区绝对路径>` → 打开 `http://127.0.0.1:5193/`
+2. 侧栏能列出活；新建；点开；删除测试活
+3. 发一条指令，中间出字，点停能停
+4. 输入 `/` 有补全；`/new` 新建活且不把引擎废话打进对话
+5. 模式/模型/思考档能改（引擎有选项时）
+6. 右栏用量有数字时显示（无免责声明）
+7. 有思考时先出现「思考」折叠条，默认收起；展开能看见推理，回复区只有正文
+8. 若引擎弹出工具批准，卡片能选允许或拒绝
 
-**协议事实（实现不得越界）**：`session/list` + `session/new` + `session/load`（回放）；单 ACP 连接、单活跃 prompt；`load` 失败须**留在当前条**（parity 表）；列表失败须可见错误、不伪造历史。
-
-**Luna 执行切片（顺序建议，可同轮合并自验）**
-
-| 切片 | 交付物 | 对应 7 条 |
-| --- | --- | --- |
-| S1 快照与动作 | `sessions` / `sessionListError` 进 WS 快照；`new_session` / `load_session`；跑 turn 时 service 拒切 | 5、7 |
-| S2 工作区生命周期 | 绑定后 `list`；`switch_workspace` 清列表并再 list | 1、6 |
-| S3 侧栏产品 | `#newSession` + `#sessionList` 贴 demo 布局；wired 非 static；运行中禁用切活/新建 | 1–4、5 |
-| S4 诚实失败 | `action_error` toast；list/load/new 错误文案 | 7 |
-| S5 机读 | `session-index` / fact-store / service 用例；`EnginePort` 测试桩补齐；`test:core` 纳入新文件 | Luna 停止点 |
-
-**Astra 明确不授权本轮**：`session/fork`、`session/resume` 作主路径、并行双 prompt、diff 台、Tauri 选夹、附件、`thinking` UI。
-
-工作树若已有 WIP 实现片段，Luna 以本切片验收为准整理，不以「已写一半」扩范围。
-
-## Git
-
-文档与 `app/` 在本仓；引擎只在 Talos-CLI。
+失败只报步骤号与现象，Luna 同轮修，不扩 scope。

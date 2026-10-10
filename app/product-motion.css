@@ -1,0 +1,99 @@
+/* Product shell motion — mirrors demo/talos.css entrance + interactive easing */
+
+@keyframes header-in {
+  from {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 9px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes side-in {
+  from {
+    opacity: 0;
+    translate: -9px 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.masthead {
+  animation: header-in 0.5s var(--ease) both;
+}
+
+.sidebar {
+  animation: side-in 0.55s var(--ease) 0.06s both;
+}
+
+.record-head {
+  animation: rise 0.5s var(--ease) 0.12s both;
+}
+
+.composer {
+  animation: rise 0.5s var(--ease) 0.23s both;
+}
+
+.inspector {
+  animation: side-in 0.55s var(--ease) 0.17s both;
+}
+
+.detail-dialog[open] {
+  animation: dialog-in 0.26s var(--ease);
+}
+
+.log-inner .approval {
+  animation: rise 0.32s var(--ease);
+}
+
+.usage-track > i {
+  transition: width 0.4s var(--ease);
+}
+
+.session-delete,
+.composer-bottom .model-menu,
+.composer-field .slash-menu {
+  transition: opacity 0.18s var(--ease), transform 0.18s var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .masthead,
+  .sidebar,
+  .record-head,
+  .composer,
+  .inspector,
+  .detail-dialog[open],
+  .log-inner .approval {
+    animation: none !important;
+  }
+
+  .usage-track > i {
+    transition: none !important;
+  }
+}

@@ -8,6 +8,7 @@ function createService() {
   const calls = { send: 0, cancel: 0, approve: 0 };
   const engine = {
     sendPrompt: vi.fn(async () => void calls.send++),
+    executeSlash: vi.fn(async () => {}),
     cancel: vi.fn(async () => void calls.cancel++),
     replyApproval: vi.fn(async () => void calls.approve++),
     setMode: vi.fn(async () => {}),
@@ -15,6 +16,24 @@ function createService() {
     createSession: vi.fn(async () => {}),
     loadSession: vi.fn(async () => {}),
     deleteSession: vi.fn(async () => {}),
+    renameSession: vi.fn(async () => {}),
+    archiveSession: vi.fn(async () => {}),
+    replyQuestionnaire: vi.fn(async () => {}),
+    dismissQuestionnaire: vi.fn(async () => {}),
+    searchWorkspaceFiles: vi.fn(async () => []),
+    listWorkspaceFiles: vi.fn(async () => []),
+    steerTurn: vi.fn(async () => {}),
+    enqueueMessage: vi.fn(async () => {}),
+    deleteQueueItem: vi.fn(async () => {}),
+    continueQueue: vi.fn(async () => {}),
+    previewRewind: vi.fn(async () => 'preview'),
+    rewindSession: vi.fn(async () => {}),
+    steerQueueItem: vi.fn(async () => {}),
+    getForkOptions: vi.fn(async () => ({ canFork: false })),
+    forkSession: vi.fn(async () => 's2'),
+    editSessionMessage: vi.fn(async () => {}),
+    updateQueueItem: vi.fn(async () => {}),
+    retrySessionHistory: vi.fn(async () => {}),
   };
   const service = new TalosService(new FactStore('service-1'), engine);
   return { service, engine, calls };

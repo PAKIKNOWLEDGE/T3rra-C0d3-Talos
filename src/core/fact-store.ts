@@ -1,4 +1,11 @@
-import type { EngineEvent, MessageFact, ServiceSnapshot, SessionIndexItem, ToolFact } from './types.js';
+import type {
+  EngineEvent,
+  MessageFact,
+  ServiceSnapshot,
+  SessionIndexItem,
+  TimelineItem,
+  ToolFact,
+} from './types.js';
 
 export class FactStore {
   private readonly state: ServiceSnapshot;
@@ -14,8 +21,13 @@ export class FactStore {
       sessions: [],
       agent: { sessionDelete: false },
       messages: [],
+      timeline: [],
       tools: [],
       approvals: [],
+      interactions: {},
+      queue: [],
+      inspection: { skillNames: [], mcpServerNames: [] },
+      inputSummaries: [],
       errors: [],
     };
   }
@@ -38,8 +50,13 @@ export class FactStore {
     this.state.sessionListError = undefined;
     this.state.agent = { sessionDelete: false };
     this.state.messages = [];
+    this.state.timeline = [];
     this.state.tools = [];
     this.state.approvals = [];
+    this.state.interactions = {};
+    this.state.queue = [];
+    this.state.inspection = { skillNames: [], mcpServerNames: [] };
+    this.state.inputSummaries = [];
     this.state.revision += 1;
   }
 
@@ -48,8 +65,13 @@ export class FactStore {
     this.state.turn = { status: 'idle' };
     this.state.context = {};
     this.state.messages = [];
+    this.state.timeline = [];
     this.state.tools = [];
     this.state.approvals = [];
+    this.state.interactions = {};
+    this.state.queue = [];
+    this.state.inspection = { skillNames: [], mcpServerNames: [] };
+    this.state.inputSummaries = [];
     this.state.revision += 1;
   }
 
@@ -74,9 +96,14 @@ export class FactStore {
             ...(this.state.session.cwd ? { cwd: this.state.session.cwd } : {}),
           };
           this.state.messages = [];
+          this.state.timeline = [];
           this.state.tools = [];
           this.state.approvals = [];
           this.state.context = {};
+          this.state.interactions = {};
+          this.state.queue = [];
+          this.state.inspection = { skillNames: [], mcpServerNames: [] };
+          this.state.inputSummaries = [];
         }
         break;
       case 'disconnected':
@@ -88,13 +115,56 @@ export class FactStore {
         this.state.session = { status: 'ready', sessionId: event.sessionId, cwd: event.cwd };
         this.upsertListedSession({ sessionId: event.sessionId, cwd: event.cwd });
         break;
+      case 'session.history':
+        if (this.state.session.sessionId === event.sessionId) {
+          this.state.messages = structuredClone(event.messages);
+          this.state.timeline = structuredClone(event.timeline);
+          this.state.tools = structuredClone(event.tools);
+          this.state.session = { ...this.state.session, historyLoadError: undefined };
+        }
+        break;
+      case 'session.history_error':
+        if (this.state.session.sessionId === event.sessionId) {
+          this.state.session = { ...this.state.session, historyLoadError: event.message };
+        }
+        break;
+      case 'stream.notice':
+        this.state.timeline.push({
+          kind: 'notice',
+          noticeId: event.noticeId,
+          text: event.text,
+        });
+        break;
       case 'session.listed':
         this.state.sessions = structuredClone(event.sessions);
         this.state.sessionListError = undefined;
         break;
+      case 'session.run_state': {
+        const index = this.state.sessions.findIndex((row) => row.sessionId === event.sessionId);
+        if (index >= 0) {
+          this.state.sessions[index] = { ...this.state.sessions[index], running: event.running };
+        }
+        break;
+      }
       case 'session.list_error':
         this.state.sessionListError = event.message;
         this.state.errors.push(event.message);
+        break;
+      case 'interaction.updated':
+        if (this.state.session.sessionId === event.sessionId) {
+          this.state.interactions = structuredClone(event.interactions);
+        }
+        break;
+      case 'session.queue':
+        if (this.state.session.sessionId === event.sessionId) {
+          this.state.queue = structuredClone(event.items);
+        }
+        break;
+      case 'session.inspection':
+        if (this.state.session.sessionId === event.sessionId) {
+          this.state.inspection = structuredClone(event.inspection);
+          this.state.inputSummaries = structuredClone(event.inputSummaries);
+        }
         break;
       case 'session.context':
         this.state.context = { ...this.state.context, ...structuredClone(event.context) };
@@ -107,18 +177,48 @@ export class FactStore {
           const model = ctx.modelOptions.find((item) => item.value === ctx.currentModelValue);
           if (model) ctx.modelLabel = model.name;
         }
+        if (ctx.currentThinkingValue && ctx.thinkingOptions?.length) {
+          const thinking = ctx.thinkingOptions.find((item) => item.value === ctx.currentThinkingValue);
+          if (thinking) ctx.thinkingLabel = thinking.name;
+        }
         break;
       case 'turn.started':
         this.state.session.status = 'running';
         this.state.turn = { status: 'running', turnId: event.turnId, prompt: event.prompt };
+        if (this.state.session.sessionId) {
+          const index = this.state.sessions.findIndex(
+            (row) => row.sessionId === this.state.session.sessionId,
+          );
+          if (index >= 0) this.state.sessions[index] = { ...this.state.sessions[index], running: true };
+        }
         break;
       case 'user.message':
         this.appendMessage({ messageId: event.messageId, role: 'user', text: event.text });
+        this.appendTimelineUser(event.messageId, event.text);
+        break;
+      case 'slash.completed':
+        this.appendMessage({ messageId: event.messageId, role: 'user', text: event.command });
+        this.appendTimelineUser(event.messageId, event.command);
+        this.appendMessage({ messageId: event.replyId, role: 'assistant', text: event.output });
+        this.appendTimelineAssistant(event.replyId, event.output);
+        break;
+      case 'thought.delta':
+        this.appendTimelineThought(event.thoughtId, event.text);
         break;
       case 'assistant.delta': {
+        const trimmed = event.text.trim();
+        if (!trimmed) break;
         const existing = this.state.messages.find((message) => message.messageId === event.messageId);
-        if (existing) existing.text += event.text;
-        else this.appendMessage({ messageId: event.messageId, role: 'assistant', text: event.text });
+        if (existing) {
+          existing.text += event.text;
+        } else if (
+          !this.state.messages.some(
+            (message) => message.role === 'assistant' && message.text.trim() === trimmed,
+          )
+        ) {
+          this.appendMessage({ messageId: event.messageId, role: 'assistant', text: event.text });
+        }
+        this.appendTimelineAssistant(event.messageId, event.text);
         break;
       }
       case 'tool.update':
@@ -148,6 +248,12 @@ export class FactStore {
           prompt: this.state.turn.prompt,
           stopReason: event.stopReason,
         };
+        if (this.state.session.sessionId) {
+          const index = this.state.sessions.findIndex(
+            (row) => row.sessionId === this.state.session.sessionId,
+          );
+          if (index >= 0) this.state.sessions[index] = { ...this.state.sessions[index], running: false };
+        }
         break;
       case 'error':
         this.state.connection.status = 'error';
@@ -164,6 +270,46 @@ export class FactStore {
     else this.state.messages.push(structuredClone(message));
   }
 
+  private appendTimelineUser(messageId: string, text: string) {
+    const trimmed = text.trim();
+    const last = this.state.timeline.at(-1);
+    if (last?.kind === 'user' && last.messageId === messageId) {
+      last.text += text;
+      return;
+    }
+    if (trimmed && last?.kind === 'user' && last.text.trim() === trimmed) return;
+    this.state.timeline.push({ kind: 'user', messageId, text });
+  }
+
+  private appendTimelineThought(thoughtId: string, text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const last = this.state.timeline.at(-1);
+    if (last?.kind === 'thought' && last.thoughtId === thoughtId) {
+      last.text += text;
+      return;
+    }
+    if (this.state.timeline.some((item) => item.kind === 'thought' && item.text.trim() === trimmed)) {
+      return;
+    }
+    this.state.timeline.push({ kind: 'thought', thoughtId, text });
+  }
+
+  private appendTimelineAssistant(messageId: string, text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const last = this.state.timeline.at(-1);
+    if (last?.kind === 'assistant' && last.messageId === messageId) {
+      last.text += text;
+      return;
+    }
+    if (last?.kind === 'assistant' && last.text.trim() === trimmed) return;
+    if (this.state.timeline.some((item) => item.kind === 'assistant' && item.text.trim() === trimmed)) {
+      return;
+    }
+    this.state.timeline.push({ kind: 'assistant', messageId, text });
+  }
+
   private upsertListedSession(item: SessionIndexItem) {
     const existing = this.state.sessions.find((session) => session.sessionId === item.sessionId);
     if (existing) {
@@ -177,7 +323,13 @@ export class FactStore {
 
   private upsertTool(toolCallId: string, patch: Omit<ToolFact, 'toolCallId'>) {
     const existing = this.state.tools.find((tool) => tool.toolCallId === toolCallId);
-    if (existing) Object.assign(existing, structuredClone(patch));
-    else this.state.tools.push({ toolCallId, ...structuredClone(patch) });
+    if (existing) {
+      Object.assign(existing, structuredClone(patch));
+      return;
+    }
+    this.state.tools.push({ toolCallId, ...structuredClone(patch) });
+    if (!this.state.timeline.some((item) => item.kind === 'tool' && item.toolCallId === toolCallId)) {
+      this.state.timeline.push({ kind: 'tool', toolCallId });
+    }
   }
 }

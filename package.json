@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Talos browser single-session ACP probe and product shell.",
+  "description": "Talos Desktop product shell over talos studio JSON-RPC.",
   "engines": {
     "node": ">=22.19 <23 || >=24.2 <27"
   },
@@ -13,7 +13,7 @@
     "dev:product": "tsx src/dev.ts",
     "stop:product": "tsx spike/stop-product-ports.ts",
     "dev:shell": "vite --config app/vite.config.ts",
-    "test:core": "vitest run test/round3.test.ts test/acp-helpers.test.ts test/workspace-path.test.ts test/session-directory.test.ts test/usage-from-acp.test.ts test/message-markdown.test.ts",
+    "test:core": "vitest run test/round3.test.ts test/acp-helpers.test.ts test/studio-helpers.test.ts test/studio-band0.test.ts test/studio-account.test.ts test/usage-from-studio.test.ts test/band-acceptance.test.ts test/ui-manifest.test.ts test/service-actions.test.ts test/engine-events-fact-store.test.ts test/workspace-file-list.test.ts test/studio-questionnaire.test.ts test/studio-inspection.test.ts test/studio-fork.test.ts test/studio-band4.test.ts test/studio-band5.test.ts test/engine-port.test.ts test/studio-slash.test.ts test/timeline-fact-store.test.ts test/session-history.test.ts test/workspace-path.test.ts test/session-directory.test.ts test/usage-from-acp.test.ts test/message-markdown.test.ts test/round1-acceptance.test.ts test/slash-prompt.test.ts",
     "check:all": "npm run typecheck && npm run test:core && npm run check:demo && npm run check:handoff",
     "typecheck": "tsc --noEmit",
     "check:handoff": "python tools/check-handoff.py",

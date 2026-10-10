@@ -42,7 +42,7 @@ TUI 采用对话流式终端方向：主阅读区留给连续对话和代码，�
 
 此前 03 装配机械臂的 [字符稿](references/tui-arm.txt) 和 [文本示意图](references/tui-frames.md) 仅供历史构图参考，已不作为真实欢迎页标识。游戏参考目录 `C:\DEV\develop\tmp\Manuel-ref-image` 的素材仅用于设计比对，不是发布资产。
 
-原生 TUI 已有对话、工具、审批与 provider 交互。视觉调整复用这些组件；文本示意图中的动态选项、Esc 和“仅一次”文案不能直接作为行为规范。真实边界见 [talos-engine](adapters/talos-engine.md#原生-tui-与-gui-边界复核2026-09-29)，不要把 GUI 的 ACP 卡片契约移植成另一套 TUI 业务逻辑。
+原生 TUI 已有对话、工具、审批与 provider 交互。视觉调整复用这些组件；文本示意图中的动态选项、Esc 和“仅一次”文案不能直接作为行为规范。真实边界见 [talos-engine](adapters/talos-engine.md)，不要把 GUI 的批准卡片契约移植成另一套 TUI 业务逻辑。
 
 旧机械臂本机预览位于忽略目录 `.talos/tui-art/`，不能作为当前欢迎页依据。真实图案以相邻引擎 `packages/tui/src/tui/shell/welcome/design.ts` 为准；代码断言不能替代终端目视。整体配色、密度、菜单、输入区仍需分别验收；图案通过不等于整个 TUI 通过。
 

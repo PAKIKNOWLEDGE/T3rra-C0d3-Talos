@@ -1,28 +1,32 @@
 import { FactStore } from '../core/fact-store.js';
 import { assertWorkspaceDirectory } from '../host/workspace-path.js';
-import { startTalosAcpProcess } from '../host/minimax-process.js';
-import { readSessionDeleteCapability, type MinimaxAcpAdapter } from '../adapter/minimax-acp.js';
+import { startTalosStudioProcess } from '../host/talos-studio-process.js';
+import type { TalosStudioAdapter } from '../adapter/talos-studio.js';
 import { TalosService, type EnginePort } from './talos-service.js';
 import { createTalosWebSocketServer } from './ws-server.js';
 import { bindGuiSession } from './workspace-session.js';
 import { writeSessionBinding } from '../host/session-binding.js';
 
-type AcpBundle = Awaited<ReturnType<typeof startTalosAcpProcess>>;
+type StudioBundle = Awaited<ReturnType<typeof startTalosStudioProcess>>;
 
 export async function startRuntimeService(initialCwd: string, port = 5194) {
   const workspaceDir = assertWorkspaceDirectory(initialCwd);
   let processEpoch = 1;
-  let acpBundle: AcpBundle | undefined;
-  let adapter: MinimaxAcpAdapter | undefined;
+  let studioBundle: StudioBundle | undefined;
+  let adapter: TalosStudioAdapter | undefined;
 
   const store = new FactStore(TalosService.createEpoch());
   const engine: EnginePort = {
     sendPrompt: (sessionId, prompt) => {
-      if (!adapter) throw new Error('Talos ACP adapter is not connected.');
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
       return adapter.sendPrompt(sessionId, prompt);
     },
+    executeSlash: (sessionId, name, input) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.executeSlash(sessionId, name, input);
+    },
     cancel: (sessionId) => {
-      if (!adapter) throw new Error('Talos ACP adapter is not connected.');
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
       return adapter.cancel(sessionId);
     },
     replyApproval: async (sessionId, requestId, optionId) => {
@@ -31,15 +35,15 @@ export async function startRuntimeService(initialCwd: string, port = 5194) {
       }
     },
     setMode: (sessionId, modeId) => {
-      if (!adapter) throw new Error('Talos ACP adapter is not connected.');
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
       return adapter.setMode(sessionId, modeId);
     },
     setConfigOption: (sessionId, configId, value) => {
-      if (!adapter) throw new Error('Talos ACP adapter is not connected.');
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
       return adapter.setConfigOption(sessionId, configId, value);
     },
     createSession: async (cwd) => {
-      if (!adapter) throw new Error('Talos ACP adapter is not connected.');
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
       const created = await adapter.createSession(cwd);
       writeSessionBinding(cwd, { sessionId: created.sessionId, cwd });
       try {
@@ -49,7 +53,7 @@ export async function startRuntimeService(initialCwd: string, port = 5194) {
       }
     },
     loadSession: async (sessionId, cwd) => {
-      if (!adapter) throw new Error('Talos ACP adapter is not connected.');
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
       await adapter.loadSession(sessionId, cwd);
       writeSessionBinding(cwd, { sessionId, cwd });
       try {
@@ -59,7 +63,7 @@ export async function startRuntimeService(initialCwd: string, port = 5194) {
       }
     },
     deleteSession: async (sessionId, cwd) => {
-      if (!adapter) throw new Error('Talos ACP adapter is not connected.');
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
       await adapter.deleteSession(sessionId);
       try {
         await adapter.listSessions(cwd);
@@ -67,13 +71,85 @@ export async function startRuntimeService(initialCwd: string, port = 5194) {
         /* list error already emitted */
       }
     },
+    renameSession: async (sessionId, title, cwd) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      await adapter.renameSession(sessionId, title, cwd);
+    },
+    archiveSession: async (sessionId, archived, cwd) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      await adapter.archiveSession(sessionId, archived, cwd);
+    },
+    replyQuestionnaire: (sessionId, requestId, answers) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.replyQuestionnaire(sessionId, requestId, answers);
+    },
+    dismissQuestionnaire: (sessionId, requestId) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.dismissQuestionnaire(sessionId, requestId);
+    },
+    searchWorkspaceFiles: (cwd, query) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.searchWorkspaceFiles(cwd, query);
+    },
+    listWorkspaceFiles: (cwd, path) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.listWorkspaceFiles(cwd, path);
+    },
+    steerTurn: (sessionId, text) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.steerTurn(sessionId, text);
+    },
+    enqueueMessage: (sessionId, text) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.enqueueMessage(sessionId, text);
+    },
+    deleteQueueItem: (sessionId, itemId) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.deleteQueueItem(sessionId, itemId);
+    },
+    continueQueue: (sessionId) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.continueQueue(sessionId);
+    },
+    previewRewind: (sessionId, userMessageId) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.previewRewind(sessionId, userMessageId);
+    },
+    rewindSession: (sessionId, userMessageId, rewindTurnDiff) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.rewindSession(sessionId, userMessageId, rewindTurnDiff);
+    },
+    steerQueueItem: (sessionId, itemId) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.steerQueueItem(sessionId, itemId);
+    },
+    getForkOptions: (sessionId, assistantMessageId) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.getForkOptions(sessionId, assistantMessageId);
+    },
+    forkSession: (sessionId, cwd, assistantMessageId) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.forkSession(sessionId, cwd, assistantMessageId);
+    },
+    editSessionMessage: (sessionId, userMessageId, content) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.editSessionMessage(sessionId, userMessageId, content);
+    },
+    updateQueueItem: (sessionId, itemId, text) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.updateQueueItem(sessionId, itemId, text);
+    },
+    retrySessionHistory: (sessionId) => {
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      return adapter.retrySessionHistory(sessionId);
+    },
   };
 
-  const applyAgentCapabilities = (bundle: AcpBundle) => {
+  const applyStudioCapabilities = () => {
     service.apply({
       kind: 'agent.capabilities',
       processEpoch,
-      sessionDelete: readSessionDeleteCapability(bundle.initialized),
+      sessionDelete: true,
     });
   };
 
@@ -85,12 +161,12 @@ export async function startRuntimeService(initialCwd: string, port = 5194) {
     if (current.session.cwd === nextDir && current.session.sessionId) return;
 
     service.prepareWorkspaceSwitch(processEpoch + 1);
-    acpBundle?.close();
+    studioBundle?.close();
     processEpoch += 1;
     try {
-      acpBundle = await startTalosAcpProcess(processEpoch, (event) => service.apply(event));
-      adapter = acpBundle.adapter;
-      applyAgentCapabilities(acpBundle);
+      studioBundle = await startTalosStudioProcess(processEpoch, nextDir, (event) => service.apply(event));
+      adapter = studioBundle.adapter;
+      applyStudioCapabilities();
       await bindGuiSession(adapter, nextDir);
     } catch (error) {
       service.apply({
@@ -105,9 +181,9 @@ export async function startRuntimeService(initialCwd: string, port = 5194) {
   service = new TalosService(store, engine, { switchWorkspace });
 
   try {
-    acpBundle = await startTalosAcpProcess(processEpoch, (event) => service.apply(event));
-    adapter = acpBundle.adapter;
-    applyAgentCapabilities(acpBundle);
+    studioBundle = await startTalosStudioProcess(processEpoch, workspaceDir, (event) => service.apply(event));
+    adapter = studioBundle.adapter;
+    applyStudioCapabilities();
     await bindGuiSession(adapter, workspaceDir);
     const socketServer = createTalosWebSocketServer(service, port);
     await socketServer.ready;
@@ -115,15 +191,15 @@ export async function startRuntimeService(initialCwd: string, port = 5194) {
       service,
       socketServer,
       switchWorkspace,
-      initialized: acpBundle.initialized,
-      stderr: acpBundle.stderr,
+      initialized: studioBundle.initialized,
+      stderr: studioBundle.stderr,
       close: async () => {
         await socketServer.close();
-        acpBundle?.close();
+        studioBundle?.close();
       },
     };
   } catch (error) {
-    acpBundle?.close();
+    studioBundle?.close();
     throw error;
   }
 }

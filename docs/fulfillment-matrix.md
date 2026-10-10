@@ -1,0 +1,75 @@
+# Studio 履约矩阵（Tauri 前全产品）
+
+**履行状态**：本表是 **合同**，不是验收签字。机读桩、Git WIP、主人目视失败与 P0 缺陷见 [handoff-honest-2026-10-10.md](handoff-honest-2026-10-10.md)。
+
+主人 `/goal`：带 **0–5** 按本表交付；**带 6**（Tauri）不在本目标内。每行在改代码前必须闭合，禁止「ACP 管道副作用」假设。
+
+| 用户动作 | Studio 方法（全部） | FactStore / 事件 | 诚实 UI 若缺 |
+| --- | --- | --- | --- |
+| 连上 | `studio/initialize` | `connected` / `error` | 失败可读 |
+| 列活 | `session/list` | `session.listed` | 列表错误 |
+| 新建 | `session/create` + `session/messages`（空） | `session.created` | 空记录 |
+| 点开旧活 | `session/load` + `session/messages` + `session/activeRun` | `session.loaded` + `session.history`；在跑则 `turn/watch` | 「记录未能加载」+ 重试 |
+| 刷新附着 | `session/resume`（失败则 `load`）+ `session/messages` | 同点开 | bind 走 `workspace-session` |
+| 删活 | `session/delete` | `session.deleted` | |
+| 关掉附着 | `session/close` | —（宿主 `adapter.close`） | 换工作区重启子进程 |
+| 发正文 | `turn/start`（仅非斜杠） | `turn.*`、流事件 | |
+| 停 | `turn/cancel`；重连 `turn/watch` | turn 状态 | |
+| `/` 补全 | `commands/list` | `session.context.availableCommands` | 未同步拒提交 |
+| `/new` | 宿主 `session/create` | 同新建 | |
+| ACP 内建斜杠 | **禁止 `turn/start`**；`studio-slash.ts` + `execute_slash` | `slash.completed` | notice 失败 |
+| 模式 | `session/setMode`（`transition: next_turn`） | `session.context` `pendingModeId` | 胶囊 `*` +「下回合生效」 |
+| 模型/思考 | `config/set`（`config/options`） | `session.context` | |
+| 用量 | `inspection/usage` + 有则 `inspection/usageSummary` + `inspection/context`；`usage/commits/subscribe` | context 用量字段；`usage/commit` 刷新 | 无数不画假条 |
+| 账号只读 | `account/status` | `session.context.accountStatusLabel` | 失败见底栏 error；不画假登录 |
+| 批准 | `permission/list` + `permission/reply` | `approval.*` | |
+| 思考块 | `turn/event` 投影 | `thought.delta` / `assistant.delta` | 默认折叠 |
+
+| 改名 / 归档 | `session/rename` `session/archive` | `session.listed` 刷新 | 生成中禁用侧栏操作 |
+| 在跑标记 | `session/activeRun` + `turn/*` | `session.run_state` | 外会话「运行中」不可切 |
+| 目录随引擎变 | `runtime/events/subscribe` | `session.listed` 自动刷新 | |
+
+| 时间线工具/通知 | `turn/event` 投影 | `tool`/`notice` timeline 项 | 未知 generic → 通知条 |
+| Git 元数据 | `workspace/git` | `session.context.gitBranch` | 非仓库仍显示「已连接」 |
+| 历史含工具 | `session/messages` 内 toolCalls | `session.history.tools` | |
+
+| 问卷 | `questionnaire/getPending` + `reply` / `dismiss` | `interactions.questionnaire` | 无则不装卡片 |
+| 计划审查 | `getPlanReview`（+ pending 内 plan） | `interactions.planReview` | 右栏空态 |
+| `@` 文件 | `workspace/files/list`（空查询）+ `search` | `list_workspace_files` / `search_workspace_files` | 不支持则菜单提示 |
+
+| 运行中排队 | `queue/enqueue` `queue/delete` | `session.queue` | composer 条带 |
+| 插话 | `turn/steer` | —（仍属当前 turn） | 插话模式按钮 |
+| 压缩 | `inspection/compact` | 经 `/compact` → `slash.completed` | 无假按钮 |
+| 回退 | `rewindPreview` + `session/rewind` | `session.history` 刷新 | 用户消息「回退到此」+ 预览确认 |
+| 记录锚点 | `session/inputSummaries` | `inputSummaries` | 侧栏跳转 |
+| 检视只读 | `inspection/skills` `mcp` `diagnostics` | `inspection` | 无数据空态 |
+
+| 队列继续/提前 | `queue/continue` `queue/steer` | `session.queue` 刷新 | 条带按钮 |
+| 分叉 | `forkOptions` + `session/fork` | 切换至新 `sessionId` | 侧栏 ⎇ / 助手消息分叉 |
+| 改用户话 | `session/editMessage` | `session.history` 刷新 | 编辑重发 + 确认 |
+
+| 队列改字 | `queue/update` | `session.queue` 刷新 | 条带「编辑」 |
+| 上下文明细 | `inspection/context` | `inspection.contextSnapshotLabel` | 用量区副标题 |
+| 后台任务 | `backgroundTasks/list` | `inspection.backgroundTasks` | 无则不写 |
+| 已装插件 | `plugins/listInstalled` | `inspection.installedPlugins` | 只读详情 |
+| 目标 | `goal/get`（禁用时无入口文案） | `inspection.goal` | 未启用不装假目标 |
+| 委派只读 | `delegation/get` | `inspection.delegationSummary` | 无则省略 |
+
+带 5 写操作（`goal/create`、`mcp/configure`、feedback 等）仍不进桌面；权威方法表以引擎 `studio-parity.md` 为准。
+
+## 机读证据（非目视替代）
+
+| 闸 | 命令 / 文件 |
+| --- | --- |
+| 总闸 | `npm run check:all` |
+| studio 脊骨 RPC | `test/band-acceptance.test.ts` |
+| ServiceAction 派发 | `test/service-actions.test.ts` |
+| FactStore 事件 | `test/engine-events-fact-store.test.ts` |
+| 带 0 合同 | `test/studio-band0.test.ts` |
+| 斜杠 / 压缩 | `test/studio-slash.test.ts`、`test/slash-prompt.test.ts` |
+| 带 3 问卷 | `test/studio-questionnaire.test.ts` |
+| 带 4 分叉 / 回退 / 改话 | `test/studio-fork.test.ts`、`test/studio-band4.test.ts` |
+| EnginePort 接线 | `test/engine-port.test.ts` |
+| 带 5 检视 | `test/studio-band5.test.ts`、`test/studio-inspection.test.ts` |
+| UI 登记 | `test/ui-manifest.test.ts`、`app/ui-manifest.json` |
+| **主人目视带 0–5** | [plan.md 下一小轮：带 0 目视验收](plan.md#下一小轮带-0-目视验收)（机读绿 ≠ 产品签字） |

@@ -14,6 +14,9 @@ function engineStub(overrides: Partial<{
 }> = {}) {
   return {
     sendPrompt: vi.fn(async () => {}),
+    executeSlash: vi.fn(async () => {}),
+    renameSession: vi.fn(async () => {}),
+    archiveSession: vi.fn(async () => {}),
     cancel: vi.fn(async () => {}),
     replyApproval: vi.fn(async () => {}),
     setMode: vi.fn(async () => {}),
@@ -21,6 +24,22 @@ function engineStub(overrides: Partial<{
     createSession: vi.fn(async () => {}),
     loadSession: vi.fn(async () => {}),
     deleteSession: vi.fn(async () => {}),
+    replyQuestionnaire: vi.fn(async () => {}),
+    dismissQuestionnaire: vi.fn(async () => {}),
+    searchWorkspaceFiles: vi.fn(async () => []),
+    listWorkspaceFiles: vi.fn(async () => []),
+    steerTurn: vi.fn(async () => {}),
+    enqueueMessage: vi.fn(async () => {}),
+    deleteQueueItem: vi.fn(async () => {}),
+    continueQueue: vi.fn(async () => {}),
+    previewRewind: vi.fn(async () => 'preview'),
+    rewindSession: vi.fn(async () => {}),
+    steerQueueItem: vi.fn(async () => {}),
+    getForkOptions: vi.fn(async () => ({ canFork: false })),
+    forkSession: vi.fn(async () => 's2'),
+    editSessionMessage: vi.fn(async () => {}),
+    updateQueueItem: vi.fn(async () => {}),
+    retrySessionHistory: vi.fn(async () => {}),
     ...overrides,
   };
 }
@@ -61,6 +80,18 @@ describe('session index parsing', () => {
 });
 
 describe('session directory service', () => {
+  it('marks session running from session.run_state', () => {
+    const store = new FactStore('epoch');
+    store.apply({
+      kind: 'session.listed',
+      processEpoch: 1,
+      cwd: 'C:\\tmp',
+      sessions: [{ sessionId: 'a', cwd: 'C:\\tmp' }],
+    });
+    store.apply({ kind: 'session.run_state', processEpoch: 1, sessionId: 'a', running: true });
+    expect(store.snapshot().sessions[0]?.running).toBe(true);
+  });
+
   it('stores session.listed on snapshot', () => {
     const service = new TalosService(new FactStore('s'), engineStub());
     service.apply({ kind: 'connected', processEpoch: 1 });
@@ -170,5 +201,19 @@ describe('session directory service', () => {
     expect(service.snapshot().messages).toEqual([
       { messageId: 'm1', role: 'user', text: 'stay' },
     ]);
+  });
+
+  it('retry_session_history calls engine when session matches', async () => {
+    const engine = engineStub();
+    const service = new TalosService(new FactStore('s'), engine);
+    service.apply({ kind: 'connected', processEpoch: 1 });
+    service.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: 'C:/w' });
+    await service.dispatch({
+      type: 'retry_session_history',
+      operationId: 'op-retry',
+      sessionId: 's1',
+      cwd: 'C:/w',
+    });
+    expect(engine.retrySessionHistory).toHaveBeenCalledWith('s1');
   });
 });

@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
   <title>TALOS · Talos 桌面控制台</title>
-  <link rel="stylesheet" href="../demo/talos.css">
+  <link rel="stylesheet" href="/demo/talos.css">
   <link rel="stylesheet" href="product.css">
-  <script src="../demo/text-scale.js" defer></script>
-  <script src="talos.js" defer></script>
+  <link rel="stylesheet" href="product-motion.css">
+  <script src="/demo/text-scale.js" defer></script>
+  <script type="module" src="talos.js"></script>
 </head>
 <body>
   <svg class="symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -62,8 +63,9 @@
       <form class="composer" id="composer">
         <label class="sr-only" for="prompt">下达指令</label>
         <div class="composer-field">
-          <textarea id="prompt" rows="2" placeholder="下达指令，或输入 / 浏览 Talos 命令…" autocomplete="off" spellcheck="false"></textarea>
+          <textarea id="prompt" rows="2" placeholder="下达指令；/ 命令 · @ 引用工作区文件" autocomplete="off" spellcheck="false"></textarea>
           <ul class="slash-menu" id="slashMenu" role="listbox" aria-label="斜杠命令" hidden></ul>
+          <ul class="slash-menu mention-menu" id="mentionMenu" role="listbox" aria-label="工作区文件" hidden></ul>
         </div>
         <div class="composer-bottom">
           <div class="mode-switch" role="group" aria-label="工作模式" id="modeControl">
@@ -78,9 +80,15 @@
             <ul class="model-menu" id="modelMenu" role="listbox" hidden></ul>
             <span class="model-readonly" id="modelValue">—</span>
           </label>
+          <div class="thinking-switch" role="group" aria-label="思考" id="thinkingControl">
+            <div id="thinkingButtonsHost"></div>
+            <span class="thinking-readonly" id="thinkingValue">—</span>
+          </div>
+          <button type="button" class="steer-toggle" id="steerButton" hidden aria-pressed="false">插话模式</button>
           <button type="submit" class="send" id="sendButton"><span>发送指令</span><svg class="icon"><use href="#i-arrow"/></svg></button>
           <button type="button" class="stop" id="stopButton" hidden>停止当前回合 <span>■</span></button>
         </div>
+        <div class="queue-strip" id="queueStrip" hidden></div>
         <div class="composer-note" id="composerNote"><span>未连接 · 请先启动 Talos</span><span>Enter 发送 <i>·</i> Shift + Enter 换行</span></div>
       </form>
     </main>
@@ -88,7 +96,9 @@
     <aside class="inspector" id="inspector" aria-label="本轮概况">
       <div class="inspector-heading"><span class="eyebrow">OPERATION / INFO</span><h2>本轮概况</h2></div>
       <section class="summary-section"><div class="section-label"><h3>执行计划</h3><span id="planCount">—</span></div><ol class="plan" id="plan"></ol></section>
-      <section class="summary-section"><div class="section-label"><h3>上下文</h3><span class="eyebrow">CONTEXT</span></div><div class="usage"><strong id="usageValue">—</strong><span id="usageCap">暂无用量数据</span></div><div class="usage-track"><i id="usageBar"></i></div><p class="subtle">有数据时显示用量。</p></section>
+      <section class="summary-section"><div class="section-label"><h3>检视</h3><span id="inspectionCount">—</span></div><p class="inspection-blurb" id="inspectionBlurb">—</p><button type="button" class="light-button inspection-detail-btn" id="inspectionDetailBtn" hidden>技能与 MCP</button></section>
+      <section class="summary-section"><div class="section-label"><h3>记录锚点</h3><span id="anchorCount">—</span></div><ul class="files anchor-list" id="inputAnchors"></ul></section>
+      <section class="summary-section"><div class="section-label"><h3>上下文</h3><span class="eyebrow">CONTEXT</span></div><div class="usage"><strong id="usageValue">—</strong><span id="usageCap"></span></div><div class="usage-track"><i id="usageBar"></i></div></section>
       <section class="summary-section"><div class="section-label"><h3>本轮文件</h3><span id="fileCount">00</span></div><ul class="files" id="files"></ul></section>
       <div class="engine"><span class="engine-icon" aria-hidden="true">T</span><div><b id="engineTitle">TALOS</b><span id="engineSubtitle">Talos · 离线</span></div></div>
     </aside>
@@ -101,7 +111,7 @@
     <span class="sample-footnote" id="statusFootnote">未连接</span>
   </footer>
 
-  <dialog id="detailDialog" class="detail-dialog" aria-labelledby="detailTitle"><header class="dialog-head"><div><span class="eyebrow" id="detailLabel">DETAIL</span><h2 id="detailTitle">详情</h2></div><button type="button" class="icon-button" id="closeDetail" aria-label="关闭详情"><svg class="icon"><use href="#i-close"/></svg></button></header><div class="dialog-content" id="detailContent"></div><footer class="dialog-footer"><span id="dialogFootnote">Talos 桌面</span><button type="button" class="light-button" id="doneDetail">返回记录 <span>↗</span></button></footer></dialog>
+  <dialog id="detailDialog" class="detail-dialog" aria-labelledby="detailTitle"><header class="dialog-head"><div><span class="eyebrow" id="detailLabel">DETAIL</span><h2 id="detailTitle">详情</h2></div><button type="button" class="icon-button" id="closeDetail" aria-label="关闭详情"><svg class="icon"><use href="#i-close"/></svg></button></header><div class="dialog-content" id="detailContent"></div><footer class="dialog-footer"><span id="dialogFootnote">Talos 桌面</span><div class="dialog-actions" id="detailActions" hidden><button type="button" class="neutral-button" id="detailCancel">取消</button><button type="button" class="primary-button" id="detailConfirm">确认</button></div><button type="button" class="light-button" id="doneDetail">返回记录 <span>↗</span></button></footer></dialog>
   <div class="toast" id="toast" role="status"></div>
 </body>
 </html>
