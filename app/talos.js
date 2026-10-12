@@ -865,13 +865,13 @@ function renderSessions() {
           const blockSwitch = (running && !active) || foreignRunning;
           const sideActions =
             !running && !foreignRunning
-              ? `<button type="button" class="session-fork" data-session-fork="${escapeHtml(item.sessionId)}" aria-label="分叉" title="分叉">⎇</button><button type="button" class="session-rename" data-session-rename="${escapeHtml(item.sessionId)}" aria-label="重命名">✎</button><button type="button" class="session-archive" data-session-archive="${escapeHtml(item.sessionId)}" data-archived="${item.archived ? '1' : '0'}" aria-label="${item.archived ? '取消归档' : '归档'}">${item.archived ? '↩' : '⊟'}</button>${
+              ? `<button type="button" class="session-fork" data-session-fork="${escapeHtml(item.sessionId)}" aria-label="分叉" title="分叉">${icon('fork')}</button><button type="button" class="session-rename" data-session-rename="${escapeHtml(item.sessionId)}" aria-label="重命名" title="重命名">${icon('edit')}</button><button type="button" class="session-archive" data-session-archive="${escapeHtml(item.sessionId)}" data-archived="${item.archived ? '1' : '0'}" aria-label="${item.archived ? '取消归档' : '归档'}" title="${item.archived ? '取消归档' : '归档'}">${icon(item.archived ? 'unarchive' : 'archive')}</button>${
                   sessionDeleteEnabled()
-                    ? `<button type="button" class="session-delete" data-session-delete="${escapeHtml(item.sessionId)}" aria-label="删除会话"><svg class="icon"><use href="#i-close"/></svg></button>`
+                    ? `<button type="button" class="session-delete" data-session-delete="${escapeHtml(item.sessionId)}" aria-label="删除会话" title="删除会话"><svg class="icon"><use href="#i-close"/></svg></button>`
                     : ''
                 }`
               : '';
-          return `<div class="session-row${foreignRunning ? ' session-row-running' : ''}"><button type="button" class="session${active ? ' current' : ''}" data-session-id="${escapeHtml(item.sessionId)}" ${active ? 'aria-current="true"' : ''} ${blockSwitch ? 'disabled' : ''}><span class="session-index">${String(index + 1).padStart(2, '0')}</span><span><span class="session-name">${escapeHtml(sessionLabel(item))}</span><span class="session-meta">${escapeHtml(meta)}</span></span></button>${sideActions ? `<div class="session-row-actions">${sideActions}</div>` : ''}</div>`;
+          return `<div class="session-row${active ? ' session-row-current' : ''}${foreignRunning ? ' session-row-running' : ''}"><button type="button" class="session${active ? ' current' : ''}" data-session-id="${escapeHtml(item.sessionId)}" title="${escapeHtml(sessionLabel(item))}" ${active ? 'aria-current="true"' : ''} ${blockSwitch ? 'disabled' : ''}><span class="session-index">${String(index + 1).padStart(2, '0')}</span><span><span class="session-name">${escapeHtml(sessionLabel(item))}</span><span class="session-meta">${escapeHtml(meta)}</span></span></button>${sideActions ? `<div class="session-row-actions">${sideActions}</div>` : ''}</div>`;
         })
         .join(''),
     );

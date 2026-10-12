@@ -116,60 +116,95 @@
 
 .session-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 4px;
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  min-width: 0;
+  border: 1px solid #ffffff10;
+  border-radius: 3px;
+  background: #ffffff04;
+  overflow: hidden;
+}
+
+.session-row-current {
+  background: linear-gradient(110deg, #dededd, #c8c8c7);
+  border-color: #e4e5e3;
 }
 
 .session-row .session {
   min-width: 0;
+  min-height: 64px;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 10px;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
+
+.session-row .session > span:last-child { min-width: 0; }
+
+.session-row .session.current { background: transparent; }
+.session-row .session.current::before { left: 0; top: 12px; bottom: 12px; width: 3px; }
+.session-row .session:hover { background: #ffffff08; }
+.session-row-current .session:hover { background: #ffffff18; }
+
+.session-row .session-name {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.session-row .session-index { font-size: 16px; }
+.session-row .session-meta { margin-top: 4px; }
 
 .session-row-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: flex-end;
   gap: 4px;
+  padding: 4px 8px;
+  border-top: 1px solid #ffffff0c;
 }
 
-.session-row-running .session-meta {
-  color: #f4eb16;
-}
+.session-row-current .session-row-actions { border-color: #26262618; }
+.session-row-running .session-meta { color: var(--yellow); }
 
-.session-delete,
-.session-rename,
-.session-archive {
-  display: flex;
+.session-row-actions > button {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  min-height: 20px;
-  flex: 1;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
   padding: 0;
-  border: 1px solid #ffffff14;
+  border: 1px solid transparent;
   border-radius: 3px;
-  background: #ffffff06;
-  color: #a8a8a6;
+  background: transparent;
+  color: #a8aaa6;
   cursor: pointer;
 }
 
-.session-delete:hover {
-  background: #ffffff12;
-  color: #f4eb16;
-  border-color: #f4eb1640;
+.session-row-actions > button .icon { width: 15px; height: 15px; }
+.session-row-actions > button:hover { background: #ffffff0b; color: #e4e5df; border-color: #ffffff20; }
+.session-row-current .session-row-actions > button { color: #535650; }
+.session-row-current .session-row-actions > button:hover { background: #2626260b; color: #252625; border-color: #26262622; }
+.session-row-actions > .session-delete:hover { color: #e3a7a1; }
+.session-row-current .session-row-actions > .session-delete:hover { color: #934c42; }
+
+.session-row .session:focus-visible,
+.session-row-actions > button:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: -2px;
 }
 
-.session-delete .icon {
-  width: 14px;
-  height: 14px;
-}
-
-.session-row .session.current + .session-delete {
-  color: #4a4a48;
-}
-
-.session-row .session.current + .session-delete:hover {
-  color: #252625;
-}
+.session-row-current .session:focus-visible,
+.session-row-current .session-row-actions > button:focus-visible { outline-color: #252625; }
 
 .session-empty {
   padding: 14px 10px;
@@ -232,7 +267,7 @@
   width: 100%;
   padding: 8px 10px;
   font-size: 11px;
-  border: 1px dashed #ffffff22;
+  border: 1px solid #ffffff22;
   border-radius: 3px;
   background: #1a1a1a;
   color: #e0e0df;
@@ -247,12 +282,16 @@
   padding: 8px 12px;
   font-size: 11px;
   font-weight: 700;
-  border: 1px solid #f4eb1640;
+  border: 1px solid #ffffff22;
   border-radius: 3px;
-  background: #f4eb1618;
-  color: #f4eb16;
+  background: #ffffff05;
+  color: #c4c6c0;
   cursor: pointer;
 }
+
+.workspace-switch button:hover:not(:disabled) { background: #ffffff0c; border-color: #ffffff38; }
+.workspace-switch input:focus-visible,
+.workspace-switch button:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
 
 .workspace-switch button:disabled {
   opacity: 0.45;
@@ -714,4 +753,28 @@
 
 .usage-track.is-empty > i {
   width: 0 !important;
+}
+
+/* Secondary actions retain the product's rectangular industrial controls. */
+.message-actions .light-button,
+.inspection-detail-btn {
+  min-height: 32px;
+  padding: 7px 12px;
+  border: 1px solid #ffffff24;
+  border-radius: 3px;
+  background: #ffffff06;
+  color: #c6c8c2;
+  font-size: calc(11px * var(--text-scale));
+}
+
+.message-actions .light-button:hover,
+.inspection-detail-btn:hover { background: #ffffff10; border-color: #ffffff40; color: #eeeeea; }
+.message-actions .light-button:focus-visible,
+.inspection-detail-btn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+
+@media (max-width: 640px) {
+  .session-row .session { grid-template-columns: 18px minmax(0, 1fr); gap: 6px; padding: 10px 8px; }
+  .session-row .session-index { font-size: 12px; }
+  .session-row-actions { gap: 3px; padding: 4px 6px; }
+  .session-row-actions > button { flex-basis: 24px; width: 24px; height: 28px; }
 }

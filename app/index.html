@@ -42,6 +42,10 @@
     <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></symbol>
     <symbol id="i-terminal" viewBox="0 0 24 24"><path d="m4 6 6 6-6 6M13 18h8"/></symbol>
     <symbol id="i-file" viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5zM14 3v6h5M8 13h8M8 17h5"/></symbol>
+    <symbol id="i-fork" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><path d="M6 7v10M18 7v2a4 4 0 0 1-4 4H6"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m14 5 5 5M4 20l4-1L20 7l-4-4L4 15z"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24"><path d="M4 4h16v4H4zM5 8v12h14V8M9 12h6"/></symbol>
+    <symbol id="i-unarchive" viewBox="0 0 24 24"><path d="M4 4h16v4H4zM5 8v12h14V8M12 17v-6m-3 3 3-3 3 3"/></symbol>
     <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v7M12 6v2"/></symbol>
   </svg>
 
@@ -65,7 +69,7 @@
         </div>
         <form class="workspace-switch" id="workspaceSwitchForm">
           <label class="sr-only" for="workspaceInput">切换到的工作区绝对路径</label>
-          <input type="text" id="workspaceInput" name="cwd" placeholder="输入目标路径，如 C:\Projects\repo" spellcheck="false" autocomplete="off" />
+          <input type="text" id="workspaceInput" name="cwd" placeholder="工作区绝对路径" spellcheck="false" autocomplete="off" />
           <button type="submit">切换工作区</button>
         </form>
         <p class="workspace-switch-hint" id="workspaceSwitchHint">输入工作区的绝对路径。</p>
