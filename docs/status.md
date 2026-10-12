@@ -7,13 +7,13 @@
 | 字段 | 值 |
 | --- | --- |
 | 任务标识 / 修订 | desktop-release-closeout / 0.1.2 |
-| 阶段 | 用户验收通过；发布收口中，公共安装包受字体来源缺项阻塞 |
+| 阶段 | 用户验收/文档收口通过；main已推送；Release草稿已上传，公开发行受字体来源缺项阻塞 |
 | 本轮角色 / 来源 | 用户明确授权Codex审docs、写README、放入两张图、push/release与有限清理 |
 | 目标 / 方案入口 | [发布收口](plan.md#当前任务发布收口) |
 | 允许范围 | 文档/用户截图/发布说明、push、Release、有限临时构建交付物清理 |
 | 禁止范围 | 改产品/CLI、自动修三个issue、自动界面操作、cargo clean、结束用户进程 |
 | 验收 / 停止点 | 文档与Release状态一致；字体缺项不掩盖，停在可核对交付状态 |
-| 完成证据 | 产品22c0b4e；0.1.2用户明确通过；本轮文档/发布记录待保存 |
+| 完成证据 | 产品22c0b4e；0.1.2用户明确通过；文档收口e03a353已推送；Release草稿410530819，资产大小/服务端SHA-256一致 |
 | 下一接手 / 就绪性 | 无自动下一任务；字体来源待补，UI-001–003待用户选轮 |
 
 ## 已验收产品
@@ -34,8 +34,8 @@
 | NSIS资产名 | TALOS_0.1.2_x64-setup.exe |
 | 大小 | 27,668,605 bytes |
 | SHA-256 | 77BB4813835B1C46CA16A65F8B14E00306880B2BEC8209CBE3920D93DFEC1FF3 |
-| push | 本轮待执行并核对remote HEAD |
-| Release | 本轮准备草稿；公共安装包未发布，不能宣称已公开可下载 |
+| push | e03a353已推送且remote HEAD核对一致；本文档补记随后另存推送 |
+| Release | v0.1.2草稿已创建，ID410530819，target e03a353；NSIS与SHA256SUMS已上传；draft=true，未公开 |
 | 发布阻塞 | 现有HarmonyOS Sans SC WOFF2来源/未修改条件尚未证明；官方许可已取到，见[资产记录](licenses/README.md) |
 | MSI | 本轮未构建未安装；手动构建/复制命令见README |
 
@@ -51,4 +51,11 @@ Release草稿用于保留候选与资产校验；待字体来源/再分发条件
 
 构建缓存保留；不执行cargo clean。上传核对后清理自有NSIS/发布可执行输出、app/dist、dist-desktop及未使用旧安装验证目录。当前用户仍运行`.sandbox/talos-install-check-0.1.2/talos-desktop.exe`，不能删除正在使用的目录，也不结束用户程序；关闭后可另行清理。node_modules、Cargo build/deps/incremental缓存、用户.talos、会话/凭据、视觉预览与本地参考保留。
 
-本轮离线检查与清理实际结果在完成后补记；没有自动界面或真实模型调用。
+## 本轮检查与交付记录
+
+- 【实测】check-handoff通过：31份Markdown、205本地链接、15必需文件与demo基线；git diff --check通过。静态检查不证明外部链接、字体再分发或渲染。
+- 【实测】main从origin/main的0e00fb7推进到e03a353（含此前已验收的本地提交与本轮文档），推送成功并核对远端SHA。没有修改产品、调用模型或启动自动界面操作。
+- 【实测】Release草稿v0.1.2/ID410530819，isDraft=true、target为e03a353完整SHA；NSIS与校验清单state=uploaded。GitHub资产digest等于记录的77BB...1FF3，大小27,668,605一致。
+- 【未验】额外gh download回读未在有限等待内完成，已中断自有下载；不能声称下载后校验通过，上传资产核对依据为服务端digest。
+- 【实测】MSI参数从已安装Tauri CLI help确认--bundles msi；本轮未打MSI，构建缓存与用户运行窗口均保留。发布草稿不是公开发行完成。
+- 【受阻】清理删除被环境策略拒绝，包含明确路径重试；本轮没有删构建产物、没有cargo clean。当前运行的0.1.2目录本来也应保留。
