@@ -6,7 +6,7 @@
 | Talos Desktop | 本仓开发的 Windows 桌面工作台，使用相同引擎能力与已确认视觉 |
 | Studio | talos studio，stdio JSON-RPC，当前所读源码协议 v2；Desktop 唯一引擎入口 |
 | ACP | CLI 保留的编辑器客户端接口；不是本仓 Desktop 路线 |
-| 宿主 | 管理 CLI 子进程、cwd 与系统 I/O 的桌面侧代码；当前为 Node 开发服务，Tauri 方案后续落实 |
+| 宿主 | 管理 CLI 子进程、cwd 与系统 I/O 的桌面侧代码；Tauri管理原生窗口/目录/退出，随包Node运行现有服务 |
 | 投影 | 把引擎消息转换成显示记录，保留其内容、身份、顺序与语义 |
 | 候选 | 绑定提交、检查证据和启动入口的待验版本；不等于 release |
 | 技术复核 | Codex 独立核对实现是否符合当前任务合同 |

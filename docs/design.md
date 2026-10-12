@@ -6,7 +6,7 @@
 
 1. 正本：[demo/talos.html](../demo/talos.html)、[CSS](../demo/talos.css)、[JS](../demo/talos.js)。这是已验收的模拟数据交互范本。
 2. 本地参考：[newend1](references/newend1.png)、[newend2](references/newend2.png)、[newend3](references/newend3.png)、[newend4](references/newend4.png)、[newend5](references/newend5.png)、[newend6](references/newend6.png)。使用边界见 [参考说明](references/README.md)。
-3. 产品壳：[app/index.html](../app/index.html)、[app/product.css](../app/product.css)、[app/product-motion.css](../app/product-motion.css)。与 demo 共用基础样式；有真实数据接驳不等于已通过产品验收。
+3. 产品壳：[app/index.html](../app/index.html)、[app/product.css](../app/product.css)、[app/product-motion.css](../app/product-motion.css)。与 demo 共用基础样式；产品验收事实只见status；0.1.2真实画面由用户确认。
 
 新增已确认方案（2026-10-12）：用户确认 `8e52c77` 的 [开屏与空态预览](../preview/empty-landing/index.html) 非常满意。开屏采用浅灰点阵、黄色斜切面、深色 Talos 徽标与字标，沿用约 2.2 秒锁位/揭幕；空层沿既有预览。该确认只覆盖新增表面，预览整页的三栏、色板与模拟状态不替代已有产品正本；生产接入与状态验收按 plan/status。
 
@@ -32,7 +32,7 @@ TUI 视觉与验收归相邻 CLI，本仓不再维护一套 TUI 开发计划。�
 
 ## 资产与分发
 
-HarmonyOS Sans SC Regular / Bold 位于 demo/fonts 与 app/fonts。既有资料未附完整许可原文；本轮未核验，公开分发前需取得许可或由用户指定替代。不能从“免费商用”推断已履行再分发义务。
+HarmonyOS Sans SC Regular / Bold 位于 demo/fonts 与 app/fonts。官方许可原文已取得，但现有WOFF2来源及未修改条件尚未关闭，见[资产记录](licenses/README.md)。公开安装包不能只因取得许可原文就视为通过。
 
 六张游戏参考 PNG 仅本地设计比对，已忽略，不默认进入源码或产品包。不删除现有本地参考；新 checkout 缺参考时报告缺项，不能从相近图片编造视觉验收。
 

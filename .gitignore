@@ -12,8 +12,6 @@ __pycache__/
 .env.*
 !.env.example
 docs/references/*.png
-node_modules/
-dist/
 traces/
 .talos/
 

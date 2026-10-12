@@ -12,7 +12,7 @@ required = [
     'demo/talos.js', 'demo/talos-check.py',
     'demo/fonts/HarmonyOS_Sans_SC_Regular.woff2',
     'demo/fonts/HarmonyOS_Sans_SC_Bold.woff2',
-] + [f'docs/references/newend{i}.png' for i in range(1, 7)]
+]
 errors = []
 for relative in required:
     if not (root / relative).is_file():
@@ -92,4 +92,4 @@ if errors:
     print('\n'.join(errors))
     raise SystemExit(1)
 print(f'PASS: {len(documents)} documents, {links} local links, {len(required)} required files, demo SHA-256 snapshot, active handoff anchors')
-print('NOT VERIFIED: external URLs, engine behavior, font redistribution license, browser rendering')
+print('NOT VERIFIED: external URLs, engine behavior, font redistribution license, browser rendering; local reference PNGs are optional and untracked')

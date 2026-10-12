@@ -31,8 +31,8 @@
 
 源码路径相对 src/，app/ 除外。新能力进入当前任务时才写清具体事件、状态和失败行为；不要复制整个引擎接口表。
 
-## 对本轮消息修复的特别约束
+## 消息接驳约束
 
 “未知 generic → 用户通知”已被源码对照否定，应按已核实产品语义选择展示。数据保留与默认展示分开；内部 query_collapse_view 不进聊天正文。
 
-现有 test/studio-helpers.test.ts、test/session-history.test.ts、test/timeline-fact-store.test.ts 是本轮测试入口。其他按名称分带的测试仅作历史组织，不决定执行顺序。机读证据与用户验收均依 [plan](plan.md) 和 [workflow](workflow.md) 绑定候选。
+现有 test/studio-helpers.test.ts、test/session-history.test.ts、test/timeline-fact-store.test.ts 是相关测试入口。其他按名称分带的测试仅作历史组织，不决定执行顺序。机读证据与用户验收均依 [plan](plan.md) 和 [workflow](workflow.md) 绑定候选。
