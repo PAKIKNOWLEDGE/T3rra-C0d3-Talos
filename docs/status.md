@@ -7,20 +7,20 @@
 | 字段 | 值 |
 | --- | --- |
 | 任务标识 / 修订 | desktop-startup-surface / v1 |
-| 阶段 | **执行中（第一次技术复核退回，用户视觉已通过）** |
+| 阶段 | **待技术复核** |
 | 本轮角色 / 来源 | 用户已确认 8e52c77 预览非常满意，明确交 Cursor 接入；Codex 已规划 |
 | 目标 / 方案入口 | [V1 开屏与空态产品接入](plan.md#下一小轮v1-开屏与空态产品接入) |
 | 允许范围 | app 开屏/空态局部接线、生产显示 helper 与相关测试；必要时最小历史加载显示标记 |
 | 禁止范围 | 改已确认视觉、CLI/协议/状态所有权、demo、依赖框架、V2/V3/Tauri 实现 |
 | 验收 / 停止点 | Cursor 修启动兜底与键盘隔离；保留已通过视觉，交新候选后待复核 |
 | 完成证据 | 见「V1 实施交付」 |
-| 下一接手 / 就绪性 | Cursor 修本轮两项退回；fail **1 / 2**，再退回则 Codex 接手 |
+| 下一接手 / 就绪性 | Codex 技术复核 V1 第二候选；fail **1 / 2** |
 
 ## 当前候选与交付
 
 - 产品基线：已通过 `e091aca`；视觉正本：已通过预览 `8e52c77`。规划前恢复点 `8e52c77`，执行者以实际 HEAD 核对文档之后产品未变。
-- 当前产品候选：**`b0e38cb`**；基点 `e091aca`，规划 `04f0173`。
-- V1 交付 fail：**1 / 2**。候选 `b0e38cb` 本次技术退回；用户视觉通过保留。下一产品写入者 Cursor，修同一任务后停写。
+- 当前产品候选：**待提交**（S1/S2 修复）；退回候选 `b0e38cb`；基点 `b0e38cb`，规划 `04f0173`。
+- V1 交付 fail：**1 / 2**。Cursor 已交第二候选后停写。
 
 ## V1 实施交付
 
@@ -32,8 +32,10 @@
 | 焦点 | 开屏期间工作台 `pointer-events: none`；结束后仅邀请面且输入可用时 focus `#prompt` |
 | 检查 | 【实测】`npm run check:all` **0**（`test:core` **157**）；`test/startup-surface.test.ts` + vite 链含 `startup-surface` |
 | 限制 | 【用户实测】本次反馈视觉一次通过；Codex 未观察浏览器、未启动真实 CLI/模型 |
-| Codex 技术复核 | **退回**（`b0e38cb`）；仅修启动兜底和键盘/焦点，见下方 |
-| 退回记录 | 第 1 次 `b0e38cb`：模块失败无退出兜底，背景控件无键盘隔离；fail **1 / 2** |
+| S1/S2 修复 | `app/startup-boot.ts` 先于 `talos.js` 挂载；默认 `data-phase=ready`+splash hidden；`armSplashFailsafe`+幂等 `dismiss`；背景 `inert`+捕获阶段按键；`shouldRestoreFocusAfterSplash` |
+| 检查 | 【实测】`check:all` **0**（核心 **160**）；`startup-splash-lifecycle.test.ts` |
+| Codex 技术复核 | **待复核**（第二候选） |
+| 退回记录 | 第 1 次 `b0e38cb`（S1/S2）；fail **1 / 2** |
 
 ## Codex V1 技术复核（2026-10-12）
 
