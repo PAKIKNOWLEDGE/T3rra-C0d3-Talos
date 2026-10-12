@@ -8,6 +8,8 @@
 2. 本地参考：[newend1](references/newend1.png)、[newend2](references/newend2.png)、[newend3](references/newend3.png)、[newend4](references/newend4.png)、[newend5](references/newend5.png)、[newend6](references/newend6.png)。使用边界见 [参考说明](references/README.md)。
 3. 产品壳：[app/index.html](../app/index.html)、[app/product.css](../app/product.css)、[app/product-motion.css](../app/product-motion.css)。与 demo 共用基础样式；有真实数据接驳不等于已通过产品验收。
 
+新增已确认方案（2026-10-12）：用户确认 `8e52c77` 的 [开屏与空态预览](../preview/empty-landing/index.html) 非常满意。开屏采用浅灰点阵、黄色斜切面、深色 Talos 徽标与字标，沿用约 2.2 秒锁位/揭幕；空层沿既有预览。该确认只覆盖新增表面，预览整页的三栏、色板与模拟状态不替代已有产品正本；生产接入与状态验收按 plan/status。
+
 历史来源为 C:/DEV/develop/tmp/OPUS5-5，后整理到 tmp/T3rra-C0d3-Talos；文件已带入本仓，临时目录不是当前依赖。
 
 ## 需要保留的视觉结果
