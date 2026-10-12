@@ -2,6 +2,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Plugin } from 'vite';
 
+function copyDirRecursive(source: string, target: string) {
+  fs.mkdirSync(target, { recursive: true });
+  for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
+    const from = path.join(source, entry.name);
+    const to = path.join(target, entry.name);
+    if (entry.isDirectory()) copyDirRecursive(from, to);
+    else fs.copyFileSync(from, to);
+  }
+}
+
 /** Serve demo/talos.css and demo/fonts for the product shell (Vite root is app/). */
 export function talosDemoAssetsPlugin(repoRoot: string): Plugin {
   const demoDir = path.join(repoRoot, 'demo');
@@ -13,6 +23,10 @@ export function talosDemoAssetsPlugin(repoRoot: string): Plugin {
 
   return {
     name: 'talos-demo-assets',
+    closeBundle() {
+      const outDemo = path.join(repoRoot, 'app', 'dist', 'demo');
+      copyDirRecursive(demoDir, outDemo);
+    },
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const raw = req.url?.split('?')[0] ?? '';

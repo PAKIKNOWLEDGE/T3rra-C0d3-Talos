@@ -21,6 +21,11 @@ import {
   STARTUP_SPLASH_END_EVENT,
   shouldRestoreFocusAfterSplash,
 } from '../src/view/startup-splash-lifecycle.ts';
+import {
+  isDesktopShell,
+  pickWorkspaceDirectory,
+  rememberWorkspaceDirectory,
+} from './desktop-host.ts';
 
 const $ = (id) => document.getElementById(id);
 const icon = (name) => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
@@ -1290,6 +1295,7 @@ function connect() {
       const op = message.operationId || '';
       if (!pending && message.result?.accepted && op.startsWith('workspace-')) {
         notice(ui.workspaceSwitched);
+        void rememberWorkspaceDirectory(state.snapshot?.session?.cwd ?? '');
         const submit = $('workspaceSwitchForm')?.querySelector('button[type="submit"]');
         if (submit) submit.disabled = false;
         $('workspaceInput').value = '';
@@ -1906,8 +1912,26 @@ document.addEventListener(STARTUP_SPLASH_END_EVENT, () => {
   focusAfterStartupSplash();
 });
 
+function wireDesktopWorkspacePicker() {
+  if (!isDesktopShell()) return;
+  const pickButton = $('workspacePickButton');
+  if (pickButton) {
+    pickButton.hidden = false;
+    pickButton.addEventListener('click', async () => {
+      const dir = await pickWorkspaceDirectory();
+      if (!dir) return;
+      const input = $('workspaceInput');
+      if (input) input.value = dir;
+      $('workspaceSwitchForm')?.requestSubmit();
+    });
+  }
+  const hint = $('workspaceSwitchHint');
+  if (hint) hint.textContent = '输入路径或使用「选择工作区」指定文件夹。';
+}
+
 if (globalThis.TalosTextScale) TalosTextScale.init();
 wireSessionControlHandlers();
 wireMentionHandlers();
+wireDesktopWorkspacePicker();
 render();
 if (location.protocol.startsWith('http')) connect();

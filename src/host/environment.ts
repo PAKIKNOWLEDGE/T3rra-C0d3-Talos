@@ -79,6 +79,7 @@ function findEntry(launcher: string | undefined): string | undefined {
   if (!launcher) return undefined;
   const fromLauncher = resolveEntryFromLauncher(launcher);
   if (fromLauncher) return fromLauncher;
+  if (process.env.TALOS_DESKTOP_BUNDLE === '1') return undefined;
   const adjacent = resolve(process.cwd(), '..', 'Talos-CLI', 'dist', 'cli.js');
   return existsSync(adjacent) ? adjacent : undefined;
 }

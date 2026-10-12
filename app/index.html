@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="product-splash.css">
   <script src="/demo/text-scale.js" defer></script>
   <script type="module" src="startup-boot.ts"></script>
+  <script type="module" src="desktop-host.ts"></script>
   <script type="module" src="talos.js"></script>
 </head>
 <body>
@@ -70,6 +71,7 @@
         <form class="workspace-switch" id="workspaceSwitchForm">
           <label class="sr-only" for="workspaceInput">切换到的工作区绝对路径</label>
           <input type="text" id="workspaceInput" name="cwd" placeholder="工作区绝对路径" spellcheck="false" autocomplete="off" />
+          <button type="button" id="workspacePickButton" class="workspace-pick" hidden>选择工作区</button>
           <button type="submit">切换工作区</button>
         </form>
         <p class="workspace-switch-hint" id="workspaceSwitchHint">输入工作区的绝对路径。</p>

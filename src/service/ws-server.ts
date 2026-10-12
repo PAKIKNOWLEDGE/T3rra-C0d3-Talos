@@ -1,15 +1,52 @@
+import { createReadStream, existsSync, statSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
+import path from 'node:path';
 import { WebSocketServer, type WebSocket } from 'ws';
 import type { ServiceAction } from '../core/types.js';
 import { TalosService } from './talos-service.js';
 
-export function createTalosWebSocketServer(service: TalosService, port = 5193) {
+const STATIC_MIME: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.woff2': 'font/woff2',
+  '.png': 'image/png',
+  '.ico': 'image/x-icon',
+};
+
+function serveStaticFile(staticRoot: string, requestPath: string, response: import('node:http').ServerResponse) {
+  const decoded = decodeURIComponent(requestPath.split('?')[0] ?? '/');
+  const rel = decoded === '/' ? '/index.html' : decoded;
+  const file = path.resolve(staticRoot, `.${rel}`);
+  if (!file.startsWith(path.resolve(staticRoot)) || !existsSync(file) || !statSync(file).isFile()) {
+    response.writeHead(404).end();
+    return;
+  }
+  const ext = path.extname(file).toLowerCase();
+  response.writeHead(200, { 'content-type': STATIC_MIME[ext] ?? 'application/octet-stream' });
+  createReadStream(file).pipe(response);
+}
+
+export function createTalosWebSocketServer(
+  service: TalosService,
+  port = 5193,
+  options?: { staticRoot?: string },
+) {
+  const staticRoot = options?.staticRoot ? path.resolve(options.staticRoot) : undefined;
   const httpServer = createServer((request, response) => {
-    if (request.url !== '/health') {
-      response.writeHead(404).end();
+    const url = request.url?.split('?')[0] ?? '';
+    if (url === '/health') {
+      response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ ok: true }));
       return;
     }
-    response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ ok: true }));
+    if (staticRoot && request.method === 'GET') {
+      serveStaticFile(staticRoot, url, response);
+      return;
+    }
+    response.writeHead(404).end();
   });
   const websocketServer = new WebSocketServer({ server: httpServer, path: '/ws' });
   websocketServer.on('connection', (socket: WebSocket) => {

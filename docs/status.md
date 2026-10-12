@@ -7,33 +7,47 @@
 | 字段 | 值 |
 | --- | --- |
 | 任务标识 / 修订 | desktop-windows-package / r3 |
-| 阶段 | **可执行** |
-| 本轮角色 / 来源 | 用户确认 V3 并要求 Cursor 打包 Tauri；Codex 已准备合同 |
+| 阶段 | **执行中（用户 2026-10-12 要求暂停，先落文档）** |
+| 本轮角色 / 来源 | Cursor 实施 R3；用户确认 V3 后授权打包；本次暂停前未完成交付 |
 | 目标 / 方案入口 | [R3 Windows Tauri 安装候选](plan.md#下一小轮r3-windows-tauri-安装候选) |
 | 允许范围 | Tauri 2、前端/服务构建与资源、随包 Node、目录/端点/退出、实际 Windows 安装产物与相关检查 |
 | 禁止范围 | Electron、CLI 写入/升级、复制引擎、重做视觉/消息状态、自动发布、R4 |
 | 验收 / 停止点 | 实际 release/NSIS、启动/资源/生命周期证据与候选后待技术复核 |
-| 完成证据 | 待 Cursor 执行；dev 窗口/旧测试不代表安装产物通过 |
-| 下一接手 / 就绪性 | 已就绪：Cursor 执行 [唯一当前任务](plan.md#下一小轮r3-windows-tauri-安装候选) |
+| 完成证据 | **尚无**；未提交候选、无 NSIS/release 启动证据 |
+| 下一接手 / 就绪性 | 继续 R3：修随包服务打包阻塞 → `check:all` → `tauri build` → 填下方产物表 |
 
 ## R3 当前候选与实施交付
 
-- 【用户实测】用户本次明确「可以的」，确认 V3 产品 3a467e8 通过，并授权 Cursor 实施 Tauri 打包。
-- 产品基线 3a467e8；规划前恢复点 fdb94d7；当前工作树干净。规划之后仅文档，执行者以实际 HEAD 为恢复基点。
-- R3 产品候选：待交付；Cursor 收到任务后为唯一产品写入者，交候选即停写。
-- R3 交付 fail：**0 / 2**；首次退回 Cursor 修，第二次 Codex 接手，同一任务不清零。
-- 【源码】未有 src-tauri；共享 demo 资源只通过 configureServer；现有 runtime 启动依赖 dev.ts/Node，浏览器端点依赖 location.host。合同已针对这些真实打包缺口展开。
-- 【实测】Get-Command 找到本机 cargo/rustc；尚未执行 MSVC/WebView2 或实际打包检查，不假称环境全部通过。
+- 【用户实测】用户确认 V3 产品 **`3a467e8`** 通过，并授权 Cursor 实施 Tauri 打包。
+- 【用户指令】2026-10-12 要求**先停在此处**，把当前状态写入本文档；**未**要求提交候选或进入待技术复核。
+- **规划提交** `50e1bbd`（R3 合同与交接）；**产品视觉基线**仍为 `3a467e8`。执行开始时工作树在 `50e1bbd` 且干净；暂停时 **HEAD 仍为 `50e1bbd`**，R3 实现为**未提交工作区变更**（见下）。
+- R3 **产品候选**：**无**（未 `git commit`）。R3 交付 fail：**0 / 2**（未交付，不计退回）。
+- 【源码 / 已做但未验收】已搭最小 Tauri 2 骨架（`src-tauri/`、dialog/shell 插件、随包 `node` sidecar 占位、Rust 启动 Node 服务并等 `TALOS_DESKTOP_READY` 后开 `http://127.0.0.1:*` 窗口）；`tools/build-desktop.mjs` 跑 Vite 生产构建并复制 `demo/` 到 `app/dist/demo`；`src/desktop-service-entry.ts` 生产入口；`runtime` 支持延迟工作区 + `ws-server` 静态目录；`app/desktop-host.ts` +「选择工作区」按钮与 `remember_workspace_directory`；桌面 bundle 下禁用 `Talos-CLI` 相邻路径回退（`TALOS_DESKTOP_BUNDLE`）。
+- 【实测】`npm install`（含 `@tauri-apps/cli`、`@tauri-apps/api`、`esbuild`）；`npx tauri icon` 生成本地图标；`npm run typecheck` **0**；`npm run build:desktop` **Vite 构建成功**（`app/dist` + `dist-desktop/static` + 复制 Node 到 `src-tauri/binaries/node-x86_64-pc-windows-msvc.exe`）。
+- 【实测 / 阻塞】直接运行 `node dist-desktop/talos-desktop-service.mjs --static-dir dist-desktop/static --port 0` **失败**：esbuild 单文件打包 `ws` 触发 `Dynamic require of "events" is not supported`。随包服务尚不能启动 → **未**跑 `tauri build`、**无** release exe/NSIS、**无**安装后启动证据。
+- 【未验】`npm run check:all` 本轮暂停前**未重跑**；`cargo`/`rustc` 本机可用（1.95.0）；MSVC/WebView2/完整 `tauri build` **未验证**；真实 CLI 握手与目录选择 UI **未在 release 窗口验证**；`tauri dev` **不算**交付。
+
+### 暂停时工作区（恢复 R3 用）
+
+未跟踪 / 修改（相对 `50e1bbd`）：`.gitignore`；`app/index.html`、`app/talos.js`、`app/vite.config.ts`、`app/desktop-host.ts`；`package.json`、`package-lock.json`；`src/desktop-service-entry.ts`、`src/host/environment.ts`、`src/service/runtime.ts`、`src/service/ws-server.ts`、`src/vite-demo-assets.ts`；`src-tauri/**`（含 `icons/`、`binaries/` 为构建生成、已 gitignore）；`tools/build-desktop.mjs`、`tools/gen-tauri-icon.py`。生成物目录（不提交）：`app/dist/`、`dist-desktop/`、`src-tauri/target/`。
+
+### 产物与证据表（交付前必填）
 
 | 字段 | 当前值 |
 | --- | --- |
-| 候选 / 基点 / 改动与失效范围 | 待执行 |
-| 构建命令 / Windows架构 / release产物 | 待执行 |
-| NSIS绝对路径 / 大小 / SHA-256 | 待执行 |
-| 随包 Node / 实际 CLI 路径版本 | 待执行 |
-| 资源 / 原生目录 / endpoint / 退出证据 | 待执行 |
-| 安装与实际入口启动 / 未验限制 | 待执行 |
-| Codex复核 / 用户验收 / 退回记录 | 待交付；fail 0/2 |
+| 候选 / 基点 / 改动与失效范围 | **无候选提交**；规划 `50e1bbd`；产品视觉 `3a467e8`；失效范围：自 `50e1bbd` 起全部 R3 未提交改动 |
+| 构建命令 / Windows架构 / release产物 | 已试：`npm run build:desktop`；【阻塞】随包服务需先修 esbuild/`ws` 打包；计划：`npm run build:desktop:win`（`package.json`）→ `tauri build`；架构：**未构建**（目标 x86_64-pc-windows-msvc） |
+| NSIS绝对路径 / 大小 / SHA-256 | **无** |
+| 随包 Node / 实际 CLI 路径版本 | 构建脚本复制**当前** `process.execPath` 为 sidecar（本机 Node v24.15.0 实测复制）；**未**锁版本/校验文档；CLI 仍依赖用户已安装 `talos`（`inspectEnvironment` / PATH），安装包**不包含** CLI |
+| 资源 / 原生目录 / endpoint / 退出证据 | Vite 产物含 `demo/talos.css`、`text-scale.js`（`closeBundle` 复制）；**无** release 下静态/WS/退出实测 |
+| 安装与实际入口启动 / 未验限制 | **无**安装验收；阻塞项见上 |
+| Codex复核 / 用户验收 / 退回记录 | **未交付**；fail **0 / 2** |
+
+### 建议下一刀（执行者，非授权自动做）
+
+1. 修 `tools/build-desktop.mjs`：`ws` 标为 external 并随资源带上 `node_modules/ws`，或改打包策略（勿用动态 require 单文件包 `ws`）。
+2. 验证 `TALOS_DESKTOP_READY` 与 `/health`、`/demo/talos.css` 静态路径。
+3. `npm run check:all`；`npm run build:desktop:win`；记录 NSIS 绝对路径、大小、SHA-256 与 release 启动证据后提交候选并改阶段为**待技术复核**。
 
 ## 上轮已通过视觉（V3）
 

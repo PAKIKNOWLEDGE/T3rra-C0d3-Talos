@@ -9,8 +9,27 @@ import { writeSessionBinding } from '../host/session-binding.js';
 
 type StudioBundle = Awaited<ReturnType<typeof startTalosStudioProcess>>;
 
-export async function startRuntimeService(initialCwd: string, port = 5194) {
-  const workspaceDir = assertWorkspaceDirectory(initialCwd);
+export type RuntimeServiceOptions = {
+  /** When true, omit or invalid initial cwd keeps WS up until switch_workspace. */
+  allowDeferredWorkspace?: boolean;
+  staticRoot?: string;
+};
+
+export async function startRuntimeService(
+  initialCwd: string,
+  port = 5194,
+  options?: RuntimeServiceOptions,
+) {
+  let workspaceDir: string | undefined;
+  if (initialCwd.trim()) {
+    try {
+      workspaceDir = assertWorkspaceDirectory(initialCwd);
+    } catch (error) {
+      if (!options?.allowDeferredWorkspace) throw error;
+    }
+  } else if (!options?.allowDeferredWorkspace) {
+    throw new Error('工作区必须是绝对路径，例如 C:\\Projects\\my-repo');
+  }
   let processEpoch = 1;
   let studioBundle: StudioBundle | undefined;
   let adapter: TalosStudioAdapter | undefined;
@@ -179,19 +198,38 @@ export async function startRuntimeService(initialCwd: string, port = 5194) {
 
   service = new TalosService(store, engine, { switchWorkspace });
 
-  try {
-    studioBundle = await startTalosStudioProcess(processEpoch, workspaceDir, (event) => service.apply(event));
+  const socketServer = createTalosWebSocketServer(service, port, {
+    ...(options?.staticRoot ? { staticRoot: options.staticRoot } : {}),
+  });
+  const listenPort = await socketServer.ready;
+
+  const connectStudio = async (dir: string) => {
+    studioBundle = await startTalosStudioProcess(processEpoch, dir, (event) => service.apply(event));
     adapter = studioBundle.adapter;
     applyStudioCapabilities();
-    await bindGuiSession(adapter, workspaceDir);
-    const socketServer = createTalosWebSocketServer(service, port);
-    await socketServer.ready;
+    await bindGuiSession(adapter, dir);
+  };
+
+  try {
+    if (workspaceDir) {
+      try {
+        await connectStudio(workspaceDir);
+      } catch (error) {
+        service.apply({
+          kind: 'error',
+          processEpoch,
+          message: error instanceof Error ? error.message : String(error),
+        });
+        if (!options?.allowDeferredWorkspace) throw error;
+      }
+    }
     return {
       service,
       socketServer,
+      listenPort,
       switchWorkspace,
-      initialized: studioBundle.initialized,
-      stderr: studioBundle.stderr,
+      initialized: studioBundle?.initialized,
+      stderr: studioBundle?.stderr ?? [],
       close: async () => {
         await socketServer.close();
         studioBundle?.close();
@@ -199,6 +237,7 @@ export async function startRuntimeService(initialCwd: string, port = 5194) {
     };
   } catch (error) {
     studioBundle?.close();
+    await socketServer.close();
     throw error;
   }
 }
