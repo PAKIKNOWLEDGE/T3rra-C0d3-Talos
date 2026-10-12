@@ -503,21 +503,11 @@ export class TalosStudioAdapter {
       throw new Error('Approval request is stale or unknown.');
     }
     const decision = mapApprovalDecision(optionId);
-    try {
-      await this.rpc.request('permission/reply', {
-        agentName: meta.agentName,
-        requestId,
-        decision,
-      });
-    } catch (error) {
-      this.emit({
-        kind: 'error',
-        processEpoch: this.processEpoch,
-        sessionId,
-        message: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    await this.rpc.request('permission/reply', {
+      agentName: meta.agentName,
+      requestId,
+      decision,
+    });
     this.permissionMeta.delete(requestId);
     this.seenPermissionIds.delete(requestId);
     this.emit({

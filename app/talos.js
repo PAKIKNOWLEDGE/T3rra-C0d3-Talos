@@ -1,5 +1,12 @@
 import { planSlashSubmit } from './slash-prompt.js';
-import { rejectAllPendingOperations } from '../src/client/pending-operations.ts';
+import {
+  clearApprovalFlightIfCurrent,
+  clearStopFlightIfCurrent,
+  createOperationWaitContext,
+  isOperationWaitContextCurrent,
+  rejectAllPendingOperations,
+  tryRegisterApprovalFlight,
+} from '../src/client/pending-operations.ts';
 import {
   escapeHtml,
   renderAssistantMessageHtml,
@@ -27,8 +34,9 @@ const state = {
   mentionResults: [],
   mentionTimer: undefined,
   pendingOperations: new Map(),
-  pendingStopOperationId: undefined,
-  pendingApprovalRequestIds: new Set(),
+  connectionToken: 0,
+  pendingStopFlight: undefined,
+  pendingApprovalFlights: new Map(),
   questionnaireDraft: {},
   steerCompose: false,
   pendingConfirm: undefined,
@@ -149,6 +157,10 @@ function nextOperationId(prefix) {
 
 function sessionId() {
   return state.snapshot?.session?.sessionId;
+}
+
+function operationWaitCurrent() {
+  return { sessionId: sessionId() ?? '', connectionToken: state.connectionToken };
 }
 
 function phase() {
@@ -1179,24 +1191,32 @@ function render() {
 
 function connect() {
   if (state.socket && state.socket.readyState <= WebSocket.OPEN) return;
+  state.connectionToken += 1;
   const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
   const host = location.host || '127.0.0.1:5193';
-  state.socket = new WebSocket(`${protocol}://${host}/ws`);
-  state.socket.addEventListener('open', () => {
+  const socket = new WebSocket(`${protocol}://${host}/ws`);
+  state.socket = socket;
+  socket.addEventListener('open', () => {
+    if (state.socket !== socket) return;
     recordEvent('service.connected', ui.connected);
     notice(ui.connected);
   });
-  state.socket.addEventListener('close', () => {
+  socket.addEventListener('close', () => {
+    if (state.socket !== socket) return;
     recordEvent('service.disconnected', '连接已断开');
     rejectAllPendingOperations(state.pendingOperations, '连接已断开');
-    state.pendingStopOperationId = undefined;
-    state.pendingApprovalRequestIds.clear();
+    state.pendingStopFlight = undefined;
+    state.pendingApprovalFlights.clear();
     notice('连接已断开');
     state.snapshot = null;
     render();
   });
-  state.socket.addEventListener('error', () => notice('连接失败'));
-  state.socket.addEventListener('message', (event) => {
+  socket.addEventListener('error', () => {
+    if (state.socket !== socket) return;
+    notice('连接失败');
+  });
+  socket.addEventListener('message', (event) => {
+    if (state.socket !== socket) return;
     const message = JSON.parse(event.data);
     if (message.type === 'snapshot') {
       state.snapshot = message.snapshot;
@@ -1211,9 +1231,10 @@ function connect() {
           state.pendingOperations.delete(message.operationId);
           pending.reject(new Error(message.message || '操作失败'));
         }
-        if (state.pendingStopOperationId === message.operationId) {
-          state.pendingStopOperationId = undefined;
-        }
+        state.pendingStopFlight = clearStopFlightIfCurrent(
+          state.pendingStopFlight,
+          message.operationId,
+        );
       }
       notice(message.message || ui.workspaceSwitchFailed);
       const submit = $('workspaceSwitchForm')?.querySelector('button[type="submit"]');
@@ -1226,9 +1247,10 @@ function connect() {
         state.pendingOperations.delete(message.operationId);
         pending.resolve(message.result);
       }
-      if (state.pendingStopOperationId === message.operationId) {
-        state.pendingStopOperationId = undefined;
-      }
+      state.pendingStopFlight = clearStopFlightIfCurrent(
+        state.pendingStopFlight,
+        message.operationId,
+      );
       const op = message.operationId || '';
       if (!pending && message.result?.accepted && op.startsWith('workspace-')) {
         notice(ui.workspaceSwitched);
@@ -1528,12 +1550,12 @@ document.addEventListener('click', async (event) => {
     if (!id) return;
     const requestId = button.dataset.approval;
     const optionId = button.dataset.option;
-    if (state.pendingApprovalRequestIds.has(requestId)) {
+    const operationId = nextOperationId('approval');
+    const approvalContext = createOperationWaitContext(operationId, id, state.connectionToken);
+    if (!tryRegisterApprovalFlight(state.pendingApprovalFlights, requestId, approvalContext)) {
       notice(ui.approvalInFlight);
       return;
     }
-    const operationId = nextOperationId('approval');
-    state.pendingApprovalRequestIds.add(requestId);
     try {
       const result = await sendActionWithResult({
         type: 'reply_approval',
@@ -1542,11 +1564,18 @@ document.addEventListener('click', async (event) => {
         requestId,
         optionId,
       });
-      if (result?.accepted) notice(ui.approvalSubmitted);
+      if (
+        isOperationWaitContextCurrent(approvalContext, operationWaitCurrent()) &&
+        result?.accepted
+      ) {
+        notice(ui.approvalSubmitted);
+      }
     } catch (error) {
-      notice(error instanceof Error ? error.message : ui.approvalSubmitFailed);
+      if (isOperationWaitContextCurrent(approvalContext, operationWaitCurrent())) {
+        notice(error instanceof Error ? error.message : ui.approvalSubmitFailed);
+      }
     } finally {
-      state.pendingApprovalRequestIds.delete(requestId);
+      clearApprovalFlightIfCurrent(state.pendingApprovalFlights, requestId, operationId);
     }
     return;
   }
@@ -1603,25 +1632,28 @@ $('eventsTab').addEventListener('click', () => {
 $('stopButton').addEventListener('click', async () => {
   const id = sessionId();
   if (!id) return notice('当前没有可停止的会话');
-  if (state.pendingStopOperationId) {
+  if (state.pendingStopFlight) {
     notice(ui.stopInFlight);
     return;
   }
   const operationId = nextOperationId('cancel');
-  state.pendingStopOperationId = operationId;
+  const stopContext = createOperationWaitContext(operationId, id, state.connectionToken);
+  state.pendingStopFlight = stopContext;
   try {
     const result = await sendActionWithResult({
       type: 'cancel',
       operationId,
       sessionId: id,
     });
-    if (result?.accepted) notice(ui.stopRequested);
-  } catch (error) {
-    notice(error instanceof Error ? error.message : ui.stopFailed);
-  } finally {
-    if (state.pendingStopOperationId === operationId) {
-      state.pendingStopOperationId = undefined;
+    if (isOperationWaitContextCurrent(stopContext, operationWaitCurrent()) && result?.accepted) {
+      notice(ui.stopRequested);
     }
+  } catch (error) {
+    if (isOperationWaitContextCurrent(stopContext, operationWaitCurrent())) {
+      notice(error instanceof Error ? error.message : ui.stopFailed);
+    }
+  } finally {
+    state.pendingStopFlight = clearStopFlightIfCurrent(state.pendingStopFlight, operationId);
   }
 });
 $('overviewToggle').addEventListener('click', toggleOverview);
