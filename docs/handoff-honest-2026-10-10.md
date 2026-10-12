@@ -7,6 +7,6 @@
 - [status](status.md)：现状、候选和验收。
 - [plan](plan.md)：路线和唯一当前任务。
 - [workflow](workflow.md)：Cursor 执行与 Codex 复核方式。
-- [接驳证据](adapters/talos-engine.md)：本轮核实的 CLI 源码与桌面差异。
+- [接驳证据](adapters/talos-engine.md)：协议来源与生产消费路径。
 
 旧事故中的猜测、版本与“下一步”不覆盖这些现行文件。

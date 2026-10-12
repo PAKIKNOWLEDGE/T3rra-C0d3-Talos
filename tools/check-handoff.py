@@ -7,7 +7,7 @@ import re
 root = Path(__file__).resolve().parents[1]
 required = [
     'AGENTS.md', 'README.md', 'docs/status.md', 'docs/plan.md', 'docs/workflow.md',
-    'docs/design.md', 'docs/lessons.md', 'docs/adapters/minimax-code.md',
+    'docs/design.md', 'docs/lessons.md', 'docs/adapters/talos-engine.md',
     'docs/references/README.md', 'demo/talos.html', 'demo/talos.css',
     'demo/talos.js', 'demo/talos-check.py',
     'demo/fonts/HarmonyOS_Sans_SC_Regular.woff2',
@@ -19,18 +19,43 @@ for relative in required:
         errors.append(f'Missing: {relative}')
 
 documents = [root / 'AGENTS.md', root / 'README.md', *sorted((root / 'docs').rglob('*.md'))]
+def markdown_anchors(text):
+    """Check current local document headings; archives remain immutable snapshots."""
+    result = set()
+    counts = {}
+    in_fence = False
+    for line in text.splitlines():
+        if line.startswith(('```', '~~~')):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        match = re.match(r'^#{1,6}\s+(.+)', line)
+        if not match:
+            continue
+        heading = match.group(1).strip().rstrip('#').strip()
+        anchor = ''.join(char for char in heading.lower() if char.isalnum() or char in '_- ').replace(' ', '-')
+        count = counts.get(anchor, 0)
+        counts[anchor] = count + 1
+        result.add(anchor if count == 0 else f'{anchor}-{count}')
+    return result
+
 links = 0
 for document in documents:
     if not document.is_file():
         continue
     for target in re.findall(r'\]\(([^)]+)\)', document.read_text(encoding='utf-8')):
-        if re.match(r'^(https?://|mailto:|#)', target):
+        if re.match(r'^(https?://|mailto:)', target):
             continue
-        path = target.split('#', 1)[0]
+        path, _, anchor = target.partition('#')
+        destination = document.parent / path if path else document
         if path:
             links += 1
-            if not (document.parent / path).is_file():
+            if not destination.is_file():
                 errors.append(f'Broken link: {document.relative_to(root)} -> {target}')
+        if anchor and 'archive' not in document.relative_to(root).parts and destination.suffix == '.md' and destination.is_file():
+            if anchor not in markdown_anchors(destination.read_text(encoding='utf-8')):
+                errors.append(f'Broken heading: {document.relative_to(root)} -> {target}')
 
 def check_current_handoff(status_text, plan_text, workflow_text=""):
     """Validate the active handoff only; archived plans are not execution inputs."""
