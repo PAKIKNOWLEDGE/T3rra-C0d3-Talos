@@ -16,11 +16,11 @@ import {
   renderUserMessageHtml,
   stripRedactedThinking,
 } from '../src/view/message-markdown.ts';
+import { shouldShowTaskInvite } from '../src/view/startup-surface.ts';
 import {
-  SPLASH_EXIT_MS,
-  createSplashController,
-  shouldShowTaskInvite,
-} from '../src/view/startup-surface.ts';
+  STARTUP_SPLASH_END_EVENT,
+  shouldRestoreFocusAfterSplash,
+} from '../src/view/startup-splash-lifecycle.ts';
 
 const $ = (id) => document.getElementById(id);
 const icon = (name) => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
@@ -1884,15 +1884,17 @@ $('prompt').addEventListener('keydown', (event) => {
   }
 });
 document.addEventListener('keydown', (event) => {
+  if (document.documentElement.dataset.phase === 'splash') return;
   if (event.key === 'Escape' && !$('detailDialog').open && state.snapshot?.turn?.status === 'running') {
     $('stopButton').click();
   }
 });
 
-let startupSplashController;
-
 function focusAfterStartupSplash() {
   if ($('detailDialog')?.open) return;
+  const splash = $('startupSplash');
+  const skip = $('skipStartupSplash');
+  if (!shouldRestoreFocusAfterSplash(document.activeElement, splash, skip)) return;
   const snapshot = state.snapshot;
   if (!shouldShowTaskInvite(snapshot, state.view)) return;
   const prompt = $('prompt');
@@ -1900,54 +1902,12 @@ function focusAfterStartupSplash() {
   prompt.focus();
 }
 
-function endStartupSplash() {
-  const root = document.documentElement;
-  if (root.dataset.phase !== 'splash') return;
-  root.dataset.phase = 'ready';
-  const splash = $('startupSplash');
-  window.setTimeout(() => {
-    if (splash) {
-      splash.hidden = true;
-      splash.setAttribute('aria-hidden', 'true');
-    }
-    focusAfterStartupSplash();
-  }, SPLASH_EXIT_MS);
-}
-
-function initStartupSplash() {
-  const splash = $('startupSplash');
-  const skip = $('skipStartupSplash');
-  if (!splash) {
-    document.documentElement.dataset.phase = 'ready';
-    return;
-  }
-  startupSplashController = createSplashController({
-    onEnd: () => endStartupSplash(),
-  });
-  const requestSkip = () => startupSplashController?.finish('skip');
-  skip?.addEventListener('click', (event) => {
-    event.stopPropagation();
-    requestSkip();
-  });
-  splash.addEventListener('click', (event) => {
-    if (event.target.closest('.splash-skip')) return;
-    requestSkip();
-  });
-  document.addEventListener('keydown', (event) => {
-    if (document.documentElement.dataset.phase !== 'splash') return;
-    if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      requestSkip();
-    }
-  });
-  if (document.documentElement.dataset.phase === 'splash' && startupSplashController.ended()) {
-    endStartupSplash();
-  }
-}
+document.addEventListener(STARTUP_SPLASH_END_EVENT, () => {
+  focusAfterStartupSplash();
+});
 
 if (globalThis.TalosTextScale) TalosTextScale.init();
 wireSessionControlHandlers();
 wireMentionHandlers();
-initStartupSplash();
 render();
 if (location.protocol.startsWith('http')) connect();

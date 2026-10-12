@@ -19,7 +19,7 @@
     { "id": "aboutButton", "status": "wired" },
     { "id": "closeDetail", "status": "wired" },
     { "id": "doneDetail", "status": "wired" },
-    { "id": "startupSplash", "status": "wired: 开屏一次；跳过/reduced-motion；不阻塞 connect" },
+    { "id": "startupSplash", "status": "wired: startup-boot 安装；默认 hidden；failsafe/跳过/reduced-motion" },
     { "id": "skipStartupSplash", "status": "wired: 立即结束开屏" },
     { "id": "taskInvite", "status": "wired: 空任务邀请面；shouldShowTaskInvite 优先级" },
     { "id": "taskInviteTitle", "status": "wired: 邀请标题" },

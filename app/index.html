@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-phase="splash">
+<html lang="zh-CN" data-phase="ready">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,10 +10,11 @@
   <link rel="stylesheet" href="product-motion.css">
   <link rel="stylesheet" href="product-splash.css">
   <script src="/demo/text-scale.js" defer></script>
+  <script type="module" src="startup-boot.ts"></script>
   <script type="module" src="talos.js"></script>
 </head>
 <body>
-  <div class="splash" id="startupSplash" role="dialog" aria-modal="true" aria-label="开屏">
+  <div class="splash" id="startupSplash" role="dialog" aria-modal="true" aria-label="开屏" hidden aria-hidden="true">
     <div class="splash-grid" aria-hidden="true"></div>
     <div class="splash-plane" aria-hidden="true"></div>
     <div class="splash-ghost" aria-hidden="true">TALOS</div>

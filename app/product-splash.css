@@ -1,5 +1,9 @@
 /* Startup splash — scoped to #startupSplash; tokens from demo/talos.css */
 
+#startupSplash.splash[hidden] {
+  display: none !important;
+}
+
 #startupSplash.splash {
   position: fixed;
   inset: 0;
