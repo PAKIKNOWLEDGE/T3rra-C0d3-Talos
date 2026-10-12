@@ -102,6 +102,14 @@
 
 失败、断连、重复提交和迟到结果的离线验证已由执行者完成，用户不用逐个模拟。R2-B 用户通过后准备 R3 合同与 Cursor prompt，不再追加无依据的检查轮。
 
+## 非本轮：空任务层预览（未授权改产品）
+
+2026-10-12 用户澄清：要的是「无任务时的独立表面 + 开屏」，视觉仍用已确认 Endfield 语言；不是搬 Codex 配色。Cursor 未改 `app/`、`demo/` 与冻结候选 `029a863`。
+
+- 可看：[preview/empty-landing](../preview/empty-landing/README.md)
+- 拟改清单：[提案](proposals/empty-task-layer.md)
+- 实施需另开任务并由 Codex 写合同；本轮 R2-B 验收入口不变。
+
 ## 保留的产品事实
 
 | 项 | 状态 |
