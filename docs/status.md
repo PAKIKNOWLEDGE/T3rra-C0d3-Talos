@@ -7,28 +7,42 @@
 | 字段 | 值 |
 | --- | --- |
 | 任务标识 / 修订 | desktop-startup-surface / v1 |
-| 阶段 | **可执行** |
+| 阶段 | **待技术复核** |
 | 本轮角色 / 来源 | 用户已确认 8e52c77 预览非常满意，明确交 Cursor 接入；Codex 已规划 |
 | 目标 / 方案入口 | [V1 开屏与空态产品接入](plan.md#下一小轮v1-开屏与空态产品接入) |
 | 允许范围 | app 开屏/空态局部接线、生产显示 helper 与相关测试；必要时最小历史加载显示标记 |
 | 禁止范围 | 改已确认视觉、CLI/协议/状态所有权、demo、依赖框架、V2/V3/Tauri 实现 |
 | 验收 / 停止点 | 连接/真实状态不受开屏影响，离线自验、本地提交后待 Codex 复核 |
-| 完成证据 | 待 Cursor 交付；预览用户通过不冒充生产接入已验 |
-| 下一接手 / 就绪性 | 已就绪：Cursor 执行 [唯一当前任务](plan.md#下一小轮v1-开屏与空态产品接入) |
+| 完成证据 | 见「V1 实施交付」 |
+| 下一接手 / 就绪性 | Codex 技术复核 V1 候选；fail **0 / 2** |
 
 ## 当前候选与交付
 
 - 产品基线：已通过 `e091aca`；视觉正本：已通过预览 `8e52c77`。规划前恢复点 `8e52c77`，执行者以实际 HEAD 核对文档之后产品未变。
-- 当前产品候选：**待交付**；Cursor 收到任务后为唯一产品写入者，交候选即停写。
-- V1 交付 fail：**0 / 2**，新任务单独计数；R2-B 历史 2/2 不迁移为 V1 失败，直接回归仍按实际影响处理。
+- 当前产品候选：**`b0e38cb`**；基点 `e091aca`，规划 `04f0173`。
+- V1 交付 fail：**0 / 2**；Cursor 已停写。
+
+## V1 实施交付
 
 | 字段 | 当前值 |
 | --- | --- |
-| 候选 / 基点 / 改动清单 | 待执行 |
-| 开屏生命周期 / 空态优先级 / 焦点证据 | 待执行 |
-| 生产入口与检查结果 / 未验限制 | 待执行 |
-| Codex 技术复核 / 用户集成验收 | 待候选 |
-| 退回记录 | 无；fail 0 / 2 |
+| 产品候选 / 改动 | 开屏 `#startupSplash` + `product-splash.css`（8e52c77 节奏）；`taskInvite` 邀请面；`src/view/startup-surface.ts`；`FactStore.snapshot` 派生 `historyLoading`；`talos.js` 接线（connect 并行、不重置快照）；manifest/测试 |
+| 开屏生命周期 | 每页载入一次（内存 `createSplashController`）；约 2.2s / 跳过 / reduced-motion 同一 `endStartupSplash`；不重播于切会话或 WS 重连；无重播按钮 |
+| 空态优先级 | `shouldShowTaskInvite` + `hasRecordBody`：事件页、断连、无 sessionId、加载中、historyLoading/失败、运行、消息/工具、审批、问卷、errors 均优先于邀请面 |
+| 焦点 | 开屏期间工作台 `pointer-events: none`；结束后仅邀请面且输入可用时 focus `#prompt` |
+| 检查 | 【实测】`npm run check:all` **0**（`test:core` **157**）；`test/startup-surface.test.ts` + vite 链含 `startup-surface` |
+| 限制 | 【未验】浏览器开屏动效与集成画面；未启动真实 CLI/模型 |
+| Codex 技术复核 | **待复核** |
+| 退回记录 | 无；fail **0 / 2** |
+
+### 用户验收入口（V1 候选）
+
+[README 启动浏览器产品](../README.md#启动浏览器产品)：`npm run dev:product -- --cwd <工作区绝对路径>` → `http://127.0.0.1:5193/`
+
+1. 刷新 → 开屏一次，跳过或结束后看到当时真实页面；底栏连接照常进行。
+2. 新建空会话 → 邀请面；打开有记录的会话 → 原 timeline 正常。
+3. 发一条简短指令 → 进入记录流，不重播开屏/工作台进场。
+4. 切会话、减少动态（系统设置）→ 不重播开屏；加载中/错误/审批不被邀请面盖住。
 
 ## 已确认的预览与产品基线
 
