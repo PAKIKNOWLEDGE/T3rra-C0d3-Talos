@@ -30,4 +30,44 @@ describe('message markdown', () => {
   it('strips redacted thinking blocks', () => {
     expect(stripRedactedThinking('<think>x</think>hello')).toBe('hello');
   });
+
+  it('renders GFM tables with escaped cells and inline markdown', () => {
+    const md = [
+      '| Name | Score |',
+      '| --- | --- |',
+      '| **Ada** | `42` |',
+      '| Bob | 7 |',
+    ].join('\n');
+    const html = renderAssistantMessageHtml(md);
+    expect(html).toContain('<table class="md-table">');
+    expect(html).toContain('<thead><tr><th>');
+    expect(html).toContain('<strong>Ada</strong>');
+    expect(html).toContain('<code>42</code>');
+    expect(html).not.toContain('| --- |');
+    expect(html).not.toMatch(/\|---\|/);
+  });
+
+  it('keeps lists and fenced code when mixed with tables', () => {
+    const md = [
+      '- first',
+      '| A | B |',
+      '| --- | --- |',
+      '| 1 | 2 |',
+      '```txt',
+      'fence',
+      '```',
+    ].join('\n');
+    const html = renderAssistantMessageHtml(md);
+    expect(html).toContain('<ul>');
+    expect(html).toContain('<table class="md-table">');
+    expect(html).toContain('<pre><code>fence</code></pre>');
+    expect(html).not.toContain('| --- |');
+  });
+
+  it('escapes HTML inside table cells', () => {
+    const md = ['| x |', '| --- |', '| <img onerror=alert(1)> |'].join('\n');
+    const html = renderAssistantMessageHtml(md);
+    expect(html).toContain('&lt;img');
+    expect(html).not.toContain('<img onerror');
+  });
 });

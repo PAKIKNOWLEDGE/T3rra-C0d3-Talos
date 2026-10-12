@@ -34,6 +34,24 @@
   padding: 0;
 }
 
+.log .message .assistant-message table.md-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+}
+
+.log .message .assistant-message table.md-table th,
+.log .message .assistant-message table.md-table td {
+  border: 1px solid #ffffff12;
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.log .message .assistant-message table.md-table th {
+  font-weight: 600;
+}
+
 .log .message-thought .thought-block {
   border: 1px solid #ffffff14;
   border-radius: 6px;

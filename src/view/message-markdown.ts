@@ -17,6 +17,31 @@ function applyInlineMarkdown(escaped: string): string {
   return out;
 }
 
+function parseTableCells(line: string): string[] | null {
+  const trimmed = line.trim();
+  if (!trimmed.includes('|')) return null;
+  let inner = trimmed;
+  if (inner.startsWith('|')) inner = inner.slice(1);
+  if (inner.endsWith('|')) inner = inner.slice(0, -1);
+  const cells = inner.split('|').map((cell) => cell.trim());
+  return cells.length ? cells : null;
+}
+
+function isTableSeparatorLine(line: string): boolean {
+  const cells = parseTableCells(line);
+  if (!cells?.length) return false;
+  return cells.every((cell) => /^:?-{3,}:?$/.test(cell));
+}
+
+function renderMarkdownTable(headerCells: string[], bodyRows: string[][]): string {
+  const cellHtml = (text: string) => applyInlineMarkdown(escapeHtml(text));
+  const header = headerCells.map((cell) => `<th>${cellHtml(cell)}</th>`).join('');
+  const body = bodyRows
+    .map((row) => `<tr>${row.map((cell) => `<td>${cellHtml(cell)}</td>`).join('')}</tr>`)
+    .join('');
+  return `<table class="md-table"><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
 function renderTextBlock(text: string): string {
   const lines = text.split('\n');
   const parts: string[] = [];
@@ -28,21 +53,48 @@ function renderTextBlock(text: string): string {
     listItems = [];
   };
 
-  for (const line of lines) {
+  let index = 0;
+  while (index < lines.length) {
+    const line = lines[index];
     const bullet = /^[-*]\s+(.+)$/.exec(line);
     if (bullet) {
       listItems.push(bullet[1]);
+      index += 1;
       continue;
     }
     flushList();
     if (!line.trim()) {
-      parts.push('');
+      index += 1;
+      continue;
+    }
+    const headerCells = parseTableCells(line);
+    if (
+      headerCells &&
+      index + 1 < lines.length &&
+      isTableSeparatorLine(lines[index + 1])
+    ) {
+      const bodyRows: string[][] = [];
+      index += 2;
+      while (index < lines.length) {
+        const rowLine = lines[index];
+        if (!rowLine.trim()) break;
+        if (isTableSeparatorLine(rowLine)) {
+          index += 1;
+          continue;
+        }
+        const rowCells = parseTableCells(rowLine);
+        if (!rowCells) break;
+        bodyRows.push(rowCells);
+        index += 1;
+      }
+      parts.push(renderMarkdownTable(headerCells, bodyRows));
       continue;
     }
     parts.push(`<p>${applyInlineMarkdown(escapeHtml(line))}</p>`);
+    index += 1;
   }
   flushList();
-  return parts.filter((part, index, array) => !(part === '' && array[index + 1] === '')).join('');
+  return parts.join('');
 }
 
 /** Safe markdown subset for assistant bubbles (no raw HTML). */
