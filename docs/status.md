@@ -7,22 +7,22 @@
 | 字段 | 值 |
 | --- | --- |
 | 任务标识 / 修订 | desktop-windows-package / r3 |
-| 阶段 | **待用户验收（Codex 接手安装候选）** |
-| 本轮角色 / 来源 | 用户停止 Cursor 并明确要求 Codex 先生成三六边形图标、接手打包 |
+| 阶段 | **待用户重验（首次启动修复 0.1.1）** |
+| 本轮角色 / 来源 | Codex 接手打包后，用户反馈打开一直未连接；本轮直接修 R3 首次启动 |
 | 目标 / 方案入口 | [R3 Windows Tauri 安装候选](plan.md#下一小轮r3-windows-tauri-安装候选) |
 | 允许范围 | 图标、Tauri/随包 Node/前端服务、系统目录、端点与退出、Windows产物 |
 | 禁止范围 | CLI 写入升级、Electron、重做视觉/消息协议、自动公开发布、R4 |
-| 验收 / 停止点 | 实际安装/服务/窗口/退出已有限验证；冻结候选，用户验窗口与正常使用 |
-| 完成证据 | 91aa1ff；release/NSIS、安装exit0、真实CLI握手、端口关闭、check:all160项 |
+| 验收 / 停止点 | 首次启动入口/错误提示已修；实际安装窗口连接与真实CLI载入通过；冻结候选待用户重验 |
+| 完成证据 | 候选待保存；0.1.1 release/NSIS、安装exit0、首次无目录→真实CLI握手、窗口WS已连接、check:all162项 |
 | 下一接手 / 就绪性 | 用户验下方安装入口；Codex修直接回归，Cursor停写 |
 
 ## 接手、恢复与版本
 
 - 规划 `50e1bbd`；视觉通过基线 `3a467e8`。用户要求停止时 Cursor 未提交，服务打包与 Rust 未通过。
 - Codex 先保存完整暂停源码/文档为 **`97070eb` WIP**，没有丢弃 Cursor 工作。暂停记录可由该提交的 status 追溯。
-- 当前产品候选 **`91aa1ff`**。之后仅本文档记录，产物与此候选源码一致。当前无人产品写入。
+- 旧候选 **`91aa1ff`** 因用户反馈首次启动一直未连接被退回；本轮可恢复基点为 `e2738c8`。修复候选待保存，产物已更新为0.1.1。
 - R3 交付 fail **0/2**（Cursor 未交付，用户主动要求接手不计失败）；本轮由 Codex 实现与自验，不冒称独立技术复核。
-- 应用版本 **0.1.0 / Windows x64**；未签名本机安装候选，不是公开发行声明。
+- 应用版本 **0.1.1 / Windows x64**；未签名本机安装候选，不是公开发行声明。
 
 ## 图标与实现
 
@@ -40,15 +40,15 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 构建命令 | README：npm run build:desktop:win；Tauri beforeBuild执行生产服务类型检查/前端与服务构建 |
-| NSIS | `C:/DEV/develop/T3rra-C0d3-Talos/src-tauri/target/release/bundle/nsis/TALOS_0.1.0_x64-setup.exe` |
-| 大小 | **27,672,858 bytes（约26.39 MiB）** |
-| NSIS SHA-256 | `50258216F2C64FA93A1DA6279E5AD72992A748070A742E44D39AC6F9B99157F3` |
+| NSIS | `C:/DEV/develop/T3rra-C0d3-Talos/src-tauri/target/release/bundle/nsis/TALOS_0.1.1_x64-setup.exe` |
+| 大小 | **27,667,863 bytes（约26.39 MiB）** |
+| NSIS SHA-256 | `563A0E8471865D1A3D937DCBA2119A0B4690173A86AB9D50E00D85E94814EFD7` |
 | release exe | `src-tauri/target/release/talos-desktop.exe`；须与安装资源/Node共同部署，不单独拷贝exe冒充完整包 |
 | 实际安装目录 | `C:/DEV/develop/T3rra-C0d3-Talos/.sandbox/talos-install-check`（NSIS有限本机安装验证） |
 | 已装应用入口 | `C:/DEV/develop/T3rra-C0d3-Talos/.sandbox/talos-install-check/talos-desktop.exe` |
 | 实际CLI | `C:/Users/pachu77/AppData/Roaming/npm/talos.cmd` / @pakiknowledge/tal0s-code **0.1.4**；使用其安装entry与随包Node启动Studio，未升级 |
 
-- 【实测】check:all **退出0**：32文件/160项；cargo check、release/NSIS构建退出0；typecheck:desktop通过。
+- 【实测】check:all **退出0**：32文件/162项；cargo check、release/NSIS构建退出0；typecheck:desktop通过。
 - 【实测】官方 Node 校验通过；图标已查看实际 PNG，ICO生成；Node/WS许可随最终安装产物存在。
 - 【实测】NSIS安装 **退出0**；从最终安装目录启动，不在源码cwd运行：窗口标题 TALOS · 作业终端，自有node=1，loopback健康检查true；关闭后自有进程残留=0。未关闭用户既有开发/CLI服务。
 - 【实测】`node tools/check-desktop-package.mjs --installed-dir .sandbox/talos-install-check`：真实安装Node/服务资源、字体/脚本可读，无认证WS拒绝、认证WS快照、服务关闭exit0与端口释放通过；生产不依赖源码checkout，验证脚本本身在仓库运行。
@@ -56,12 +56,23 @@
 - 【实测】安装服务注入仅对该子进程有效的缺失CLI路径：界面端点仍提供服务、快照error与恢复入口，无相邻源码回退，退出0。没有修改系统环境。
 - 【限制】没有观察真窗口画面、没有交互验证原生目录选择/取消，未发付费模型；Rust目录接口编译通过不能代替用户真实选择。字体再分发许可仍按design记为公开发行前未核项；本候选不宣称发行全量通过。
 
+## 本轮首次启动修复
+
+- 【实测】用户本机没有已保存 workspace.json；从安装目录启动的 WebView 已与自有 Node 建立 WS，健康检查200。此次证据支持“尚未选择工作区被错误表示为未连接”，不能据此声称用户所有历史故障均已解释。
+- 【源码】无目录启动保留真实 disconnected/无session快照；旧前端将它合并进通用“未连接/重新连接”。会话建立前的错误也被通用空态遮住，原生服务启动异常仅短暂提示。
+- 修复只改变前端启动显示：启动中 → 等待工作区/主页面「选择工作区」 → 建立会话。主页面按钮复用既有原生选择与 switch_workspace；不伪造引擎连接，不改CLI/协议/已通过视觉。取消仍不派发动作。
+- 无session的服务/引擎错误保留在主页面；原生服务失败给重新连接，CLI/目录失败给重新选择工作区。断开后恢复工作区提交按钮；旧会话已有错误展示保持原路径。
+- 【实测】聚焦26项通过；check:all32文件162项、生产服务及新增启动helper类型检查通过。release/NSIS构建与新包安装退出0；实际文件版本0.1.1。
+- 【实测】新安装Node/服务：首次无目录快照 → 无效相对目录 action_error → C:/DEV/develop/tmp/test 通过真实已安装Studio连接、ready且会话存在、historyLoading false、errors为空。脚本没有发prompt/turn模型请求；资源/认证WS/退出与端口关闭通过。
+- 【实测】从TEMP启动新安装应用：窗口标题正常、自有Node=1、窗口与其服务Established=1、health200；关闭该验证窗口后host退出、自有Node残留0。未结束用户进程。
+- 【未验】新空态实际画面、系统选择器选择/取消与退出再开自动恢复仍待用户操作；网络连接证据不冒称画面验收。本轮没有付费模型请求。
+
 ## 用户验收（本候选）
 
 可以直接启动上述已装应用，或使用 NSIS 装到期望目录。**不用 npm run dev:product。** CLI需已安装并配置好provider。
 
-1. 打开 TALOS → 三六边形图标、已确认开屏/字体/布局正常。
-2. 使用「选择工作区」选测试目录，再点一次并取消 → 正确目录连接，取消不改变当前记录。
+1. 打开0.1.1 TALOS → 开屏结束后，首次无目录应显示「等待工作区」及主页面「选择工作区」；原有字体/布局保留。
+2. 点击主页面「选择工作区」选测试目录 → 建立会话后进入待命；再从侧栏选择并取消，目录与记录不变。
 3. 打开既有会话；用户主动短请求 → 正常生成，停止/安全审批沿已有语义（无场景标未验）。
 4. 退出再打开 → 正确恢复目录；若失败有清楚错误与重新选择入口。
 

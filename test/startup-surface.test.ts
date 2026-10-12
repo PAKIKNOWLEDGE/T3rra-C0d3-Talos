@@ -1,3 +1,4 @@
+import { desktopStartup } from '../src/view/desktop-startup.js';
 import { describe, expect, it, vi } from 'vitest';
 import { FactStore } from '../src/core/fact-store.js';
 import type { ServiceSnapshot } from '../src/core/types.js';
@@ -132,5 +133,25 @@ describe('startup-surface (v1)', () => {
     });
     expect(store.snapshot().session.historyLoading).toBe(false);
     expect(shouldShowTaskInvite(store.snapshot(), 'record')).toBe(true);
+  });
+});
+
+
+describe('desktop first launch', () => {
+  it('requests a workspace for the real initial FactStore without claiming engine connection', () => {
+    const snapshot = new FactStore('first-launch').snapshot();
+    expect(desktopStartup(snapshot, true)).toMatchObject({ status: '等待工作区', action: 'pick-workspace' });
+    expect(snapshot.connection.status).toBe('disconnected');
+    expect(desktopStartup(snapshot, false)).toBeNull();
+  });
+
+  it('keeps startup failures visible and distinguishes service retry from workspace retry', () => {
+    const store = new FactStore('failed-launch');
+    store.apply({ kind: 'error', processEpoch: 1, message: 'CLI unavailable' });
+    expect(desktopStartup(store.snapshot(), true)).toMatchObject({ body: 'CLI unavailable', action: 'pick-workspace' });
+    expect(desktopStartup(null, true, 'service failed')).toMatchObject({ body: 'service failed', action: 'reconnect' });
+    expect(desktopStartup(null, true)).toMatchObject({ status: '启动中', action: '' });
+    expect(desktopStartup(store.snapshot(), true, undefined, true)).toMatchObject({ status: '建立会话' });
+    expect(desktopStartup(baseSnapshot(), true)).toBeNull();
   });
 });

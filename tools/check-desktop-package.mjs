@@ -5,6 +5,8 @@ import { resolve } from 'node:path';
 import { readFileSync, readdirSync } from 'node:fs';
 import WebSocket from 'ws';
 
+const workspaceIndex = process.argv.indexOf('--workspace');
+const workspace = workspaceIndex >= 0 ? process.argv[workspaceIndex + 1] : undefined;
 const root = resolve(import.meta.dirname, '..');
 const installedIndex = process.argv.indexOf('--installed-dir');
 const installed = installedIndex >= 0 ? resolve(process.argv[installedIndex + 1]) : undefined;
@@ -34,7 +36,25 @@ try {
  const denied=new WebSocket(wsUrl);denied.on('error',()=>{});const denial=await new Promise(res=>denied.on('unexpected-response',(_req,r)=>{r.resume();res(r.statusCode);}));assert.equal(denial,401);denied.terminate();
  wsUrl.search=endpoint.search;
  const socket=new WebSocket(wsUrl);const message=once(socket,'message');await once(socket,'open');
- const [raw]=await message;assert.equal(JSON.parse(raw.toString()).type,'snapshot');
+ const [raw]=await message;
+ const initial = JSON.parse(raw.toString());
+ assert.equal(initial.type,'snapshot');
+ assert.equal(initial.snapshot.connection.status,'disconnected');
+ assert.equal(initial.snapshot.session.cwd,undefined);
+ assert.equal(initial.snapshot.session.sessionId,undefined);
+ assert.deepEqual(initial.snapshot.errors,[]);
+ if (workspace) {
+  const exchange = (action, predicate) => new Promise((resolveMessage,reject)=>{
+   const cleanup=()=>{clearTimeout(timer);socket.off('message',onMessage);};
+   const timer=setTimeout(()=>{cleanup();reject(new Error('workspace action timed out'));},30000);
+   const onMessage=data=>{const value=JSON.parse(data.toString());if(predicate(value)){cleanup();resolveMessage(value);}};
+   socket.on('message',onMessage);socket.send(JSON.stringify(action));
+  });
+  await exchange({type:'switch_workspace',operationId:'workspace-invalid',cwd:'relative-invalid'},m=>m.type==='action_error'&&m.operationId==='workspace-invalid');
+  const restored=await exchange({type:'switch_workspace',operationId:'workspace-real',cwd:workspace},m=>m.type==='snapshot'&&m.snapshot.connection.status==='connected'&&m.snapshot.session.status==='ready'&&Boolean(m.snapshot.session.sessionId)&&!m.snapshot.session.historyLoading);
+  assert.deepEqual(restored.snapshot.errors,[]);
+  console.log('PASS first launch: no workspace -> rejected invalid directory -> real Studio connected/session ready; no prompt/model request.');
+ }
  socket.close();await once(socket,'close');
  const exit=once(child,'exit');child.stdin.write('shutdown\n');const [code]=await exit;assert.equal(code,0);
  const stopped=await fetch(new URL('/health',endpoint)).then(()=>false,()=>true);assert.ok(stopped);

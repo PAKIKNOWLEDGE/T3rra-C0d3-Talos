@@ -16,6 +16,7 @@ import {
   renderUserMessageHtml,
   stripRedactedThinking,
 } from '../src/view/message-markdown.ts';
+import { desktopStartup } from '../src/view/desktop-startup.ts';
 import { shouldShowTaskInvite } from '../src/view/startup-surface.ts';
 import {
   STARTUP_SPLASH_END_EVENT,
@@ -34,6 +35,8 @@ const workspace = document.querySelector('.workspace');
 const compact = window.matchMedia('(max-width: 980px)');
 const state = {
   snapshot: null,
+  desktopError: undefined,
+  workspaceStarting: false,
   view: 'record',
   events: [],
   socket: null,
@@ -180,7 +183,13 @@ function operationWaitCurrent() {
   return { sessionId: sessionId() ?? '', connectionToken: state.connectionToken };
 }
 
+function startup() {
+  return desktopStartup(state.snapshot, isDesktopShell(), state.desktopError, state.workspaceStarting);
+}
+
 function phase() {
+  const initial = startup();
+  if (initial) return initial.status;
   const snapshot = state.snapshot;
   if (!snapshot) return '未连接';
   if (snapshot.approvals.some((approval) => approval.status === 'pending')) return '待授权';
@@ -256,7 +265,8 @@ function renderWorkspaceMeta() {
         ? 'detached'
         : 'git'
       : ui.connected
-    : ui.disconnected;
+    : startup()?.status || ui.disconnected;
+  $('statusDisconnected').textContent = startup()?.status || ui.disconnected;
   $('statusDisconnected').dataset.active = connected ? 'false' : 'true';
   $('statusConnected').dataset.active = connected ? 'true' : 'false';
 }
@@ -845,7 +855,7 @@ function renderSessions() {
   $('sessionCount').textContent = String(list.length).padStart(2, '0');
   const listEl = $('sessionList');
   if (!connected) {
-    listEl.innerHTML = `<div class="session-empty">${ui.sessionWaiting}</div>`;
+    listEl.innerHTML = `<div class="session-empty">${startup()?.status || ui.sessionWaiting}</div>`;
     return;
   }
   const parts = [];
@@ -1036,8 +1046,14 @@ function renderContent() {
     return;
   }
   if (!snapshot?.session?.sessionId) {
+    const initial = startup();
+    const error = snapshot?.errors?.at(-1);
+    const title = initial?.title || (error ? ui.errorTitle : ui.emptyTitle);
+    const body = initial?.body || error || ui.emptyBody;
+    const action = initial ? initial.action : 'reconnect';
+    const label = initial?.label || ui.emptyAction;
     $('stream').innerHTML =
-      `<section class="empty"><span class="empty-number">TALOS / CURRENT SESSION</span><h2>${ui.emptyTitle}</h2><p>${ui.emptyBody}</p><button type="button" class="suggestion" data-action="reconnect">${ui.emptyAction} ↗</button></section>`;
+      `<section class="empty"><span class="empty-number">TALOS / CURRENT SESSION</span><h2>${escapeHtml(title)}</h2><p>${escapeHtml(body)}</p>${action ? `<button type="button" class="suggestion" data-action="${action}">${escapeHtml(label)} ↗</button>` : ''}</section>`;
     updateTaskInviteSurface();
     return;
   }
@@ -1193,7 +1209,7 @@ function render() {
       ? ui.ready
       : connected
         ? ui.composerPreparing
-        : ui.composerOffline;
+        : startup()?.status || ui.composerOffline;
   const slashReady = running
     ? ui.runningSendHint
     : hasSession && (state.snapshot?.context?.availableCommands?.length ?? 0) > 0
@@ -1210,14 +1226,14 @@ function render() {
     ? accountLabel ? `${ui.engineOnline} · ${accountLabel}` : ui.engineOnline
     : connected
       ? accountLabel ? `${ui.enginePreparing} · ${accountLabel}` : ui.enginePreparing
-      : ui.engineOffline;
+      : startup() ? `Talos · ${startup().status}` : ui.engineOffline;
   const footnote = $('statusFootnote');
   if (footnote) {
     footnote.textContent = connected && hasSession
       ? accountLabel ? `${ui.footnoteOnline} · ${accountLabel}` : ui.footnoteOnline
       : connected
         ? ui.footnotePreparing
-        : ui.footnoteOffline;
+        : startup()?.status || ui.footnoteOffline;
   }
   $('recordDate').textContent = new Intl.DateTimeFormat('zh-CN', {
     month: 'short',
@@ -1237,10 +1253,14 @@ async function connect() {
   state.connectionToken += 1;
   let origin;
   connectionStarting = true;
+  state.desktopError = undefined;
+  render();
   try {
     origin = isDesktopShell() ? await desktopServiceOrigin() : location.origin;
   } catch (error) {
-    notice(error instanceof Error ? error.message : '桌面服务启动失败');
+    state.desktopError = error instanceof Error ? error.message : '桌面服务启动失败';
+    notice(state.desktopError);
+    render();
     return;
   } finally { connectionStarting = false; }
   const endpoint = new URL('/ws', origin);
@@ -1261,16 +1281,23 @@ async function connect() {
     state.pendingApprovalFlights.clear();
     notice('连接已断开');
     state.snapshot = null;
+    state.workspaceStarting = false;
+    state.desktopError ||= '本地服务连接已断开，请重新连接。';
+    const submit = $('workspaceSwitchForm')?.querySelector('button[type="submit"]');
+    if (submit) submit.disabled = false;
     render();
   });
   socket.addEventListener('error', () => {
     if (state.socket !== socket) return;
-    notice('连接失败');
+    state.desktopError = '无法连接本地服务，请重新连接。';
+    notice(state.desktopError);
+    render();
   });
   socket.addEventListener('message', (event) => {
     if (state.socket !== socket) return;
     const message = JSON.parse(event.data);
     if (message.type === 'snapshot') {
+      state.desktopError = undefined;
       state.snapshot = message.snapshot;
       recordEvent('service.snapshot', '状态已更新');
       render();
@@ -1289,8 +1316,10 @@ async function connect() {
       if (feedback === 'consumer' || feedback === 'ignored') return;
       notice(message.message || ui.workspaceSwitchFailed);
       if (feedback === 'workspace') {
+        state.workspaceStarting = false;
         const submit = $('workspaceSwitchForm')?.querySelector('button[type="submit"]');
         if (submit) submit.disabled = false;
+        render();
       }
       return;
     }
@@ -1306,6 +1335,8 @@ async function connect() {
       );
       const op = message.operationId || '';
       if (!pending && message.result?.accepted && op.startsWith('workspace-')) {
+        state.workspaceStarting = false;
+        render();
         notice(ui.workspaceSwitched);
         void rememberWorkspaceDirectory(state.snapshot?.session?.cwd ?? '').catch(error => notice(error.message));
         const submit = $('workspaceSwitchForm')?.querySelector('button[type="submit"]');
@@ -1633,6 +1664,10 @@ document.addEventListener('click', async (event) => {
     }
     return;
   }
+  if (button.dataset.action === 'pick-workspace') {
+    $('workspacePickButton')?.click();
+    return;
+  }
   if (button.dataset.action === 'reconnect') {
     connect();
     notice('正在连接…');
@@ -1742,6 +1777,8 @@ $('workspaceSwitchForm')?.addEventListener('submit', (event) => {
   if (!state.socket || state.socket.readyState !== WebSocket.OPEN) return notice(ui.disconnected);
   const submit = event.target.querySelector('button[type="submit"]');
   if (submit) submit.disabled = true;
+  state.workspaceStarting = true;
+  render();
   notice(ui.workspaceSwitching);
   sendAction({ type: 'switch_workspace', operationId: nextOperationId('workspace'), cwd });
 });
