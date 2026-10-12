@@ -42,7 +42,8 @@ function renderMarkdownTable(headerCells: string[], bodyRows: string[][]): strin
   return `<table class="md-table"><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`;
 }
 
-function renderTextBlock(text: string): string {
+/** Block markdown (lists, tables, paragraphs) inside assistant/thought bodies. */
+export function renderTextBlock(text: string): string {
   const lines = text.split('\n');
   const parts: string[] = [];
   let listItems: string[] = [];

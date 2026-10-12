@@ -1,8 +1,14 @@
 import { planSlashSubmit } from './slash-prompt.js';
+import {
+  escapeHtml,
+  renderAssistantMessageHtml,
+  renderTextBlock,
+  renderUserMessageHtml,
+  stripRedactedThinking,
+} from '../src/view/message-markdown.ts';
 
 const $ = (id) => document.getElementById(id);
 const icon = (name) => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
-const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 const workspace = document.querySelector('.workspace');
 const compact = window.matchMedia('(max-width: 980px)');
 const state = {
@@ -885,126 +891,12 @@ function approvalCard(approval) {
 }
 
 function formatMessageText(text) {
-  const open = '<think>';
-  const close = '</think>';
-  let out = String(text);
-  for (;;) {
-    const start = out.indexOf(open);
-    if (start < 0) break;
-    const end = out.indexOf(close, start);
-    if (end < 0) break;
-    out = out.slice(0, start) + out.slice(end + close.length);
-  }
-  return out.trim();
+  return stripRedactedThinking(String(text));
 }
 
 function scrollLogToEnd() {
   const log = $('log');
   if (log) log.scrollTop = log.scrollHeight;
-}
-
-function applyInlineMarkdown(escaped) {
-  let out = escaped.replace(/`([^`\n]+)`/g, '<code>$1</code>');
-  out = out.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
-  out = out.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em>$1</em>');
-  return out;
-}
-
-function parseTableCells(line) {
-  const trimmed = line.trim();
-  if (!trimmed.includes('|')) return null;
-  let inner = trimmed;
-  if (inner.startsWith('|')) inner = inner.slice(1);
-  if (inner.endsWith('|')) inner = inner.slice(0, -1);
-  const cells = inner.split('|').map((cell) => cell.trim());
-  return cells.length ? cells : null;
-}
-
-function isTableSeparatorLine(line) {
-  const cells = parseTableCells(line);
-  if (!cells?.length) return false;
-  return cells.every((cell) => /^:?-{3,}:?$/.test(cell));
-}
-
-function renderMarkdownTable(headerCells, bodyRows) {
-  const cellHtml = (text) => applyInlineMarkdown(escapeHtml(text));
-  const header = headerCells.map((cell) => `<th>${cellHtml(cell)}</th>`).join('');
-  const body = bodyRows
-    .map((row) => `<tr>${row.map((cell) => `<td>${cellHtml(cell)}</td>`).join('')}</tr>`)
-    .join('');
-  return `<table class="md-table"><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`;
-}
-
-function renderTextBlock(text) {
-  const lines = text.split('\n');
-  const parts = [];
-  let listItems = [];
-  const flushList = () => {
-    if (!listItems.length) return;
-    parts.push(`<ul>${listItems.map((item) => `<li>${applyInlineMarkdown(escapeHtml(item))}</li>`).join('')}</ul>`);
-    listItems = [];
-  };
-  let index = 0;
-  while (index < lines.length) {
-    const line = lines[index];
-    const bullet = /^[-*]\s+(.+)$/.exec(line);
-    if (bullet) {
-      listItems.push(bullet[1]);
-      index += 1;
-      continue;
-    }
-    flushList();
-    if (!line.trim()) {
-      index += 1;
-      continue;
-    }
-    const headerCells = parseTableCells(line);
-    if (headerCells && index + 1 < lines.length && isTableSeparatorLine(lines[index + 1])) {
-      const bodyRows = [];
-      index += 2;
-      while (index < lines.length) {
-        const rowLine = lines[index];
-        if (!rowLine.trim()) break;
-        if (isTableSeparatorLine(rowLine)) {
-          index += 1;
-          continue;
-        }
-        const rowCells = parseTableCells(rowLine);
-        if (!rowCells) break;
-        bodyRows.push(rowCells);
-        index += 1;
-      }
-      parts.push(renderMarkdownTable(headerCells, bodyRows));
-      continue;
-    }
-    parts.push(`<p>${applyInlineMarkdown(escapeHtml(line))}</p>`);
-    index += 1;
-  }
-  flushList();
-  return parts.join('');
-}
-
-function renderAssistantMessageHtml(text) {
-  const segments = [];
-  const pattern = /```([^\n`]*)\n([\s\S]*?)```/g;
-  let lastIndex = 0;
-  let match;
-  while ((match = pattern.exec(text)) !== null) {
-    if (match.index > lastIndex) segments.push(renderTextBlock(text.slice(lastIndex, match.index)));
-    segments.push(`<pre><code>${escapeHtml(match[2].replace(/\n$/, ''))}</code></pre>`);
-    lastIndex = pattern.lastIndex;
-  }
-  if (lastIndex < text.length) segments.push(renderTextBlock(text.slice(lastIndex)));
-  return segments.join('') || '<p></p>';
-}
-
-function renderUserMessageHtml(text) {
-  const trimmed = String(text).trim();
-  if (!trimmed) return '<p></p>';
-  return trimmed
-    .split(/\n{2,}/)
-    .map((block) => `<p>${escapeHtml(block).replace(/\n/g, '<br>')}</p>`)
-    .join('');
 }
 
 function messageBodyHtml(message) {
