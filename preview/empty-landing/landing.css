@@ -87,16 +87,18 @@ h1, h2, h3, p { margin: 0; }
 .emblem i:nth-child(2) { left: 0; top: 18px; }
 .emblem i:nth-child(3) { left: 20px; top: 18px; }
 
-/* ---- splash ---- */
+/* ---- splash: paper, industrial yellow plane, existing Talos emblem ---- */
 .splash {
   position: fixed;
   inset: 0;
   z-index: 40;
   display: grid;
   place-items: center;
-  background: #181918;
-  color: var(--ink);
+  overflow: hidden;
+  background: #d8d8d3;
+  color: #262724;
   pointer-events: none;
+  isolation: isolate;
 }
 html[data-phase='splash'] .splash {
   pointer-events: auto;
@@ -108,50 +110,95 @@ html[data-phase='splash'] .splash {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(#b8b9b618 0.8px, transparent 0.8px) 0 0 / 22px 22px,
-    linear-gradient(180deg, #1c1d1c, #141514);
-  opacity: 0.7;
+    radial-gradient(#26272430 0.7px, transparent 0.8px) 0 0 / 20px 20px,
+    linear-gradient(90deg, transparent calc(50% - 0.5px), #26272416 50%, transparent calc(50% + 0.5px)),
+    linear-gradient(180deg, #eeeee780, transparent 62%);
+}
+.splash-plane {
+  position: absolute;
+  inset: -15% -10%;
+  background: var(--yellow);
+  clip-path: polygon(46% 0, 64% 0, 43% 100%, 25% 100%);
+}
+.splash-plane::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #262724;
+  clip-path: polygon(64% 0, 64.7% 0, 43.7% 100%, 43% 100%);
+}
+.splash-ghost {
+  position: absolute;
+  left: -0.035em;
+  bottom: -0.12em;
+  font: 700 clamp(120px, 25vw, 360px) / 0.9 var(--display);
+  letter-spacing: -0.07em;
+  color: #2627240d;
+  user-select: none;
+}
+.splash-register {
+  position: absolute;
+  top: clamp(22px, 4vh, 44px);
+  left: clamp(22px, 4vw, 58px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: 10px / 1.2 var(--mono);
+  letter-spacing: 0.06em;
+}
+.splash-register span {
+  padding: 7px 9px;
+  background: #262724;
+  color: #eeeee7;
+  font-weight: 700;
+}
+.splash-register b { font-weight: 400; }
+.splash-edge {
+  position: absolute;
+  bottom: 29px;
+  left: clamp(22px, 4vw, 58px);
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  font: 9px / 1 var(--mono);
+  letter-spacing: 0.08em;
+}
+.splash-edge i {
+  width: 46px;
+  height: 10px;
+  background: repeating-linear-gradient(120deg, #262724 0 3px, transparent 3px 6px);
 }
 .splash-scan {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 18vw;
-  left: -20vw;
-  background: linear-gradient(90deg, transparent, #f4eb1628, var(--yellow), #f4eb1628, transparent);
-  filter: blur(0.4px);
+  width: 2px;
+  left: -2px;
+  background: #262724;
   opacity: 0;
-  mix-blend-mode: screen;
 }
 .splash-core {
   position: relative;
   display: grid;
   justify-items: center;
-  gap: 22px;
+  gap: 24px;
   text-align: center;
 }
-.splash-emblem {
-  width: 120px;
-  height: 138px;
-  filter: drop-shadow(0 0 0 transparent);
-}
-.splash-emblem i {
-  background: var(--paper);
-  width: 56px;
-  height: 60px;
-}
+.splash-emblem { width: 120px; height: 138px; }
+.splash-emblem i { background: #262724; width: 56px; height: 60px; }
 .splash-emblem i:nth-child(1) { left: 31px; top: 0; }
 .splash-emblem i:nth-child(2) { left: 0; top: 54px; }
 .splash-emblem i:nth-child(3) { left: 62px; top: 54px; }
 .splash-word {
   overflow: hidden;
-  height: 54px;
+  min-height: 88px;
   display: grid;
   justify-items: center;
+  align-content: start;
 }
 .splash-word span {
-  font: 700 52px / 1 var(--display);
-  letter-spacing: -0.05em;
+  font: 700 clamp(58px, 6vw, 72px) / 1 var(--display);
+  letter-spacing: -0.055em;
   transform: translateY(110%);
 }
 .splash-word b {
@@ -159,96 +206,52 @@ html[data-phase='splash'] .splash {
   width: 0;
   height: 4px;
   margin-top: 10px;
-  background: var(--yellow);
+  background: #262724;
 }
 .splash-sub {
   font: 11px / 1 var(--display);
   letter-spacing: 0.22em;
-  color: #8d8f8b;
+  color: #52544d;
   opacity: 0;
 }
 .splash-skip {
   position: absolute;
   right: 28px;
   bottom: 24px;
-  border: 1px solid #ffffff22;
-  background: transparent;
-  color: #b5b6b3;
+  border: 1px solid #26272450;
+  background: #eeeee766;
+  color: #262724;
   font: 11px var(--display);
-  letter-spacing: 0.08em;
   padding: 8px 14px;
-  opacity: 0;
 }
-
-html[data-phase='splash'] .splash-grid {
-  animation: grid-in 0.7s var(--ease) both;
-}
-html[data-phase='splash'] .splash-emblem i:nth-child(1) {
-  animation: hex-lock 0.58s var(--ease) 0.04s both;
-}
-html[data-phase='splash'] .splash-emblem i:nth-child(2) {
-  animation: hex-lock 0.58s var(--ease) 0.14s both;
-}
-html[data-phase='splash'] .splash-emblem i:nth-child(3) {
-  animation: hex-lock 0.58s var(--ease) 0.24s both;
-}
-html[data-phase='splash'] .splash-emblem {
-  animation: emblem-charge 0.8s var(--ease) 0.72s both;
-}
-html[data-phase='splash'] .splash-scan {
-  animation: scan-sweep 0.7s var(--ease) 0.78s both;
-}
-html[data-phase='splash'] .splash-word span {
-  animation: word-up 0.55s var(--ease) 1.05s both;
-}
-html[data-phase='splash'] .splash-word b {
-  animation: bar-grow 0.45s var(--ease) 1.28s both;
-}
-html[data-phase='splash'] .splash-sub {
-  animation: fade 0.4s var(--ease) 1.4s both;
-}
-html[data-phase='splash'] .splash-skip {
-  animation: fade 0.3s linear 0.6s both;
-}
-html:not([data-phase='splash']) .splash {
-  animation: veil-out 0.55s var(--ease) forwards;
-}
-
-@keyframes grid-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+.splash-skip:hover { background: #eeeee7; }
+.splash-skip:focus-visible { outline: 2px solid #262724; }
+html[data-phase='splash'] .splash-grid { animation: grid-in 0.6s var(--ease) both; }
+html[data-phase='splash'] .splash-plane { animation: plane-in 0.7s var(--ease) both; }
+html[data-phase='splash'] .splash-emblem i:nth-child(1) { animation: hex-lock 0.58s var(--ease) 0.04s both; }
+html[data-phase='splash'] .splash-emblem i:nth-child(2) { animation: hex-lock 0.58s var(--ease) 0.14s both; }
+html[data-phase='splash'] .splash-emblem i:nth-child(3) { animation: hex-lock 0.58s var(--ease) 0.24s both; }
+html[data-phase='splash'] .splash-scan { animation: scan-sweep 0.6s var(--ease) 0.78s both; }
+html[data-phase='splash'] .splash-word span { animation: word-up 0.55s var(--ease) 1.05s both; }
+html[data-phase='splash'] .splash-word b { animation: bar-grow 0.45s var(--ease) 1.28s both; }
+html[data-phase='splash'] .splash-sub { animation: fade 0.4s var(--ease) 1.4s both; }
+html:not([data-phase='splash']) .splash { animation: veil-out 0.45s var(--ease) forwards; }
+@keyframes grid-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes plane-in { from { transform: translateX(14%); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes hex-lock {
   from { opacity: 1; transform: translateY(-36px); }
   62% { transform: translateY(5px); }
   to { transform: none; }
 }
-@keyframes emblem-charge {
-  from { filter: drop-shadow(0 0 0 transparent); }
-  40% { filter: drop-shadow(0 0 18px #f4eb1688); }
-  to { filter: drop-shadow(0 10px 18px #0008); }
-}
 @keyframes scan-sweep {
   from { opacity: 0; transform: translateX(0); }
-  12% { opacity: 1; }
-  to { opacity: 0; transform: translateX(120vw); }
+  12% { opacity: 0.35; }
+  to { opacity: 0; transform: translateX(100vw); }
 }
-@keyframes word-up {
-  from { transform: translateY(110%); }
-  to { transform: none; }
-}
-@keyframes bar-grow {
-  from { width: 0; }
-  to { width: 92px; }
-}
-@keyframes fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes veil-out {
-  from { opacity: 1; }
-  to { opacity: 0; visibility: hidden; }
-}
+@keyframes word-up { from { transform: translateY(110%); } to { transform: none; } }
+@keyframes bar-grow { from { width: 0; } to { width: 92px; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes veil-out { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
 
 /* ---- shell ---- */
 .masthead {

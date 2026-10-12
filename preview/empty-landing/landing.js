@@ -54,7 +54,7 @@ function playSplash() {
   }
   clearTimeout(splashTimer);
   root.dataset.phase = 'splash';
-  splash.querySelectorAll('.splash-grid, .splash-scan, .splash-emblem, .splash-emblem i, .splash-word span, .splash-word b, .splash-sub, .splash-skip').forEach((el) => {
+  splash.querySelectorAll('.splash-grid, .splash-plane, .splash-scan, .splash-emblem, .splash-emblem i, .splash-word span, .splash-word b, .splash-sub, .splash-skip').forEach((el) => {
     el.style.animation = 'none';
     void el.offsetWidth;
     el.style.animation = '';
