@@ -7,20 +7,20 @@
 | 字段 | 值 |
 | --- | --- |
 | 任务标识 / 修订 | desktop-startup-surface / v1 |
-| 阶段 | **待技术复核** |
+| 阶段 | **已完成（技术通过，既有视觉验收保留）** |
 | 本轮角色 / 来源 | 用户已确认 8e52c77 预览非常满意，明确交 Cursor 接入；Codex 已规划 |
 | 目标 / 方案入口 | [V1 开屏与空态产品接入](plan.md#下一小轮v1-开屏与空态产品接入) |
 | 允许范围 | app 开屏/空态局部接线、生产显示 helper 与相关测试；必要时最小历史加载显示标记 |
 | 禁止范围 | 改已确认视觉、CLI/协议/状态所有权、demo、依赖框架、V2/V3/Tauri 实现 |
-| 验收 / 停止点 | Cursor 修启动兜底与键盘隔离；保留已通过视觉，交新候选后待复核 |
+| 验收 / 停止点 | S1/S2 技术复核通过，保留原视觉通过；不自动实施 V2 |
 | 完成证据 | 见「V1 实施交付」 |
-| 下一接手 / 就绪性 | Codex 技术复核 V1 第二候选；fail **1 / 2** |
+| 下一接手 / 就绪性 | 下一项 V2 由 Codex 定位实际文案并给修改清单；当前停在收口，fail **1 / 2** |
 
 ## 当前候选与交付
 
 - 产品基线：已通过 `e091aca`；视觉正本：已通过预览 `8e52c77`。规划前恢复点 `8e52c77`，执行者以实际 HEAD 核对文档之后产品未变。
-- 当前产品候选：**待提交**（S1/S2 修复）；退回候选 `b0e38cb`；基点 `b0e38cb`，规划 `04f0173`。
-- V1 交付 fail：**1 / 2**。Cursor 已交第二候选后停写。
+- 当前产品候选：**`ad8130c`**（S1/S2）；退回候选 `b0e38cb`；基点 `b0e38cb`，规划 `04f0173`。
+- V1 交付 fail：**1 / 2**；第二候选技术通过，不新增 fail。Cursor 停写，产品冻结为 `ad8130c`。
 
 ## V1 实施交付
 
@@ -29,13 +29,25 @@
 | 产品候选 / 改动 | 开屏 `#startupSplash` + `product-splash.css`（8e52c77 节奏）；`taskInvite` 邀请面；`src/view/startup-surface.ts`；`FactStore.snapshot` 派生 `historyLoading`；`talos.js` 接线（connect 并行、不重置快照）；manifest/测试 |
 | 开屏生命周期 | 每页载入一次（内存 `createSplashController`）；约 2.2s / 跳过 / reduced-motion 同一 `endStartupSplash`；不重播于切会话或 WS 重连；无重播按钮 |
 | 空态优先级 | `shouldShowTaskInvite` + `hasRecordBody`：事件页、断连、无 sessionId、加载中、historyLoading/失败、运行、消息/工具、审批、问卷、errors 均优先于邀请面 |
-| 焦点 | 开屏期间工作台 `pointer-events: none`；结束后仅邀请面且输入可用时 focus `#prompt` |
-| 检查 | 【实测】`npm run check:all` **0**（`test:core` **157**）；`test/startup-surface.test.ts` + vite 链含 `startup-surface` |
+| 焦点 | 独立启动入口给背景 inert、焦点置跳过，捕获阶段处理跳过按键；退出解除限制，用户已选其他控件时不抢焦点 |
+| 原候选检查 | 【文档】此前 check:all 0 / 核心 157；本次候选见下方 160 记录 |
 | 限制 | 【用户实测】本次反馈视觉一次通过；Codex 未观察浏览器、未启动真实 CLI/模型 |
 | S1/S2 修复 | `app/startup-boot.ts` 先于 `talos.js` 挂载；默认 `data-phase=ready`+splash hidden；`armSplashFailsafe`+幂等 `dismiss`；背景 `inert`+捕获阶段按键；`shouldRestoreFocusAfterSplash` |
 | 检查 | 【实测】`check:all` **0**（核心 **160**）；`startup-splash-lifecycle.test.ts` |
-| Codex 技术复核 | **待复核**（第二候选） |
+| Codex 技术复核 | **通过**（第二候选 `ad8130c`），见下方本次证据 |
 | 退回记录 | 第 1 次 `b0e38cb`（S1/S2）；fail **1 / 2** |
+
+## 第二候选技术复核通过（2026-10-12）
+
+**`ad8130c` 技术通过，无本轮阻塞项，fail 保持 1 / 2。** 复核 HEAD `0032be9`（产品候选后仅文档）；复核开始工作树仅有 status 候选号补全，本次保留并保存。此前用户正常集成画面通过仍有效，修复没有改变开屏图形、节奏和空态布局；本次不假称 Codex 目视或用户已验新焦点分支。
+
+- 【源码】HTML 默认 ready + splash hidden；独立 startup-boot 先于业务模块加载，hidden 样式明确 display:none。业务模块未执行时启动控制器也有 2.2 秒结束及独立 failsafe；启动模块自身未执行时页面默认不被遮罩阻挡。
+- 【源码】背景 masthead/workspace/sample-bar 采用 inert，跳过焦点可用；捕获阶段拦截开屏 Enter/Escape/空格，清理移除监听和 inert；焦点恢复仅在开屏/body 尚持焦点且输入可用时执行。
+- 【实测】Codex 直接执行真实 mountStartupSplash，仅替代 DOM EventTarget/元素与时钟边界，不加载业务 talos.js、不模拟整页渲染：正常 2200ms 退出、450ms 隐藏/结束事件、背景 inert 释放、跳过初始焦点、重复 dismiss 幂等、reduced-motion 跳过均成立。此为离线生命周期证明，不是浏览器键盘或渲染证据。
+- 【文档 / 源码】复用 Cursor 绑定候选 check:all 退出 0 / 核心 160 记录；检查 Vite 测试真实转换 startup-boot 与 talos 导入，未重跑全套。修复 diff 限于启动与焦点、对应检查登记，无引擎/操作状态变更。
+- 【实测】`git diff --check 16240b0 HEAD` 退出 0；本次只写复核文档，产品候选仍为 `ad8130c`。
+
+不要求重复整套已通过视觉；正常使用发现新焦点或启动问题再针对该场景反馈。下一项仍为 V2 文案复核清单，随后用户主导 V3 视觉总复核与 R3；本次未执行下一项。
 
 ## Codex V1 技术复核（2026-10-12）
 
