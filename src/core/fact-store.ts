@@ -65,7 +65,15 @@ export class FactStore {
   }
 
   snapshot(): ServiceSnapshot {
-    return structuredClone(this.state);
+    const snap = structuredClone(this.state);
+    snap.session = {
+      ...snap.session,
+      historyLoading:
+        Boolean(snap.session.sessionId) &&
+        this.pendingHistoryRequestIds.size > 0 &&
+        !snap.session.historyLoadError,
+    };
+    return snap;
   }
 
   restoreSnapshot(snapshot: ServiceSnapshot) {

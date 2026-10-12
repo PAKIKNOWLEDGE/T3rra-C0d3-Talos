@@ -16,6 +16,11 @@ import {
   renderUserMessageHtml,
   stripRedactedThinking,
 } from '../src/view/message-markdown.ts';
+import {
+  SPLASH_EXIT_MS,
+  createSplashController,
+  shouldShowTaskInvite,
+} from '../src/view/startup-surface.ts';
 
 const $ = (id) => document.getElementById(id);
 const icon = (name) => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
@@ -76,6 +81,10 @@ const ui = {
   sessionDeleteUnsupported: '当前 Talos 版本不支持删除。请升级到 0.1.3。',
   emptyTitle: '尚未开始会话',
   emptyBody: '连接后即可在此继续当前工作。',
+  inviteTitle: '你想在这个工作区做什么？',
+  inviteBody: '还没有活。新建一条，或直接下达第一条指令。引擎在收到内容后才开始回合。',
+  historyLoadingTitle: '正在加载记录…',
+  historyLoadingBody: '历史记录同步中，请稍候。',
   emptyAction: '重新连接',
   planEmpty: '暂无计划',
   planEmptyHint: '有步骤时会显示在这里',
@@ -990,9 +999,28 @@ function usageBarWidth(context) {
   return `${pct}%`;
 }
 
+function updateTaskInviteSurface() {
+  const snapshot = state.snapshot;
+  const invite = $('taskInvite');
+  const stream = $('stream');
+  if (!invite || !stream) return;
+  const showInvite = shouldShowTaskInvite(snapshot, state.view);
+  invite.hidden = !showInvite;
+  stream.classList.toggle('is-covered', showInvite);
+  const title = $('taskInviteTitle');
+  const body = $('taskInviteBody');
+  if (title) title.textContent = ui.inviteTitle;
+  if (body) body.textContent = ui.inviteBody;
+  const emblem = invite.querySelector('.task-invite-emblem');
+  if (emblem) {
+    emblem.classList.toggle('standby', showInvite);
+  }
+}
+
 function renderContent() {
   const snapshot = state.snapshot;
   if (state.view === 'events') {
+    updateTaskInviteSurface();
     $('stream').innerHTML = `<p class="event-note">${ui.eventLogTitle}</p>${state.events
       .map(
         (event, index) =>
@@ -1004,12 +1032,16 @@ function renderContent() {
   if (!snapshot?.session?.sessionId) {
     $('stream').innerHTML =
       `<section class="empty"><span class="empty-number">TALOS / CURRENT SESSION</span><h2>${ui.emptyTitle}</h2><p>${ui.emptyBody}</p><button type="button" class="suggestion" data-action="reconnect">${ui.emptyAction} ↗</button></section>`;
+    updateTaskInviteSurface();
     return;
   }
   const historyError = snapshot.session.historyLoadError;
+  const historyLoading = snapshot.session.historyLoading;
   const historyBlock = historyError
     ? `<div class="completion halted">${icon('info')}<div><h2>${ui.historyLoadTitle}</h2><p>${escapeHtml(historyError)}</p><button type="button" class="suggestion" data-action="retry-history">${ui.historyLoadRetry}</button></div></div>`
-    : '';
+    : historyLoading
+      ? `<div class="completion">${icon('info')}<div><h2>${ui.historyLoadingTitle}</h2><p>${ui.historyLoadingBody}</p></div></div>`
+      : '';
   const messages = timelineItems(snapshot).map((item) => renderTimelineItem(item, snapshot)).join('');
   const approvals = snapshot.approvals.filter((approval) => approval.status === 'pending').map(approvalCard).join('');
   const questionnaire = snapshot.interactions?.questionnaire;
@@ -1017,7 +1049,8 @@ function renderContent() {
   const errors = snapshot.errors.length
     ? `<div class="completion halted">${icon('info')}<div><h2>${ui.errorTitle}</h2><p>${escapeHtml(snapshot.errors.at(-1))}</p></div></div>`
     : '';
-  $('stream').innerHTML = `${historyBlock}${messages || (historyError ? '' : '<p class="event-note">当前会话尚无消息</p>')}${questionnaireBlock}${approvals}${errors}`;
+  $('stream').innerHTML = `${historyBlock}${messages || (historyError || historyLoading ? '' : '<p class="event-note">当前会话尚无消息</p>')}${questionnaireBlock}${approvals}${errors}`;
+  updateTaskInviteSurface();
   scrollLogToEnd();
 }
 
@@ -1856,8 +1889,65 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
+let startupSplashController;
+
+function focusAfterStartupSplash() {
+  if ($('detailDialog')?.open) return;
+  const snapshot = state.snapshot;
+  if (!shouldShowTaskInvite(snapshot, state.view)) return;
+  const prompt = $('prompt');
+  if (!prompt || prompt.disabled) return;
+  prompt.focus();
+}
+
+function endStartupSplash() {
+  const root = document.documentElement;
+  if (root.dataset.phase !== 'splash') return;
+  root.dataset.phase = 'ready';
+  const splash = $('startupSplash');
+  window.setTimeout(() => {
+    if (splash) {
+      splash.hidden = true;
+      splash.setAttribute('aria-hidden', 'true');
+    }
+    focusAfterStartupSplash();
+  }, SPLASH_EXIT_MS);
+}
+
+function initStartupSplash() {
+  const splash = $('startupSplash');
+  const skip = $('skipStartupSplash');
+  if (!splash) {
+    document.documentElement.dataset.phase = 'ready';
+    return;
+  }
+  startupSplashController = createSplashController({
+    onEnd: () => endStartupSplash(),
+  });
+  const requestSkip = () => startupSplashController?.finish('skip');
+  skip?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    requestSkip();
+  });
+  splash.addEventListener('click', (event) => {
+    if (event.target.closest('.splash-skip')) return;
+    requestSkip();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (document.documentElement.dataset.phase !== 'splash') return;
+    if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      requestSkip();
+    }
+  });
+  if (document.documentElement.dataset.phase === 'splash' && startupSplashController.ended()) {
+    endStartupSplash();
+  }
+}
+
 if (globalThis.TalosTextScale) TalosTextScale.init();
 wireSessionControlHandlers();
 wireMentionHandlers();
+initStartupSplash();
 render();
 if (location.protocol.startsWith('http')) connect();

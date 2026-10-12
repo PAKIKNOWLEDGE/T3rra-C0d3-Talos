@@ -24,6 +24,12 @@ describe('markdown vite import chain (r2-a)', () => {
       expect(markdownBundle?.code).toContain('renderAssistantMessageHtml');
       const talosBundle = await server.transformRequest('/talos.js');
       expect(talosBundle?.code).toContain('message-markdown');
+      expect(talosBundle?.code).toContain('startup-surface');
+      const startupPath = await server.pluginContainer.resolveId(
+        '../src/view/startup-surface.ts',
+        talosPath,
+      );
+      expect(startupPath?.id ?? '').toContain('startup-surface');
     } finally {
       await server.close();
     }

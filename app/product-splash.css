@@ -1,0 +1,328 @@
+/* Startup splash — scoped to #startupSplash; tokens from demo/talos.css */
+
+#startupSplash.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #d8d8d3;
+  color: #262724;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+html[data-phase='splash'] #startupSplash.splash {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+  animation: none;
+}
+
+#startupSplash .splash-grid {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(#26272430 0.7px, transparent 0.8px) 0 0 / 20px 20px,
+    linear-gradient(90deg, transparent calc(50% - 0.5px), #26272416 50%, transparent calc(50% + 0.5px)),
+    linear-gradient(180deg, #eeeee780, transparent 62%);
+}
+
+#startupSplash .splash-plane {
+  position: absolute;
+  inset: -15% -10%;
+  background: var(--yellow);
+  clip-path: polygon(46% 0, 64% 0, 43% 100%, 25% 100%);
+}
+
+#startupSplash .splash-plane::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #262724;
+  clip-path: polygon(64% 0, 64.7% 0, 43.7% 100%, 43% 100%);
+}
+
+#startupSplash .splash-ghost {
+  position: absolute;
+  left: -0.035em;
+  bottom: -0.12em;
+  font: 700 clamp(120px, 25vw, 360px) / 0.9 var(--display);
+  letter-spacing: -0.07em;
+  color: #2627240d;
+  user-select: none;
+}
+
+#startupSplash .splash-register {
+  position: absolute;
+  top: clamp(22px, 4vh, 44px);
+  left: clamp(22px, 4vw, 58px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: 10px / 1.2 var(--mono);
+  letter-spacing: 0.06em;
+}
+
+#startupSplash .splash-register span {
+  padding: 7px 9px;
+  background: #262724;
+  color: #eeeee7;
+  font-weight: 700;
+}
+
+#startupSplash .splash-register b {
+  font-weight: 400;
+}
+
+#startupSplash .splash-edge {
+  position: absolute;
+  bottom: 29px;
+  left: clamp(22px, 4vw, 58px);
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  font: 9px / 1 var(--mono);
+  letter-spacing: 0.08em;
+}
+
+#startupSplash .splash-edge i {
+  width: 46px;
+  height: 10px;
+  background: repeating-linear-gradient(120deg, #262724 0 3px, transparent 3px 6px);
+}
+
+#startupSplash .splash-scan {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  left: -2px;
+  background: #262724;
+  opacity: 0;
+}
+
+#startupSplash .splash-core {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+  text-align: center;
+}
+
+#startupSplash .splash-emblem {
+  width: 120px;
+  height: 138px;
+  position: relative;
+}
+
+#startupSplash .splash-emblem i {
+  position: absolute;
+  background: #262724;
+  width: 56px;
+  height: 60px;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+
+#startupSplash .splash-emblem i:nth-child(1) {
+  left: 31px;
+  top: 0;
+}
+
+#startupSplash .splash-emblem i:nth-child(2) {
+  left: 0;
+  top: 54px;
+}
+
+#startupSplash .splash-emblem i:nth-child(3) {
+  left: 62px;
+  top: 54px;
+}
+
+#startupSplash .splash-word {
+  overflow: hidden;
+  min-height: 88px;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+}
+
+#startupSplash .splash-word span {
+  font: 700 clamp(58px, 6vw, 72px) / 1 var(--display);
+  letter-spacing: -0.055em;
+  transform: translateY(110%);
+}
+
+#startupSplash .splash-word b {
+  display: block;
+  width: 0;
+  height: 4px;
+  margin-top: 10px;
+  background: #262724;
+}
+
+#startupSplash .splash-sub {
+  font: 11px / 1 var(--display);
+  letter-spacing: 0.22em;
+  color: #52544d;
+  opacity: 0;
+}
+
+#startupSplash .splash-skip {
+  position: absolute;
+  right: 28px;
+  bottom: 24px;
+  border: 1px solid #26272450;
+  background: #eeeee766;
+  color: #262724;
+  font: 11px var(--display);
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+#startupSplash .splash-skip:hover {
+  background: #eeeee7;
+}
+
+#startupSplash .splash-skip:focus-visible {
+  outline: 2px solid #262724;
+  outline-offset: 3px;
+}
+
+html[data-phase='splash'] #startupSplash .splash-grid {
+  animation: splash-grid-in 0.6s var(--ease) both;
+}
+
+html[data-phase='splash'] #startupSplash .splash-plane {
+  animation: splash-plane-in 0.7s var(--ease) both;
+}
+
+html[data-phase='splash'] #startupSplash .splash-emblem i:nth-child(1) {
+  animation: splash-hex-lock 0.58s var(--ease) 0.04s both;
+}
+
+html[data-phase='splash'] #startupSplash .splash-emblem i:nth-child(2) {
+  animation: splash-hex-lock 0.58s var(--ease) 0.14s both;
+}
+
+html[data-phase='splash'] #startupSplash .splash-emblem i:nth-child(3) {
+  animation: splash-hex-lock 0.58s var(--ease) 0.24s both;
+}
+
+html[data-phase='splash'] #startupSplash .splash-scan {
+  animation: splash-scan-sweep 0.6s var(--ease) 0.78s both;
+}
+
+html[data-phase='splash'] #startupSplash .splash-word span {
+  animation: splash-word-up 0.55s var(--ease) 1.05s both;
+}
+
+html[data-phase='splash'] #startupSplash .splash-word b {
+  animation: splash-bar-grow 0.45s var(--ease) 1.28s both;
+}
+
+html[data-phase='splash'] #startupSplash .splash-sub {
+  animation: splash-fade 0.4s var(--ease) 1.4s both;
+}
+
+html:not([data-phase='splash']) #startupSplash.splash {
+  animation: splash-veil-out 0.45s var(--ease) forwards;
+}
+
+html[data-phase='splash'] .workspace,
+html[data-phase='splash'] .masthead,
+html[data-phase='splash'] .sample-bar {
+  pointer-events: none;
+  user-select: none;
+}
+
+@keyframes splash-grid-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes splash-plane-in {
+  from {
+    transform: translateX(14%);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes splash-hex-lock {
+  from {
+    opacity: 1;
+    transform: translateY(-36px);
+  }
+  62% {
+    transform: translateY(5px);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes splash-scan-sweep {
+  from {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  12% {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100vw);
+  }
+}
+
+@keyframes splash-word-up {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes splash-bar-grow {
+  from {
+    width: 0;
+  }
+  to {
+    width: 92px;
+  }
+}
+
+@keyframes splash-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes splash-veil-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-phase='splash'] #startupSplash.splash {
+    display: none;
+  }
+}

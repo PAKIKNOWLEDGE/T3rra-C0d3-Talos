@@ -93,6 +93,10 @@
     animation: none !important;
   }
 
+  .task-invite-emblem.standby i {
+    animation: none !important;
+  }
+
   .usage-track > i {
     transition: none !important;
   }

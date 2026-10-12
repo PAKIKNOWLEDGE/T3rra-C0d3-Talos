@@ -328,7 +328,13 @@ export type ServiceSnapshot = {
   serviceEpoch: string;
   revision: number;
   connection: { status: ConnectionStatus; processEpoch: number };
-  session: { status: SessionStatus; sessionId?: string; cwd?: string; historyLoadError?: string };
+  session: {
+    status: SessionStatus;
+    sessionId?: string;
+    cwd?: string;
+    historyLoadError?: string;
+    historyLoading?: boolean;
+  };
   turn: { status: TurnStatus; turnId?: string; prompt?: string; stopReason?: string };
   context: SessionContext;
   sessions: SessionIndexItem[];

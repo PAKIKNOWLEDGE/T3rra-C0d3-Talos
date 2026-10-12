@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-phase="splash">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,10 +8,28 @@
   <link rel="stylesheet" href="/demo/talos.css">
   <link rel="stylesheet" href="product.css">
   <link rel="stylesheet" href="product-motion.css">
+  <link rel="stylesheet" href="product-splash.css">
   <script src="/demo/text-scale.js" defer></script>
   <script type="module" src="talos.js"></script>
 </head>
 <body>
+  <div class="splash" id="startupSplash" role="dialog" aria-modal="true" aria-label="开屏">
+    <div class="splash-grid" aria-hidden="true"></div>
+    <div class="splash-plane" aria-hidden="true"></div>
+    <div class="splash-ghost" aria-hidden="true">TALOS</div>
+    <div class="splash-register" aria-hidden="true"><span>TALOS</span><b>DESKTOP WORKSPACE</b></div>
+    <div class="splash-edge" aria-hidden="true"><i></i><span>LOCAL / WORKSPACE</span></div>
+    <div class="splash-scan" aria-hidden="true"></div>
+    <div class="splash-core">
+      <div class="splash-emblem" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="splash-word">
+        <span>TALOS</span>
+        <b></b>
+      </div>
+      <p class="splash-sub">桌面控制台</p>
+    </div>
+    <button type="button" class="splash-skip" id="skipStartupSplash">跳过</button>
+  </div>
   <svg class="symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <symbol id="i-grid" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
@@ -59,7 +77,19 @@
         <div class="record-title"><div><span class="eyebrow">SESSION RECORD <span id="recordNumber">/ —</span></span><h1 id="sessionTitle">等待连接</h1></div><span class="phase" id="phase" role="status" data-state="empty">未连接</span></div>
         <div class="record-tabs" aria-label="记录视图"><button type="button" id="recordTab" class="record-tab active" aria-pressed="true">作业记录 <span>RECORD</span></button><button type="button" id="eventsTab" class="record-tab" aria-pressed="false">事件 <span>EVENTS</span></button><span class="record-date" id="recordDate">—</span></div>
       </header>
-      <section class="log" id="log" aria-label="会话内容" tabindex="0"><div class="log-inner" id="stream"></div></section>
+      <section class="log" id="log" aria-label="会话内容" tabindex="0">
+        <div class="main-stage" id="mainStage">
+          <div class="task-invite" id="taskInvite" hidden>
+            <div class="task-invite-core">
+              <div class="task-invite-emblem standby" aria-hidden="true"><i></i><i></i><i></i></div>
+              <span class="empty-number">TALOS / READY</span>
+              <h2 id="taskInviteTitle">你想在这个工作区做什么？</h2>
+              <p id="taskInviteBody">还没有活。新建一条，或直接下达第一条指令。引擎在收到内容后才开始回合。</p>
+            </div>
+          </div>
+          <div class="log-inner" id="stream"></div>
+        </div>
+      </section>
       <form class="composer" id="composer">
         <label class="sr-only" for="prompt">下达指令</label>
         <div class="composer-field">
