@@ -21,6 +21,25 @@ export function rejectAllPendingOperations(
   }
 }
 
+/** Route errors once: awaited consumers own their context-aware feedback. */
+export function routeActionError(
+  pending: Map<string, PendingOperation>,
+  operationId: string | undefined,
+  message: string,
+): 'consumer' | 'ignored' | 'workspace' | 'untracked' {
+  const operation = operationId ? pending.get(operationId) : undefined;
+  if (operation && operationId) {
+    pending.delete(operationId);
+    operation.reject(new Error(message));
+    return 'consumer';
+  }
+  // A disconnected or already settled stop/approval has no current recipient.
+  if (operationId?.startsWith('approval-') || operationId?.startsWith('cancel-')) {
+    return 'ignored';
+  }
+  return operationId?.startsWith('workspace-') ? 'workspace' : 'untracked';
+}
+
 export function createOperationWaitContext(
   operationId: string,
   sessionId: string,

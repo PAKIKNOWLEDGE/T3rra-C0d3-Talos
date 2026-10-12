@@ -8,6 +8,7 @@ import {
   createOperationWaitContext,
   isOperationWaitContextCurrent,
   rejectAllPendingOperations,
+  routeActionError,
   tryRegisterApprovalFlight,
 } from '../src/client/pending-operations.js';
 import { FactStore } from '../src/core/fact-store.js';
@@ -63,6 +64,35 @@ function createStudioAdapterHarness() {
 }
 
 describe('operation feedback (r2-b)', () => {
+  it('routes an awaited error only to its consumer and ignores its late duplicate', async () => {
+    const pending = new Map();
+    const context = createOperationWaitContext('approval-old', 's1', 1);
+    const notices: string[] = [];
+    const result = new Promise((resolve, reject) => {
+      pending.set(context.operationId, { resolve, reject });
+    }).catch((error: Error) => {
+      if (isOperationWaitContextCurrent(context, { sessionId: 's2', connectionToken: 1 })) {
+        notices.push(error.message);
+      }
+    });
+    const otherReject = vi.fn();
+    pending.set('approval-new', { resolve: vi.fn(), reject: otherReject });
+    expect(routeActionError(pending, 'approval-old', 'old failure')).toBe('consumer');
+    await result;
+    expect(notices).toEqual([]);
+    expect(pending.has('approval-new')).toBe(true);
+    expect(otherReject).not.toHaveBeenCalled();
+    expect(routeActionError(pending, 'approval-old', 'late duplicate')).toBe('ignored');
+  });
+
+  it('only workspace errors request workspace control recovery', () => {
+    const pending = new Map();
+    expect(routeActionError(pending, 'workspace-1', 'failed')).toBe('workspace');
+    expect(routeActionError(pending, 'load-session-1', 'failed')).toBe('untracked');
+    expect(routeActionError(pending, undefined, 'bad input')).toBe('untracked');
+    expect(routeActionError(pending, 'cancel-old', 'late failure')).toBe('ignored');
+  });
+
   it('rejectAllPendingOperations rejects every waiter and clears the map', async () => {
     const pending = new Map<string, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
     const outcomes: string[] = [];

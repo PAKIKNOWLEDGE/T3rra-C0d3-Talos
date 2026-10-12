@@ -5,6 +5,7 @@ import {
   createOperationWaitContext,
   isOperationWaitContextCurrent,
   rejectAllPendingOperations,
+  routeActionError,
   tryRegisterApprovalFlight,
 } from '../src/client/pending-operations.ts';
 import {
@@ -1225,20 +1226,21 @@ function connect() {
       return;
     }
     if (message.type === 'action_error') {
-      if (message.operationId) {
-        const pending = state.pendingOperations.get(message.operationId);
-        if (pending) {
-          state.pendingOperations.delete(message.operationId);
-          pending.reject(new Error(message.message || '操作失败'));
-        }
-        state.pendingStopFlight = clearStopFlightIfCurrent(
-          state.pendingStopFlight,
-          message.operationId,
-        );
-      }
+      const feedback = routeActionError(
+        state.pendingOperations,
+        message.operationId,
+        message.message || '操作失败',
+      );
+      state.pendingStopFlight = clearStopFlightIfCurrent(
+        state.pendingStopFlight,
+        message.operationId,
+      );
+      if (feedback === 'consumer' || feedback === 'ignored') return;
       notice(message.message || ui.workspaceSwitchFailed);
-      const submit = $('workspaceSwitchForm')?.querySelector('button[type="submit"]');
-      if (submit) submit.disabled = false;
+      if (feedback === 'workspace') {
+        const submit = $('workspaceSwitchForm')?.querySelector('button[type="submit"]');
+        if (submit) submit.disabled = false;
+      }
       return;
     }
     if (message.type === 'action_result') {
