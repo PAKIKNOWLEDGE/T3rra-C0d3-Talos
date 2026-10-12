@@ -78,7 +78,7 @@ export class TalosService {
   private assertTurnIdle() {
     const turn = this.store.snapshot().turn.status;
     if (turn === 'running' || turn === 'stopping') {
-      throw new Error('当前这条活还在生成。请先停止，再切换或新建。');
+      throw new Error('当前会话正在执行。请先停止，再切换或新建。');
     }
   }
 
@@ -144,7 +144,7 @@ export class TalosService {
         const snap = this.store.snapshot();
         const target = snap.sessions.find((row) => row.sessionId === action.sessionId);
         if (target?.running && target.sessionId !== snap.session.sessionId) {
-          throw new Error('该会话仍在生成。请先在引擎侧停止，再切换。');
+          throw new Error('该会话仍在执行。请在运行此会话的终端停止任务后再切换。');
         }
         const current = snap.session.sessionId;
         if (current === action.sessionId) {
@@ -302,7 +302,7 @@ export class TalosService {
       case 'retry_session_history': {
         const snap = this.store.snapshot();
         if (snap.session.sessionId !== action.sessionId) {
-          throw new Error('会话已切换，请重新打开这条活。');
+          throw new Error('会话已切换，请重新载入原会话。');
         }
         await this.engine.retrySessionHistory(action.sessionId);
         return { operationId: action.operationId, accepted: true };

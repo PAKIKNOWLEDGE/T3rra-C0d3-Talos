@@ -54,47 +54,47 @@ const ui = {
   connected: '已连接',
   disconnected: '未连接',
   preparing: '准备中',
-  ready: '就绪',
-  composerRunning: '当前回合运行中 · 可停止',
+  ready: '待命',
+  composerRunning: '当前回合执行中 · 可停止',
   composerReady: 'Enter 发送 · Shift + Enter 换行',
   composerSlashHint: '输入 / 浏览命令',
   slashMenuEmpty: '命令列表同步中…',
   composerOffline: '未连接 · 请先启动 Talos',
-  composerPreparing: '正在准备会话…',
+  composerPreparing: '正在建立会话…',
   engineOnline: 'Talos · 在线',
   enginePreparing: 'Talos · 准备中',
   engineOffline: 'Talos · 离线',
   footnoteOnline: '已连接',
-  footnotePreparing: '准备会话',
+  footnotePreparing: '建立会话',
   footnoteOffline: '未连接',
   workspacePathPending: '等待工作区路径',
   workspacePathLabel: '工作区路径',
-  sessionEmpty: '这个工作区还没有活。点「新建会话」开始第一条。',
+  sessionEmpty: '暂无会话档案。选择「新建会话」开始作业。',
   sessionWaiting: '等待会话恢复',
-  sessionListFailed: '无法列出历史活',
-  sessionSwitchBlocked: '当前这条活还在生成。请先停止，再切换或新建。',
-  sessionLoading: '正在打开这条活…',
-  sessionCreating: '正在新建…',
-  sessionDeleting: '正在删除…',
-  sessionDeleteConfirm: '确定删除这条活？删除后无法从列表恢复。',
-  sessionDeleteBlocked: '生成中不能删除。请先停止。',
-  sessionDeleteUnsupported: '当前 Talos 版本不支持删除。请升级到 0.1.3。',
-  emptyTitle: '尚未开始会话',
-  emptyBody: '连接后即可在此继续当前工作。',
-  inviteTitle: '你想在这个工作区做什么？',
-  inviteBody: '还没有活。新建一条，或直接下达第一条指令。引擎在收到内容后才开始回合。',
-  historyLoadingTitle: '正在加载记录…',
-  historyLoadingBody: '历史记录同步中，请稍候。',
+  sessionListFailed: '会话档案读取失败',
+  sessionSwitchBlocked: '当前会话正在执行。请先停止，再切换或新建。',
+  sessionLoading: '正在载入会话…',
+  sessionCreating: '正在建立会话…',
+  sessionDeleting: '正在删除会话…',
+  sessionDeleteConfirm: '确认删除此会话？删除后无法从列表恢复。',
+  sessionDeleteBlocked: '当前会话正在执行。请先停止，再删除。',
+  sessionDeleteUnsupported: '当前版本不支持删除会话。请检查 Talos CLI 版本。',
+  emptyTitle: '会话未建立',
+  emptyBody: '连接 Talos 后，建立或载入会话。',
+  inviteTitle: '等待指令',
+  inviteBody: '会话已建立。输入指令，开始执行。',
+  historyLoadingTitle: '正在同步档案…',
+  historyLoadingBody: '正在读取会话记录，请稍候。',
   emptyAction: '重新连接',
   planEmpty: '暂无计划',
-  planEmptyHint: '有步骤时会显示在这里',
-  questionnaireTitle: '待回答问题',
-  questionnaireDismiss: '暂不回答',
+  planEmptyHint: '执行步骤将在此显示',
+  questionnaireTitle: '待处理问询',
+  questionnaireDismiss: '暂不处理',
   mentionMenuEmpty: '输入文件名筛选…',
-  mentionUnsupported: '当前引擎不支持工作区文件搜索',
+  mentionUnsupported: '当前版本不支持工作区文件检索',
   queueEnqueued: '已加入队列',
-  steerSent: '已插话',
-  runningSendHint: '运行中：默认排队；开启插话模式可中途加一句',
+  steerSent: '补充指令已提交',
+  runningSendHint: '执行中：默认加入队列；开启补充指令后提交至当前回合',
   rewindPreviewTitle: '回退预览',
   rewindConfirm: '确认回退',
   inspectionEmpty: '暂无技能或 MCP 数据',
@@ -102,28 +102,28 @@ const ui = {
   queueSteer: '提前执行',
   forkSession: '分叉',
   editResend: '编辑重发',
-  forkConfirm: '将基于此会话创建一条新活。',
-  goalDisabled: '目标功能未在引擎启用',
-  goalEmpty: '无活动目标',
+  forkConfirm: '基于当前记录创建独立会话。',
+  goalDisabled: '目标管理未启用',
+  goalEmpty: '暂无执行目标',
   queueEdit: '编辑',
   pathUnknown: '—',
   fileTag: '相关文件',
-  approvalTitle: '需要你的确认',
-  approvalBody: '请选择一项以继续或拒绝本次操作。',
-  approvalOptions: '可用选项',
-  errorTitle: '出现问题',
-  historyLoadTitle: '记录未能加载',
+  approvalTitle: '操作授权',
+  approvalBody: '请确认本次操作的授权范围，或选择拒绝。',
+  approvalOptions: '授权选项',
+  errorTitle: '操作异常',
+  historyLoadTitle: '档案读取失败',
   historyLoadRetry: '重试加载',
-  historyRetrying: '正在重新加载记录…',
+  historyRetrying: '正在重新读取档案…',
   stopRequested: '已请求停止当前回合',
   stopInFlight: '正在请求停止…',
   stopFailed: '停止请求失败',
-  approvalSubmitted: '已提交选择',
-  approvalSubmitFailed: '审批提交失败',
-  approvalInFlight: '正在提交审批…',
-  eventLogTitle: '连接与状态记录',
+  approvalSubmitted: '授权决定已提交',
+  approvalSubmitFailed: '授权提交失败',
+  approvalInFlight: '正在提交授权决定…',
+  eventLogTitle: '系统事件记录',
   aboutBody:
-    '<p>Talos 桌面控制台是当前工作区的工作室窗口：左侧是这个项目里的活，中间是记录，底部发指令。</p><p>须先在本机安装 Talos CLI；本窗口与终端 TUI 并存，不互相取代。</p><p>一次只能生成一条活。引擎广告的斜杠命令可在输入框用 <code>/命令</code> 发送。</p>',
+    '<p>TALOS 作业终端用于管理工作区内的会话、指令与执行记录。</p><p>依托本机 Talos CLI 执行任务；会话可在本界面或 CLI 中继续。</p><p>当前会话执行期间，新指令默认加入队列；开启补充指令后，可提交至当前回合。使用 <code>/命令</code> 调用可用命令，使用 <code>@文件</code> 引用工作区文件。</p>',
   workspaceSwitching: '正在切换工作区…',
   workspaceSwitched: '工作区已切换',
   workspaceSwitchFailed: '无法切换工作区',
@@ -177,14 +177,14 @@ function operationWaitCurrent() {
 function phase() {
   const snapshot = state.snapshot;
   if (!snapshot) return '未连接';
-  if (snapshot.approvals.some((approval) => approval.status === 'pending')) return '待批准';
+  if (snapshot.approvals.some((approval) => approval.status === 'pending')) return '待授权';
   if (snapshot.turn.status === 'running' || snapshot.turn.status === 'stopping') {
-    return snapshot.turn.status === 'stopping' ? '正在停止' : '运行中';
+    return snapshot.turn.status === 'stopping' ? '正在停止' : '执行中';
   }
-  if (snapshot.turn.status === 'cancelled') return '已中止';
-  if (snapshot.turn.status === 'failed') return '错误';
+  if (snapshot.turn.status === 'cancelled') return '已停止';
+  if (snapshot.turn.status === 'failed') return '执行失败';
   if (snapshot.turn.status === 'completed') return '已完成';
-  return snapshot.session.status === 'ready' ? '就绪' : '连接中';
+  return snapshot.session.status === 'ready' ? '待命' : '连接中';
 }
 
 function phaseState() {
@@ -707,7 +707,7 @@ function currentSessionTitle() {
   const id = sessionId();
   if (!id) return '等待连接';
   const item = listedSessions().find((row) => row.sessionId === id);
-  return item ? sessionLabel(item) : '当前 Talos 会话';
+  return item ? sessionLabel(item) : '当前会话';
 }
 
 function currentSessionRecordNumber() {
@@ -860,14 +860,14 @@ function renderSessions() {
           const foreignRunning = Boolean(item.running) && !active;
           const meta =
             (active && running) || foreignRunning
-              ? '运行中'
+              ? '执行中'
               : formatSessionTime(item.updatedAt) || (active ? phase() : '历史');
           const blockSwitch = (running && !active) || foreignRunning;
           const sideActions =
             !running && !foreignRunning
               ? `<button type="button" class="session-fork" data-session-fork="${escapeHtml(item.sessionId)}" aria-label="分叉" title="分叉">⎇</button><button type="button" class="session-rename" data-session-rename="${escapeHtml(item.sessionId)}" aria-label="重命名">✎</button><button type="button" class="session-archive" data-session-archive="${escapeHtml(item.sessionId)}" data-archived="${item.archived ? '1' : '0'}" aria-label="${item.archived ? '取消归档' : '归档'}">${item.archived ? '↩' : '⊟'}</button>${
                   sessionDeleteEnabled()
-                    ? `<button type="button" class="session-delete" data-session-delete="${escapeHtml(item.sessionId)}" aria-label="删除这条活"><svg class="icon"><use href="#i-close"/></svg></button>`
+                    ? `<button type="button" class="session-delete" data-session-delete="${escapeHtml(item.sessionId)}" aria-label="删除会话"><svg class="icon"><use href="#i-close"/></svg></button>`
                     : ''
                 }`
               : '';
@@ -902,7 +902,7 @@ function questionnaireCard(questionnaire) {
     .join('');
   const dismiss = `<button type="button" class="neutral-button" data-q-dismiss="${escapeHtml(questionnaire.requestId)}">${ui.questionnaireDismiss}</button>`;
   const title = questionnaire.title || (questionnaire.isPlanMode ? '计划审查' : ui.questionnaireTitle);
-  return `<section class="approval questionnaire" aria-labelledby="questionnaireTitle"><div class="approval-heading"><span>QUESTIONNAIRE</span><span><i></i>等待回答</span></div><div class="approval-body"><h2 id="questionnaireTitle">${escapeHtml(title)}</h2>${steps}</div><div class="approval-actions"><div>${dismiss}</div></div></section>`;
+  return `<section class="approval questionnaire" aria-labelledby="questionnaireTitle"><div class="approval-heading"><span>INQUIRY</span><span><i></i>等待回答</span></div><div class="approval-body"><h2 id="questionnaireTitle">${escapeHtml(title)}</h2>${steps}</div><div class="approval-actions"><div>${dismiss}</div></div></section>`;
 }
 
 function planLinesFromMarkdown(markdown) {
@@ -1049,7 +1049,7 @@ function renderContent() {
   const errors = snapshot.errors.length
     ? `<div class="completion halted">${icon('info')}<div><h2>${ui.errorTitle}</h2><p>${escapeHtml(snapshot.errors.at(-1))}</p></div></div>`
     : '';
-  $('stream').innerHTML = `${historyBlock}${messages || (historyError || historyLoading ? '' : '<p class="event-note">当前会话尚无消息</p>')}${questionnaireBlock}${approvals}${errors}`;
+  $('stream').innerHTML = `${historyBlock}${messages || (historyError || historyLoading ? '' : '<p class="event-note">暂无执行记录</p>')}${questionnaireBlock}${approvals}${errors}`;
   updateTaskInviteSurface();
   scrollLogToEnd();
 }
@@ -1178,7 +1178,7 @@ function render() {
   }
   const sendLabel = $('sendButton')?.querySelector('span');
   if (sendLabel) {
-    sendLabel.textContent = running ? (state.steerCompose ? '插话' : '加入队列') : '发送指令';
+    sendLabel.textContent = running ? (state.steerCompose ? '补充指令' : '加入队列') : '发送指令';
   }
   const hasSession = Boolean(snapshot?.session?.sessionId);
   const composerStatus = running
@@ -1305,7 +1305,7 @@ function toggleOverview() {
   const visible = compact.matches
     ? workspace.classList.contains('mobile-inspector')
     : !workspace.classList.contains('hide-inspector');
-  $('overviewToggle').textContent = visible ? '收起概况' : '本轮概况';
+  $('overviewToggle').textContent = visible ? '收起概况' : '执行概况';
   $('overviewToggle').setAttribute('aria-expanded', String(visible));
 }
 
@@ -1547,7 +1547,7 @@ document.addEventListener('click', async (event) => {
       requestId: button.dataset.qDismiss,
     });
     delete state.questionnaireDraft[button.dataset.qDismiss];
-    notice('已关闭问卷');
+    notice('已请求关闭问询');
     return;
   }
   if (button.dataset.qReply) {
@@ -1696,7 +1696,7 @@ $('overviewToggle').addEventListener('click', toggleOverview);
 compact.addEventListener('change', toggleOverview);
 $('aboutButton').addEventListener('click', () =>
   openDetail(
-    'Talos 桌面控制台',
+    'TALOS · 作业终端',
     'ABOUT',
     ui.aboutBody,
   ),
@@ -1731,7 +1731,7 @@ async function submitComposerPrompt() {
   const draftAtSubmit = $('prompt').value;
   const prompt = draftAtSubmit.trim();
   const id = sessionId();
-  if (!prompt) return notice('先输入一条指令');
+  if (!prompt) return notice('请输入指令');
   if (!id) return notice('当前没有可继续的会话');
   const running = turnRunning();
   const plan = planSlashSubmit({

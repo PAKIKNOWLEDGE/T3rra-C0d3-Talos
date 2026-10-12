@@ -131,7 +131,7 @@ describe('session directory service', () => {
     });
     await expect(
       service.dispatch({ type: 'new_session', operationId: 'op-new', cwd: 'C:/w' }),
-    ).rejects.toThrow(/还在生成/);
+    ).rejects.toThrow('当前会话正在执行。请先停止，再切换或新建。');
   });
 
   it('rejects delete_session without engine capability', async () => {
