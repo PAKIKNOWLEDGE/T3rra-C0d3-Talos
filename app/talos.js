@@ -1136,16 +1136,6 @@ function renderSummary() {
       inspection.delegationSummary
     );
   }
-  const anchors = snapshot?.inputSummaries ?? [];
-  $('anchorCount').textContent = anchors.length ? String(anchors.length).padStart(2, '0') : '—';
-  $('inputAnchors').innerHTML = anchors.length
-    ? anchors
-        .map(
-          (row) =>
-            `<li><button type="button" data-anchor-message="${escapeHtml(row.userMessageId)}">${escapeHtml(row.contentHead || row.userMessageId)}</button></li>`,
-        )
-        .join('')
-    : `<li><span>${ui.pathUnknown}</span></li>`;
   renderQueueStrip();
 }
 
