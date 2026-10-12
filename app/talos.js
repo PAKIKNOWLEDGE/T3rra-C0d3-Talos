@@ -1,6 +1,7 @@
 import { planSlashSubmit } from './slash-prompt.js';
 import {
   clearApprovalFlightIfCurrent,
+  clearDraftIfUnchanged,
   clearStopFlightIfCurrent,
   createOperationWaitContext,
   isOperationWaitContextCurrent,
@@ -1693,8 +1694,9 @@ $('workspaceSwitchForm')?.addEventListener('submit', (event) => {
   notice(ui.workspaceSwitching);
   sendAction({ type: 'switch_workspace', operationId: nextOperationId('workspace'), cwd });
 });
-function submitComposerPrompt() {
-  const prompt = $('prompt').value.trim();
+async function submitComposerPrompt() {
+  const draftAtSubmit = $('prompt').value;
+  const prompt = draftAtSubmit.trim();
   const id = sessionId();
   if (!prompt) return notice('先输入一条指令');
   if (!id) return notice('当前没有可继续的会话');
@@ -1707,62 +1709,77 @@ function submitComposerPrompt() {
     notice(plan.message);
     return;
   }
-  if (plan.kind === 'host_new_session') {
-    $('prompt').value = '';
+  const finishAcceptedDraft = () => {
+    $('prompt').value = clearDraftIfUnchanged($('prompt').value, draftAtSubmit);
     closeSlashMenu();
+    closeMentionMenu();
+  };
+  const reportFailure = (error, fallback) => {
+    notice(error instanceof Error ? error.message : fallback);
+  };
+  if (plan.kind === 'host_new_session') {
+    finishAcceptedDraft();
     requestNewSession();
     return;
   }
   if (plan.kind === 'host_slash') {
-    sendAction({
-      type: 'execute_slash',
-      operationId: nextOperationId('slash'),
-      sessionId: id,
-      name: plan.name,
-      input: plan.input,
-    });
-    recordEvent('user.slash', `/${plan.name}`);
-    $('prompt').value = '';
-    closeSlashMenu();
-    return;
-  }
-
-  if (running) {
-    if (state.steerCompose) {
-      sendAction({
-        type: 'steer_turn',
-        operationId: nextOperationId('steer'),
+    try {
+      const result = await sendActionWithResult({
+        type: 'execute_slash',
+        operationId: nextOperationId('slash'),
         sessionId: id,
-        text: plan.prompt,
+        name: plan.name,
+        input: plan.input,
       });
-      recordEvent('user.steer', plan.prompt);
-      notice(ui.steerSent);
-    } else {
-      sendAction({
-        type: 'enqueue_message',
-        operationId: nextOperationId('enqueue'),
-        sessionId: id,
-        text: plan.prompt,
-      });
-      recordEvent('user.queue', plan.prompt);
-      notice(ui.queueEnqueued);
+      if (result?.accepted) {
+        recordEvent('user.slash', `/${plan.name}`);
+        finishAcceptedDraft();
+      }
+    } catch (error) {
+      reportFailure(error, '命令执行失败');
     }
-    $('prompt').value = '';
-    closeSlashMenu();
-    closeMentionMenu();
     return;
   }
-
-  sendAction({
-    type: 'send_prompt',
-    operationId: nextOperationId('prompt'),
-    sessionId: id,
-    prompt: plan.prompt,
-  });
-  recordEvent('user.prompt', plan.prompt);
-  $('prompt').value = '';
-  closeSlashMenu();
-  closeMentionMenu();
+  if (running) {
+    const action = state.steerCompose
+      ? {
+          type: 'steer_turn',
+          operationId: nextOperationId('steer'),
+          sessionId: id,
+          text: plan.prompt,
+        }
+      : {
+          type: 'enqueue_message',
+          operationId: nextOperationId('enqueue'),
+          sessionId: id,
+          text: plan.prompt,
+        };
+    try {
+      const result = await sendActionWithResult(action);
+      if (result?.accepted) {
+        recordEvent(state.steerCompose ? 'user.steer' : 'user.queue', plan.prompt);
+        notice(state.steerCompose ? ui.steerSent : ui.queueEnqueued);
+        finishAcceptedDraft();
+      }
+    } catch (error) {
+      reportFailure(error, state.steerCompose ? '插入当前回合失败' : '排队失败');
+    }
+    return;
+  }
+  try {
+    const result = await sendActionWithResult({
+      type: 'send_prompt',
+      operationId: nextOperationId('prompt'),
+      sessionId: id,
+      prompt: plan.prompt,
+    });
+    if (result?.accepted) {
+      recordEvent('user.prompt', plan.prompt);
+      finishAcceptedDraft();
+    }
+  } catch (error) {
+    reportFailure(error, '发送指令失败');
+  }
 }
 
 $('composer').addEventListener('submit', (event) => {

@@ -3,6 +3,10 @@ export type PendingOperation = {
   reject: (error: Error) => void;
 };
 
+export function clearDraftIfUnchanged(currentDraft: string, submittedDraft: string): string {
+  return currentDraft === submittedDraft ? '' : currentDraft;
+}
+
 export type OperationWaitContext = {
   operationId: string;
   sessionId: string;

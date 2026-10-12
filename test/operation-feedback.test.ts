@@ -4,6 +4,7 @@ import { TalosStudioAdapter } from '../src/adapter/talos-studio.js';
 import { StudioJsonRpcClient } from '../src/adapter/studio-jsonrpc.js';
 import {
   clearApprovalFlightIfCurrent,
+  clearDraftIfUnchanged,
   clearStopFlightIfCurrent,
   createOperationWaitContext,
   isOperationWaitContextCurrent,
@@ -64,6 +65,60 @@ function createStudioAdapterHarness() {
 }
 
 describe('operation feedback (r2-b)', () => {
+  it('clears only the unchanged submitted draft', () => {
+    expect(clearDraftIfUnchanged('first prompt', 'first prompt')).toBe('');
+    expect(clearDraftIfUnchanged('new draft', 'first prompt')).toBe('new draft');
+  });
+
+  it('allocates unique turn IDs across adapter instances', async () => {
+    const first = createStudioAdapterHarness();
+    const second = createStudioAdapterHarness();
+    for (const harness of [first, second]) {
+      vi.spyOn(harness.rpc, 'request').mockImplementation(async (method, params) => {
+        if (method === 'turn/start') {
+          const turnId = (params as { turnId: string }).turnId;
+          queueMicrotask(() =>
+            harness.adapter.handleNotification('turn/completed', {
+              sessionId: 's1',
+              turnId,
+              status: 'succeeded',
+            }),
+          );
+          return { turnId };
+        }
+        return {};
+      });
+      harness.store.apply({ kind: 'connected', processEpoch: 1 });
+      harness.store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: 'C:/w' });
+    }
+    await first.adapter.sendPrompt('s1', 'one');
+    await second.adapter.sendPrompt('s1', 'two');
+    const firstTurn = first.events.find((event) => (event as { kind?: string }).kind === 'turn.started') as { turnId: string };
+    const secondTurn = second.events.find((event) => (event as { kind?: string }).kind === 'turn.started') as { turnId: string };
+    expect(firstTurn.turnId).not.toBe(secondTurn.turnId);
+    expect(firstTurn.turnId).toMatch(/^desktop-turn-/);
+    first.adapter.close();
+    second.adapter.close();
+  });
+
+  it('rejecting turn/start ends only the local turn and keeps connection ready', async () => {
+    const { rpc, adapter, events, store } = createStudioAdapterHarness();
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: 'C:/w' });
+    vi.spyOn(rpc, 'request').mockImplementation(async (method) => {
+      if (method === 'turn/start') throw new Error('Turn ingress conflicts');
+      return {};
+    });
+    await expect(adapter.sendPrompt('s1', 'retry me')).rejects.toThrow('Turn ingress conflicts');
+    expect(store.snapshot().connection.status).toBe('connected');
+    expect(store.snapshot().session.status).toBe('ready');
+    expect(store.snapshot().turn.status).toBe('failed');
+    expect(store.snapshot().errors).toEqual([]);
+    expect(events.filter((event) => (event as { kind?: string }).kind === 'error')).toHaveLength(0);
+    expect(events.filter((event) => (event as { kind?: string }).kind === 'turn.finished')).toHaveLength(1);
+    adapter.close();
+  });
+
   it('routes an awaited error only to its consumer and ignores its late duplicate', async () => {
     const pending = new Map();
     const context = createOperationWaitContext('approval-old', 's1', 1);
@@ -280,6 +335,48 @@ describe('operation feedback (r2-b)', () => {
     expect(store.snapshot().connection.status).toBe('connected');
     expect(store.snapshot().approvals[0]?.status).toBe('pending');
     expect(replyCalls).toBe(1);
+    socket.close();
+    await server.close();
+    adapter.close();
+  });
+
+  it('send_prompt ingress rejection returns action error without poisoning connection', async () => {
+    const { rpc, adapter, store } = createStudioAdapterHarness();
+    store.apply({ kind: 'connected', processEpoch: 1 });
+    store.apply({ kind: 'session.loaded', processEpoch: 1, sessionId: 's1', cwd: 'C:/w' });
+    vi.spyOn(rpc, 'request').mockImplementation(async (method) => {
+      if (method === 'turn/start') throw new Error('Turn ingress conflicts');
+      return {};
+    });
+    const engine = engineStub({
+      sendPrompt: (sessionId, prompt) => adapter.sendPrompt(sessionId, prompt),
+    });
+    const service = new TalosService(store, engine);
+    const server = createTalosWebSocketServer(service, 0);
+    const port = await server.ready;
+    const socket = new WebSocket(`ws://127.0.0.1:${port}/ws`);
+    const payloads: Array<{ type: string; operationId?: string; message?: string }> = [];
+    socket.on('message', (raw) => payloads.push(JSON.parse(raw.toString())));
+    await new Promise<void>((resolve) => socket.once('open', () => resolve()));
+    await new Promise<void>((resolve) => setTimeout(resolve, 20));
+    socket.send(
+      JSON.stringify({
+        type: 'send_prompt',
+        operationId: 'op-prompt-ingress',
+        sessionId: 's1',
+        prompt: 'retry me',
+      }),
+    );
+    await new Promise<void>((resolve) => setTimeout(resolve, 80));
+    expect(payloads.find((frame) => frame.type === 'action_error')).toMatchObject({
+      type: 'action_error',
+      operationId: 'op-prompt-ingress',
+      message: 'Turn ingress conflicts',
+    });
+    expect(store.snapshot().connection.status).toBe('connected');
+    expect(store.snapshot().session.status).toBe('ready');
+    expect(store.snapshot().turn.status).toBe('failed');
+    expect(store.snapshot().errors).toEqual([]);
     socket.close();
     await server.close();
     adapter.close();

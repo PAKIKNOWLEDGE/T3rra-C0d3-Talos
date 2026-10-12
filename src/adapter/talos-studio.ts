@@ -49,7 +49,6 @@ export type StudioInitializeResult = {
 
 export class TalosStudioAdapter {
   private historyRequestSeq = 0;
-  private turnCounter = 0;
   private readonly activeTurnBySession = new Map<string, string>();
   private readonly turnWaiters = new Map<string, TurnWaiter>();
   private readonly permissionMeta = new Map<string, PendingPermissionMeta>();
@@ -436,7 +435,7 @@ export class TalosStudioAdapter {
   }
 
   async sendPrompt(sessionId: string, prompt: string) {
-    const turnId = `local-turn-${++this.turnCounter}`;
+    const turnId = `desktop-turn-${randomUUID()}`;
     this.turnProjector.reset();
     this.emit({ kind: 'turn.started', processEpoch: this.processEpoch, sessionId, turnId, prompt });
     try {
@@ -455,12 +454,19 @@ export class TalosStudioAdapter {
       }
       await waitPromise;
     } catch (error) {
-      this.emit({
-        kind: 'error',
-        processEpoch: this.processEpoch,
-        sessionId,
-        message: error instanceof Error ? error.message : String(error),
-      });
+      const activeTurnId = this.activeTurnBySession.get(sessionId);
+      if (activeTurnId === turnId) {
+        this.activeTurnBySession.delete(sessionId);
+        this.turnWaiters.delete(turnKey(sessionId, turnId));
+        this.emit({
+          kind: 'turn.finished',
+          processEpoch: this.processEpoch,
+          sessionId,
+          turnId,
+          stopReason: 'error',
+        });
+      }
+      this.turnProjector.reset();
       throw error;
     }
   }
