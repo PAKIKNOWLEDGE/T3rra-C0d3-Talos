@@ -9,10 +9,10 @@
 在仓库根目录打开：
 
 ```bash
-npx --yes serve preview/empty-landing -p 5199
+python -m http.server 5199 --bind 127.0.0.1 --directory .
 ```
 
-浏览器访问 `http://127.0.0.1:5199/`。
+浏览器访问 `http://127.0.0.1:5199/preview/empty-landing/`。服务根为仓库根，确保相对字体资源可访问；与产品端口无关。
 
 也可直接用浏览器打开 `preview/empty-landing/index.html`（字体走相对路径 `demo/fonts`）。
 
