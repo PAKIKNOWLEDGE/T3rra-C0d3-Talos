@@ -30,9 +30,8 @@ export async function startRuntimeService(initialCwd: string, port = 5194) {
       return adapter.cancel(sessionId);
     },
     replyApproval: async (sessionId, requestId, optionId) => {
-      if (!adapter?.replyApproval(sessionId, requestId, optionId)) {
-        throw new Error('Approval request is stale or unknown.');
-      }
+      if (!adapter) throw new Error('Talos studio adapter is not connected.');
+      await adapter.replyApproval(sessionId, requestId, optionId);
     },
     setMode: (sessionId, modeId) => {
       if (!adapter) throw new Error('Talos studio adapter is not connected.');

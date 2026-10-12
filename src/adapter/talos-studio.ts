@@ -497,36 +497,36 @@ export class TalosStudioAdapter {
     await this.refreshUsage(sessionId);
   }
 
-  replyApproval(sessionId: string, requestId: string, optionId: string) {
+  async replyApproval(sessionId: string, requestId: string, optionId: string): Promise<void> {
     const meta = this.permissionMeta.get(requestId);
-    if (!meta || meta.sessionId !== sessionId) return false;
+    if (!meta || meta.sessionId !== sessionId) {
+      throw new Error('Approval request is stale or unknown.');
+    }
     const decision = mapApprovalDecision(optionId);
-    void this.rpc
-      .request('permission/reply', {
+    try {
+      await this.rpc.request('permission/reply', {
         agentName: meta.agentName,
         requestId,
         decision,
-      })
-      .then(() => {
-        this.permissionMeta.delete(requestId);
-        this.seenPermissionIds.delete(requestId);
-        this.emit({
-          kind: 'approval.settled',
-          processEpoch: this.processEpoch,
-          sessionId,
-          requestId,
-          status: 'settled',
-        });
-      })
-      .catch((error) => {
-        this.emit({
-          kind: 'error',
-          processEpoch: this.processEpoch,
-          sessionId,
-          message: error instanceof Error ? error.message : String(error),
-        });
       });
-    return true;
+    } catch (error) {
+      this.emit({
+        kind: 'error',
+        processEpoch: this.processEpoch,
+        sessionId,
+        message: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+    this.permissionMeta.delete(requestId);
+    this.seenPermissionIds.delete(requestId);
+    this.emit({
+      kind: 'approval.settled',
+      processEpoch: this.processEpoch,
+      sessionId,
+      requestId,
+      status: 'settled',
+    });
   }
 
   close(error?: unknown) {

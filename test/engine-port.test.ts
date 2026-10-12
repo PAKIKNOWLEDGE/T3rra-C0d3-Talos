@@ -17,7 +17,7 @@ describe('EnginePort runtime wiring', () => {
       expect(runtime, `runtime missing ${method}`).toContain(`${method}:`);
       const pattern =
         method === 'replyApproval'
-          ? /replyApproval:[\s\S]*?adapter\?\.replyApproval/
+          ? /replyApproval:[\s\S]*?await adapter\.replyApproval/
           : new RegExp(`${method}:[\\s\\S]*?adapter\\.${method}`);
       expect(runtime, `${method} should call adapter`).toMatch(pattern);
     }

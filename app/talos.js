@@ -1,4 +1,5 @@
 import { planSlashSubmit } from './slash-prompt.js';
+import { rejectAllPendingOperations } from '../src/client/pending-operations.ts';
 import {
   escapeHtml,
   renderAssistantMessageHtml,
@@ -26,6 +27,8 @@ const state = {
   mentionResults: [],
   mentionTimer: undefined,
   pendingOperations: new Map(),
+  pendingStopOperationId: undefined,
+  pendingApprovalRequestIds: new Set(),
   questionnaireDraft: {},
   steerCompose: false,
   pendingConfirm: undefined,
@@ -93,6 +96,12 @@ const ui = {
   historyLoadTitle: '记录未能加载',
   historyLoadRetry: '重试加载',
   historyRetrying: '正在重新加载记录…',
+  stopRequested: '已请求停止当前回合',
+  stopInFlight: '正在请求停止…',
+  stopFailed: '停止请求失败',
+  approvalSubmitted: '已提交选择',
+  approvalSubmitFailed: '审批提交失败',
+  approvalInFlight: '正在提交审批…',
   eventLogTitle: '连接与状态记录',
   aboutBody:
     '<p>Talos 桌面控制台是当前工作区的工作室窗口：左侧是这个项目里的活，中间是记录，底部发指令。</p><p>须先在本机安装 Talos CLI；本窗口与终端 TUI 并存，不互相取代。</p><p>一次只能生成一条活。引擎广告的斜杠命令可在输入框用 <code>/命令</code> 发送。</p>',
@@ -1179,6 +1188,9 @@ function connect() {
   });
   state.socket.addEventListener('close', () => {
     recordEvent('service.disconnected', '连接已断开');
+    rejectAllPendingOperations(state.pendingOperations, '连接已断开');
+    state.pendingStopOperationId = undefined;
+    state.pendingApprovalRequestIds.clear();
     notice('连接已断开');
     state.snapshot = null;
     render();
@@ -1193,10 +1205,15 @@ function connect() {
       return;
     }
     if (message.type === 'action_error') {
-      const pending = state.pendingOperations.get(message.operationId);
-      if (pending) {
-        state.pendingOperations.delete(message.operationId);
-        pending.reject(new Error(message.message || '操作失败'));
+      if (message.operationId) {
+        const pending = state.pendingOperations.get(message.operationId);
+        if (pending) {
+          state.pendingOperations.delete(message.operationId);
+          pending.reject(new Error(message.message || '操作失败'));
+        }
+        if (state.pendingStopOperationId === message.operationId) {
+          state.pendingStopOperationId = undefined;
+        }
       }
       notice(message.message || ui.workspaceSwitchFailed);
       const submit = $('workspaceSwitchForm')?.querySelector('button[type="submit"]');
@@ -1208,17 +1225,18 @@ function connect() {
       if (pending) {
         state.pendingOperations.delete(message.operationId);
         pending.resolve(message.result);
-        return;
       }
-    }
-    if (message.type === 'action_result' && message.result?.accepted) {
+      if (state.pendingStopOperationId === message.operationId) {
+        state.pendingStopOperationId = undefined;
+      }
       const op = message.operationId || '';
-      if (op.startsWith('workspace-')) {
+      if (!pending && message.result?.accepted && op.startsWith('workspace-')) {
         notice(ui.workspaceSwitched);
         const submit = $('workspaceSwitchForm')?.querySelector('button[type="submit"]');
         if (submit) submit.disabled = false;
         $('workspaceInput').value = '';
       }
+      return;
     }
   });
 }
@@ -1337,7 +1355,7 @@ function scrollToMessage(messageId) {
   if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-document.addEventListener('click', (event) => {
+document.addEventListener('click', async (event) => {
   const button = event.target.closest('button');
   if (!button) return;
   if (button.dataset.anchorMessage) {
@@ -1508,14 +1526,29 @@ document.addEventListener('click', (event) => {
   if (button.dataset.approval) {
     const id = sessionId();
     if (!id) return;
-    sendAction({
-      type: 'reply_approval',
-      operationId: nextOperationId('approval'),
-      sessionId: id,
-      requestId: button.dataset.approval,
-      optionId: button.dataset.option,
-    });
-    notice('已提交选择');
+    const requestId = button.dataset.approval;
+    const optionId = button.dataset.option;
+    if (state.pendingApprovalRequestIds.has(requestId)) {
+      notice(ui.approvalInFlight);
+      return;
+    }
+    const operationId = nextOperationId('approval');
+    state.pendingApprovalRequestIds.add(requestId);
+    try {
+      const result = await sendActionWithResult({
+        type: 'reply_approval',
+        operationId,
+        sessionId: id,
+        requestId,
+        optionId,
+      });
+      if (result?.accepted) notice(ui.approvalSubmitted);
+    } catch (error) {
+      notice(error instanceof Error ? error.message : ui.approvalSubmitFailed);
+    } finally {
+      state.pendingApprovalRequestIds.delete(requestId);
+    }
+    return;
   }
   if (button.dataset.action === 'reconnect') {
     connect();
@@ -1567,11 +1600,29 @@ $('eventsTab').addEventListener('click', () => {
   state.view = 'events';
   render();
 });
-$('stopButton').addEventListener('click', () => {
+$('stopButton').addEventListener('click', async () => {
   const id = sessionId();
   if (!id) return notice('当前没有可停止的会话');
-  sendAction({ type: 'cancel', operationId: nextOperationId('cancel'), sessionId: id });
-  notice('正在停止当前回合');
+  if (state.pendingStopOperationId) {
+    notice(ui.stopInFlight);
+    return;
+  }
+  const operationId = nextOperationId('cancel');
+  state.pendingStopOperationId = operationId;
+  try {
+    const result = await sendActionWithResult({
+      type: 'cancel',
+      operationId,
+      sessionId: id,
+    });
+    if (result?.accepted) notice(ui.stopRequested);
+  } catch (error) {
+    notice(error instanceof Error ? error.message : ui.stopFailed);
+  } finally {
+    if (state.pendingStopOperationId === operationId) {
+      state.pendingStopOperationId = undefined;
+    }
+  }
 });
 $('overviewToggle').addEventListener('click', toggleOverview);
 compact.addEventListener('change', toggleOverview);

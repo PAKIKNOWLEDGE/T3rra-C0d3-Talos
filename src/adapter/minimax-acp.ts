@@ -197,9 +197,11 @@ export class MinimaxAcpAdapter {
     this.emitSessionContext(sessionId, result);
   }
 
-  replyApproval(sessionId: string, requestId: string, optionId: string) {
+  async replyApproval(sessionId: string, requestId: string, optionId: string): Promise<void> {
     const pending = this.pendingApprovals.get(requestId);
-    if (!pending || pending.sessionId !== sessionId) return false;
+    if (!pending || pending.sessionId !== sessionId) {
+      throw new Error('Approval request is stale or unknown.');
+    }
     this.pendingApprovals.delete(requestId);
     pending.resolve({ outcome: { outcome: 'selected', optionId } });
     this.emit({
@@ -209,7 +211,6 @@ export class MinimaxAcpAdapter {
       requestId,
       status: 'settled',
     });
-    return true;
   }
 
   close(error?: unknown) {

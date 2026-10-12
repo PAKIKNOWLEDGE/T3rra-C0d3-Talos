@@ -15,12 +15,19 @@ export function createTalosWebSocketServer(service: TalosService, port = 5193) {
   websocketServer.on('connection', (socket: WebSocket) => {
     const stop = service.observe((snapshot) => socket.send(JSON.stringify({ type: 'snapshot', snapshot })));
     socket.on('message', async (payload) => {
+      let action: ServiceAction | undefined;
       try {
-        const action = JSON.parse(payload.toString()) as ServiceAction;
+        action = JSON.parse(payload.toString()) as ServiceAction;
         const result = await service.dispatch(action);
         socket.send(JSON.stringify({ type: 'action_result', operationId: action.operationId, result }));
       } catch (error) {
-        socket.send(JSON.stringify({ type: 'action_error', message: error instanceof Error ? error.message : String(error) }));
+        socket.send(
+          JSON.stringify({
+            type: 'action_error',
+            ...(action?.operationId ? { operationId: action.operationId } : {}),
+            message: error instanceof Error ? error.message : String(error),
+          }),
+        );
       }
     });
     socket.on('close', stop);
