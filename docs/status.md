@@ -7,31 +7,34 @@
 | 字段 | 值 |
 | --- | --- |
 | 任务标识 / 修订 | desktop-operation-feedback / r2-b |
-| 阶段 | **执行中（第一次复核退回）** |
+| 阶段 | **待技术复核（R2-B 第二候选）** |
 | 本轮角色 / 来源 | Luna 执行；用户授权 R2-B |
 | 目标 / 方案入口 | [R2-B 基本操作结果可信](plan.md#下一小轮r2-b-基本操作结果可信) |
 | 允许范围 | 动作结果关联、打开/继续/停止/审批消费者与聚焦测试 |
 | 禁止范围 | CLI 写入、视觉、协议/状态所有权改变、Tauri、R2-B 外扩 |
 | 验收 / 停止点 | Cursor 修本轮退回项并交新候选；不推进 R3 |
 | 完成证据 | 见「当前实施交付与复核」 |
-| 下一接手 / 就绪性 | Cursor 修同一任务；交付 fail **1 / 2**；再退回则 Codex 接手 |
+| 下一接手 / 就绪性 | Codex 技术复核候选 **`7e2b885`**；交付 fail **1 / 2**；再退回则 Codex 接手实现 |
 
 ## 本轮授权与候选
 
 - 规划提交：`edb3fc8`；产品基线：`bf0bf2d`；执行前 HEAD：`edb3fc8`（干净）。
-- 本轮已退回候选：**`41e7cb2`**；新候选待 Cursor 保存。
-- Codex 复核结束，下一写入者 Cursor；同一任务计数保持 1 / 2，不因新候选清零。
+- 已退回候选：**`41e7cb2`**（B1：审批 RPC 失败误报连接 error）。
+- 当前产品候选：**`7e2b885`**（在 `41e7cb2` 上修 B1 + 消费者等待上下文 + 聚焦测试）。
+- 下一写入者 Codex；同一任务计数保持 **1 / 2**。
 
 ## 当前实施交付与复核
 
 | 字段 | 当前值 |
 | --- | --- |
-| 产品候选 / 改动清单 | **`41e7cb2`** — `ws-server` `action_error` 带 `operationId`；`pending-operations` 断连清理；`talos.js` 停止/审批 `sendActionWithResult`、受理与失败提示分离、重复点击防护；`talos-studio` `replyApproval` await RPC 失败不提前 settled；`runtime`/`minimax-acp` 对齐 Promise |
-| 打开 / 继续 / 停止 / 审批证据 | `test/operation-feedback.test.ts`（WS 错误 ID、审批拒绝保持 pending、load 回滚）；复用 `session-directory` load 失败语义；停止/审批 UI 路径经 `sendActionWithResult` |
-| 结果关联 / 失败 / 断连恢复 | `rejectAllPendingOperations` 在 socket `close` 调用；`action_error` 仅按 `operationId` 结算对应 pending |
-| 检查命令与结果 / 限制 | `npm run check:all` **0**（`test:core` **142**）；未启动真实引擎、未浏览器目视、未付费模型 |
-| Codex 技术复核 | **退回**（`41e7cb2`）；审批 RPC 失败错误污染连接事实，见下方 |
-| 候选退回记录 | 第 1 次：`41e7cb2`，审批 RPC 失败令在线连接变 error；fail **1 / 2** |
+| 产品候选 / 改动清单 | **`7e2b885`** — B1：`talos-studio.replyApproval` 去掉 emit `error` 的 catch，失败仅 Promise 拒绝；`pending-operations` 增加 `OperationWaitContext` 与按 operation 清理/去重 helper；`talos.js` 停止/审批绑定 operationId+sessionId+connectionToken，socket 回调核对实例；保留 `41e7cb2` 的 WS `action_error`/`sendActionWithResult` 基线 |
+| B1 修复证据 | `test/operation-feedback.test.ts`「TalosStudioAdapter.replyApproval…」：真实 adapter+FactStore+RPC 边界；首次拒绝 → connected、pending、无 error 事件；重试 → 一次 settled；过期 → 无第三次 RPC。WS 路径「reply_approval over websocket…」：真实 adapter 经 service，`action_error` 带 `op-approval-ws`，连接仍 connected |
+| 消费者等待上下文证据 | helper 单测：审批双注册仅一次、stale finally 不清新 flight、跨 session/token 不 current。`talos.js` 调用 `tryRegisterApprovalFlight`/`clearApprovalFlightIfCurrent`/`createOperationWaitContext`/`isOperationWaitContextCurrent`/`clearStopFlightIfCurrent`；`connect` 递增 `connectionToken`，旧 socket close/message 忽略 |
+| 停止 / 回合分离 | `cancel accepted does not end the running turn`：`dispatch` 返回 accepted 后 `turn.status` 仍为 `running` |
+| 打开 / 继续 / 断连 / load | 保留 WS `operationId`、load 回滚、`rejectAllPendingOperations`（`41e7cb2`）；`session-directory` 未改 |
+| 检查命令与结果 / 限制 | 【实测】`npm run check:all` **0**（`test:core` **147**）；未启动真实 Talos CLI、未浏览器目视 |
+| Codex 技术复核 | **待复核**（`7e2b885`） |
+| 候选退回记录 | 第 1 次：`41e7cb2`（B1）；fail **1 / 2** |
 
 ## Codex 技术复核与退回项
 
@@ -51,9 +54,11 @@
 
 【文档】Cursor 记录 check:all 0 / test:core 142，Codex 未重跑全套；该结果与本次实际复现并存，不能据此写整体通过。【实测】`git diff --check edb3fc8 HEAD` 退出 0。【未验】本轮无可见浏览器/真实引擎证据。
 
-修复保存新候选，注明受影响范围，更新交付记录后停在待技术复核。再被明确退回一次，Cursor 停写，由 Codex 接手同一任务。
+### Cursor 实施记录（第二候选 `7e2b885`）
 
-### Cursor 本次修复指导（同一任务，fail 仍为 1 / 2）
+2026-10-12：按下方指导完成 B1 与消费者上下文；产品提交 `7e2b885`。受影响：`src/adapter/talos-studio.ts`、`src/client/pending-operations.ts`、`app/talos.js`、`test/operation-feedback.test.ts`。停在待技术复核。
+
+### Cursor 本次修复指导（同一任务，fail 仍为 1 / 2）— 已执行
 
 按以下顺序做，不自行扩大方案。先保留 `41e7cb2`，读取当前工作树；若已有修复先检查并保存，不覆盖现场。
 
