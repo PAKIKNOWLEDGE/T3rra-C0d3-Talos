@@ -114,6 +114,11 @@
   cursor: not-allowed;
 }
 
+/* Keep the action toolbar inside each card when the sidebar list scrolls. */
+.session-list {
+  grid-auto-rows: max-content;
+}
+
 .session-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

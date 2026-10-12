@@ -116,7 +116,7 @@ npm run check:desktop:package
 
 build:desktop:win 由 Tauri beforeBuildCommand 生成前端和服务；校验随包 Node 与 tools/runtime/node-win-x64.json 的官方 SHA-256 一致。图标脚本需要 Pillow；正常源码包已包含 PNG/ICO，无需每次重生成。服务产物不依赖 npm/tsx 或开发服务。
 
-release 程序位于 src-tauri/target/release/talos-desktop.exe，NSIS 位于 src-tauri/target/release/bundle/nsis/TALOS_0.1.1_x64-setup.exe。资源与 Node 与安装应用一起部署；单独拷贝 exe 不能替代安装包。check:desktop:package 有限启动自有随机端点，验证静态资源、认证 WS 和关闭，不发送模型请求。可加 `--installed-dir <安装目录> --workspace <测试目录绝对路径>`，验证首次无目录、无效目录拒绝与真实 Studio 会话载入。
+release 程序位于 src-tauri/target/release/talos-desktop.exe，NSIS 位于 src-tauri/target/release/bundle/nsis/TALOS_0.1.2_x64-setup.exe。资源与 Node 与安装应用一起部署；单独拷贝 exe 不能替代安装包。check:desktop:package 有限启动自有随机端点，验证静态资源、认证 WS 和关闭，不发送模型请求。可加 `--installed-dir <安装目录> --workspace <测试目录绝对路径>`，验证首次无目录、无效目录拒绝与真实 Studio 会话载入。
 
 桌面前端从本地打包资源加载；Node 后端仅绑定 loopback，WS 使用本次随机凭据。原生接口只开放目录选择、目录记忆和服务状态；网页没有通用 shell 权限。
 
