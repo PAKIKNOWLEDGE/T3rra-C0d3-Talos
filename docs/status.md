@@ -7,80 +7,39 @@
 | 字段 | 值 |
 | --- | --- |
 | 任务标识 / 修订 | desktop-markdown-single-source / r2-a |
-| 阶段 | **可执行** |
-| 本轮角色 / 来源 | Codex 已规划；用户明确继续并交 Cursor 执行，两次 fail 后 Codex 接手 |
+| 阶段 | **待技术复核** |
+| 本轮角色 / 来源 | Luna 执行；用户授权 R2-A |
 | 目标 / 方案入口 | [R2-A Markdown 生产与测试同源](plan.md#下一小轮r2-a-markdown-生产与测试同源) |
-| 允许范围 | 共享 Markdown 模块、实际消费者、相关测试与必要入口检查；保持 K2 生产输出 |
-| 禁止范围 | 视觉、引擎、协议、状态机、Markdown 新能力、依赖升级、R2-B/R3 实现 |
-| 验收 / 停止点 | 生产与测试同源，原输出不变，真实导入链可解析；交候选后停在待技术复核 |
-| 完成证据 | 待 Cursor 按 plan 交付；上轮检查不能算本轮已完成 |
-| 下一接手 / 就绪性 | 已就绪：Cursor 执行 [唯一当前任务](plan.md#下一小轮r2-a-markdown-生产与测试同源) |
+| 允许范围 | 共享 Markdown 模块、消费者、相关测试与 Vite 链检查 |
+| 禁止范围 | 视觉、引擎、R2-B/R3、Markdown 新能力、依赖升级 |
+| 验收 / 停止点 | Codex 技术复核本候选；不推进 R2-B |
+| 完成证据 | 见「当前实施交付与复核」 |
+| 下一接手 / 就绪性 | Codex 复核；交付 fail **0 / 2** |
 
 ## 本轮授权与候选
 
-- 规划前恢复点：`5472112`；产品基线：`256534a`。本轮规划仅改文档，执行者以实际 HEAD 为恢复基点。
-- 当前产品候选：**尚未交付**；本轮实施、自验、技术复核均待执行。
-- 当前写入者：Cursor（接到任务后）；交候选即停写，Codex 复核时保持冻结。
-- 交付 fail：**0 / 2**。首次退回 Cursor 修；第二次退回 Codex 接手，规则见 [workflow](workflow.md#两次-fail-后接手)。每次退回记录候选与具体原因。
-- 用户本次授权继续计划与执行 R2-A；不据此将 R1 尚未确认的整体操作标为实测通过。
+- 规划提交：`fc20af9`；产品基线：`256534a`；执行前 HEAD：`fc20af9`（干净工作树）。
+- 当前产品候选：**`bf0bf2d`**
+- 当前写入者：已停写，待 Codex 复核。
 
 ## 当前实施交付与复核
 
 | 字段 | 当前值 |
 | --- | --- |
-| 产品候选 / 改动清单 | 待 Cursor 填写 |
-| 改前生产基线 / 改后比对 | 待执行 |
-| 共享模块与实际入口加载 | 待执行 |
-| 检查命令与结果 / 限制 | 待执行 |
-| Codex 技术复核 | 待候选交付 |
-| 候选退回记录 | 无；交付 fail 0 / 2 |
+| 产品候选 / 改动清单 | **`bf0bf2d`** — `app/talos.js` 从 `../src/view/message-markdown.ts` 导入 `escapeHtml`、`renderAssistantMessageHtml`、`renderUserMessageHtml`、`renderTextBlock`、`stripRedactedThinking`；删除 ~110 行平行 Markdown 实现；`formatMessageText` 仍在本文件并调用 `stripRedactedThinking`；`message-markdown.ts` 仅导出 `renderTextBlock` |
+| 改前生产基线 / 改后比对 | 基线 **`256534a`** 内嵌渲染与改前 `message-markdown.ts` 逻辑一致（diff 仅 export）。`test/markdown-single-source.test.ts` 用冻结 HTML 比对表格、列表+代码混排、用户换行、思考块、单元格 XSS；**改后输出与基线一致** |
+| 共享模块与实际入口加载 | `test/markdown-vite-chain.test.ts`：`resolveId` + `transformRequest` 证明 `talos.js` → `message-markdown.ts` 可解析且打包含 `renderAssistantMessageHtml` / `message-markdown` 引用（未整页 `ssrLoadModule` talos，避免 `document` 误报） |
+| 检查命令与结果 / 限制 | `npm run check:all` **0**（`test:core` **138**）；未启动 `dev:product`、未浏览器目视、未真实模型 |
+| Codex 技术复核 | 待复核 |
+| 候选退回记录 | 无；交付 fail **0 / 2** |
 
-## 上轮触发与已确认决定
-
-用户 **K1 PASS**（`f20f145`）。K2 在生产 `app/talos.js` 增加安全表格子集，不引入新依赖。
-
-## 保留的产品事实与已知问题
+## 保留的产品事实
 
 | 项 | 状态 |
 | --- | --- |
-| K1 | **用户 PASS**（`f20f145`） |
-| 上轮通过候选 | **`256534a`** — K2 表格 |
-| K2 浏览器目视 | **【用户实测通过】**（本次交付反馈，候选 `256534a`） |
-| 真实 Studio | **【此前用户约 70%；K1/K2 已通过，R1 整体尚未明确确认】** |
-
-## 上轮 Git 与检查事实
-
-- K1 已收口：`f20f145`
-- **K2 产品候选：** 见下表（基点 `f20f145`）
-
-## 上轮候选与实施交付（K2）
-
-| 字段 | 当前值 |
-| --- | --- |
-| 产品候选提交 | **`256534a`** — `fix(desktop): safe GFM tables in production assistant markdown (K2)` |
-| 改动 | `app/talos.js`：`parseTableCells` / 分隔线识别 / `<table class="md-table">`；单元格先 `escapeHtml` 再行内 Markdown；与列表、fenced code 共存。`app/product.css` 最小表格边框（不改壳布局）。`src/view/message-markdown.ts` 同步供 `test/message-markdown.test.ts` |
-| 测试 | `message-markdown.test.ts` +3（表格、混排、XSS 转义）；`test:core` **135** |
-| 命令 | `npm run check:all` **0** |
-
-## 用户验收跟踪
-
-| 编号 | 状态 |
-| --- | --- |
-| K1 | **PASS** |
-| K2 | **技术通过 / 用户 PASS**（`256534a`） |
-
-## 上轮 Codex 技术复核（K2）
-
-2026-10-12：**K2 候选 `256534a` 技术通过，无本轮阻塞项。** 候选后的 `00e0d2a` 为文档记录；复核开始时工作树仅有 status 中候选编号补全，本次保留并一并保存。
-
-- 【源码】`app/talos.js` 的生产 assistant 渲染路径已识别表头、分隔线与数据行；单元格先转义 HTML，再处理行内格式；fenced code 先分段，不被表格识别吞入。CSS 仅增加气泡内表格样式。
-- 【文档】Cursor 记录 `npm run check:all` 退出 0，`test:core` 135；本轮未重跑全套。
-- 【实测】Codex 从实际 `app/talos.js` 提取生产渲染函数，离线执行表格行列结构、行内格式、列表与代码块顺序、HTML 转义检查，全部通过；`git diff --check f20f145 HEAD` 退出 0。没有启动浏览器或调用模型。
-- 【用户实测】用户反馈 K2 自行验收确实可用；记录为本候选画面通过，非 Codex 目视。
-- 【源码 / 证据限制】现有 Markdown 单测仍调用 `src/view/message-markdown.ts` 平行实现，不能将其数量当作浏览器生产路径证明。本次以生产函数补证和用户实测完成 K2；R2 在既定“验证覆盖实际生产路径”范围内统一此路径，避免后续漂移。当前实现是基本表格子集，不宣称完整 GFM 支持。
-
-K1/K2 均已收口。本次结论不代替尚未明确记录的 R1 整体操作验收，当时未授权开始 R2；本次用户的新推进授权见当前交接卡。
+| K1 / K2 | 用户 **PASS**（`f20f145` / `256534a`） |
+| R1 整体操作 | 尚未明确全量确认（见 plan 保留项） |
 
 ## 用户验收
 
-用户已确认 K1 和 K2。R1 其余操作保留原验收要求：会话归属清晰、流式与结束正文格式正常且无裸 JSON、工具前后顺序正确、重开与刷新记录一致、详情操作无重复或状态失真；已确认的项目不重验。目前尚未有整体通过的明确反馈，重点核对工具前后顺序、切会话/刷新后的记录一致性与思考/工具详情操作。没有新故障不另开修复轮。
+R2-A 无新视觉合同；不要求重复 K1/K2。技术通过后用户可按需 spot-check 表格/代码块/思考显示是否与 `256534a` 一致。
