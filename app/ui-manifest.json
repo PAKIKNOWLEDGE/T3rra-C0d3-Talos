@@ -48,6 +48,7 @@
     { "id": "workspaceSubtitle", "status": "wired: 工作区路径标签" },
     { "id": "engineTitle", "status": "wired: 固定 TALOS" },
     { "id": "workspacePath", "status": "wired: 来自会话 cwd" },
+    { "id": "workspacePickButton", "status": "wired: Tauri directory picker; hidden in browser" },
     { "id": "workspaceSwitchForm", "status": "wired: switch_workspace 绝对路径" },
     { "id": "workspaceInput", "status": "wired" },
     { "id": "textScaleControls", "status": "wired: 顶栏字号 标准/舒适/大，localStorage talos.textScale" },

@@ -34,7 +34,7 @@ const LIVE_FACT_DURING_RESYNC_KINDS = new Set<EngineEvent['kind']>([
 const TURN_LIFECYCLE_KINDS = new Set<EngineEvent['kind']>(['turn.started', 'turn.finished']);
 
 export class FactStore {
-  private readonly state: ServiceSnapshot;
+  private state: ServiceSnapshot;
   private historyRequestSeq = 0;
   private latestHistoryRequestId = 0;
   private maxAppliedHistoryRequestId = 0;

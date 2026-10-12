@@ -13,6 +13,7 @@ export type RuntimeServiceOptions = {
   /** When true, omit or invalid initial cwd keeps WS up until switch_workspace. */
   allowDeferredWorkspace?: boolean;
   staticRoot?: string;
+  authToken?: string;
 };
 
 export async function startRuntimeService(
@@ -21,11 +22,13 @@ export async function startRuntimeService(
   options?: RuntimeServiceOptions,
 ) {
   let workspaceDir: string | undefined;
+  let initialDirectoryError: string | undefined;
   if (initialCwd.trim()) {
     try {
       workspaceDir = assertWorkspaceDirectory(initialCwd);
     } catch (error) {
       if (!options?.allowDeferredWorkspace) throw error;
+      initialDirectoryError = error instanceof Error ? error.message : String(error);
     }
   } else if (!options?.allowDeferredWorkspace) {
     throw new Error('工作区必须是绝对路径，例如 C:\\Projects\\my-repo');
@@ -180,6 +183,8 @@ export async function startRuntimeService(
 
     service.prepareWorkspaceSwitch(processEpoch + 1);
     studioBundle?.close();
+    studioBundle = undefined;
+    adapter = undefined;
     processEpoch += 1;
     try {
       studioBundle = await startTalosStudioProcess(processEpoch, nextDir, (event) => service.apply(event));
@@ -197,9 +202,11 @@ export async function startRuntimeService(
   };
 
   service = new TalosService(store, engine, { switchWorkspace });
+  if (initialDirectoryError) service.apply({ kind: 'error', processEpoch, message: initialDirectoryError });
 
   const socketServer = createTalosWebSocketServer(service, port, {
     ...(options?.staticRoot ? { staticRoot: options.staticRoot } : {}),
+    ...(options?.authToken ? { authToken: options.authToken } : {}),
   });
   const listenPort = await socketServer.ready;
 

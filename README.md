@@ -99,6 +99,25 @@ git diff --check
 
 ## 产品交付与分发
 
-当前没有可交付安装包。Tauri 的条件见 [桌面交付边界](docs/tauri-shell.md)，具体实施只由当前任务启动。
+Windows 桌面候选使用 Tauri 2，保留同一套产品界面和 Studio 接驳。安装包携带 Node v24.15.0 x64 与桌面服务；Talos CLI 需已安装、配置好 provider，并可由本机 PATH 定位。桌面不会自动升级 CLI。实际候选、产物哈希与验收范围见 [status](docs/status.md)。
+
+安装并启动 TALOS 后，选择工作区目录；取消选择保留现有状态。首次没有目录时不连接 CLI，不以安装目录作为工作区。正常关闭窗口即可退出自有后端与 CLI 子进程。
+
+### 构建 Windows 安装候选
+
+需要 Windows x64、锁定的 Node v24.15.0、Rust/MSVC 工具链与 WebView2；采用 package-lock/Cargo.lock。在仓库根目录执行：
+
+~~~powershell
+npm ci
+npm run build:desktop:icons
+npm run build:desktop:win
+npm run check:desktop:package
+~~~
+
+build:desktop:win 由 Tauri beforeBuildCommand 生成前端和服务；校验随包 Node 与 tools/runtime/node-win-x64.json 的官方 SHA-256 一致。图标脚本需要 Pillow；正常源码包已包含 PNG/ICO，无需每次重生成。服务产物不依赖 npm/tsx 或开发服务。
+
+release 程序位于 src-tauri/target/release/talos-desktop.exe，NSIS 位于 src-tauri/target/release/bundle/nsis/TALOS_0.1.0_x64-setup.exe。资源与 Node 与安装应用一起部署；单独拷贝 exe 不能替代安装包。check:desktop:package 有限启动自有随机端点，验证静态资源、认证 WS 和关闭，不发送模型请求。
+
+桌面前端从本地打包资源加载；Node 后端仅绑定 loopback，WS 使用本次随机凭据。原生接口只开放目录选择、目录记忆和服务状态；网页没有通用 shell 权限。
 
 字体许可与本地参考图使用范围见 [design](docs/design.md#资产与分发)。源码保存、用户验收、推送和公开发布是不同动作，不能互相代替。

@@ -37,7 +37,14 @@ export async function startTalosStudioProcess(
   child.stdout.on('data', (chunk: string) => rpc.feed(chunk));
 
   adapter = TalosStudioAdapter.attach(rpc, processEpoch, emit);
-  const initialized = await adapter.initialize(workspaceCwd);
+  let initialized;
+  try { initialized = await adapter.initialize(workspaceCwd); }
+  catch (error) {
+    adapter.close(error);
+    rpc.close();
+    if (!child.killed) child.kill();
+    throw error;
+  }
 
   return {
     initialized,

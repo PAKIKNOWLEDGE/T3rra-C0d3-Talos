@@ -22,6 +22,7 @@ import {
   shouldRestoreFocusAfterSplash,
 } from '../src/view/startup-splash-lifecycle.ts';
 import {
+  desktopServiceOrigin,
   isDesktopShell,
   pickWorkspaceDirectory,
   rememberWorkspaceDirectory,
@@ -1229,12 +1230,23 @@ function render() {
   renderSummary();
 }
 
-function connect() {
+let connectionStarting = false;
+async function connect() {
+  if (connectionStarting) return;
   if (state.socket && state.socket.readyState <= WebSocket.OPEN) return;
   state.connectionToken += 1;
-  const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  const host = location.host || '127.0.0.1:5193';
-  const socket = new WebSocket(`${protocol}://${host}/ws`);
+  let origin;
+  connectionStarting = true;
+  try {
+    origin = isDesktopShell() ? await desktopServiceOrigin() : location.origin;
+  } catch (error) {
+    notice(error instanceof Error ? error.message : '桌面服务启动失败');
+    return;
+  } finally { connectionStarting = false; }
+  const endpoint = new URL('/ws', origin);
+  if (isDesktopShell()) endpoint.search = new URL(origin).search;
+  endpoint.protocol = endpoint.protocol === 'https:' ? 'wss:' : 'ws:';
+  const socket = new WebSocket(endpoint);
   state.socket = socket;
   socket.addEventListener('open', () => {
     if (state.socket !== socket) return;
@@ -1295,7 +1307,7 @@ function connect() {
       const op = message.operationId || '';
       if (!pending && message.result?.accepted && op.startsWith('workspace-')) {
         notice(ui.workspaceSwitched);
-        void rememberWorkspaceDirectory(state.snapshot?.session?.cwd ?? '');
+        void rememberWorkspaceDirectory(state.snapshot?.session?.cwd ?? '').catch(error => notice(error.message));
         const submit = $('workspaceSwitchForm')?.querySelector('button[type="submit"]');
         if (submit) submit.disabled = false;
         $('workspaceInput').value = '';
@@ -1918,7 +1930,8 @@ function wireDesktopWorkspacePicker() {
   if (pickButton) {
     pickButton.hidden = false;
     pickButton.addEventListener('click', async () => {
-      const dir = await pickWorkspaceDirectory();
+      let dir;
+      try { dir = await pickWorkspaceDirectory(); } catch (error) { notice(error instanceof Error ? error.message : '无法选择工作区'); return; }
       if (!dir) return;
       const input = $('workspaceInput');
       if (input) input.value = dir;
@@ -1934,4 +1947,4 @@ wireSessionControlHandlers();
 wireMentionHandlers();
 wireDesktopWorkspacePicker();
 render();
-if (location.protocol.startsWith('http')) connect();
+if (isDesktopShell() || location.protocol.startsWith('http')) void connect();

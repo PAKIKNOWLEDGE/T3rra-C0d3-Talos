@@ -15,3 +15,14 @@ export async function rememberWorkspaceDirectory(cwd: string): Promise<void> {
   const { invoke } = await import('@tauri-apps/api/core');
   await invoke('remember_workspace_directory', { cwd });
 }
+
+export async function desktopServiceOrigin(): Promise<string> {
+  const { invoke } = await import('@tauri-apps/api/core');
+  for (let attempt = 0; attempt < 120; attempt++) {
+    const status = await invoke<{ origin?: string; error?: string }>('desktop_service_status');
+    if (status.error) throw new Error(status.error);
+    if (status.origin) return status.origin;
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  throw new Error('桌面服务启动超时，请重新启动 TALOS。');
+}

@@ -18,10 +18,13 @@ const STATIC_MIME: Record<string, string> = {
 };
 
 function serveStaticFile(staticRoot: string, requestPath: string, response: import('node:http').ServerResponse) {
-  const decoded = decodeURIComponent(requestPath.split('?')[0] ?? '/');
+  let decoded: string;
+  try { decoded = decodeURIComponent(requestPath.split('?')[0] ?? '/'); }
+  catch { response.writeHead(400).end(); return; }
   const rel = decoded === '/' ? '/index.html' : decoded;
   const file = path.resolve(staticRoot, `.${rel}`);
-  if (!file.startsWith(path.resolve(staticRoot)) || !existsSync(file) || !statSync(file).isFile()) {
+  const relative = path.relative(staticRoot, file);
+  if (relative.startsWith('..') || path.isAbsolute(relative) || !existsSync(file) || !statSync(file).isFile()) {
     response.writeHead(404).end();
     return;
   }
@@ -33,7 +36,7 @@ function serveStaticFile(staticRoot: string, requestPath: string, response: impo
 export function createTalosWebSocketServer(
   service: TalosService,
   port = 5193,
-  options?: { staticRoot?: string },
+  options?: { staticRoot?: string; authToken?: string },
 ) {
   const staticRoot = options?.staticRoot ? path.resolve(options.staticRoot) : undefined;
   const httpServer = createServer((request, response) => {
@@ -48,7 +51,11 @@ export function createTalosWebSocketServer(
     }
     response.writeHead(404).end();
   });
-  const websocketServer = new WebSocketServer({ server: httpServer, path: '/ws' });
+  const websocketServer = new WebSocketServer({
+    server: httpServer, path: '/ws',
+    verifyClient: info => !options?.authToken ||
+      new URL(info.req.url ?? '/', 'http://localhost').searchParams.get('token') === options.authToken,
+  });
   websocketServer.on('connection', (socket: WebSocket) => {
     const stop = service.observe((snapshot) => socket.send(JSON.stringify({ type: 'snapshot', snapshot })));
     socket.on('message', async (payload) => {

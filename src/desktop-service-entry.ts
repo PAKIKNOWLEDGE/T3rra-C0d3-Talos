@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
+import { createInterface } from 'node:readline';
 import { startRuntimeService } from './service/runtime.js';
 
 process.env.TALOS_DESKTOP_BUNDLE = '1';
@@ -30,11 +31,13 @@ const staticRoot = resolve(staticDir);
 const port = readPort();
 const initialCwd = readArg('cwd')?.trim() ?? '';
 
+const authToken = randomUUID();
 let runtime: Awaited<ReturnType<typeof startRuntimeService>>;
 try {
   runtime = await startRuntimeService(initialCwd, port, {
     allowDeferredWorkspace: true,
     staticRoot,
+    authToken,
   });
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
@@ -43,7 +46,7 @@ try {
 
 const listenPort = runtime.listenPort;
 const origin = `http://127.0.0.1:${listenPort}`;
-console.log(`TALOS_DESKTOP_READY ${origin}`);
+console.log(`TALOS_DESKTOP_READY ${origin}/?token=${authToken}`);
 console.log(`Talos desktop service: ${origin}/`);
 if (initialCwd) console.log(`Workspace cwd: ${initialCwd}`);
 
@@ -66,3 +69,7 @@ process.once('SIGTERM', () => onSignal('SIGTERM'));
 if (process.platform === 'win32') {
   process.once('SIGBREAK', () => onSignal('SIGBREAK'));
 }
+
+const input = createInterface({ input: process.stdin });
+input.on('line', line => { if (line.trim() === 'shutdown') onSignal('host-shutdown'); });
+input.on('close', () => onSignal('host-closed'));

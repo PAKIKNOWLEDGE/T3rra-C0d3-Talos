@@ -5,30 +5,47 @@
   "identifier": "com.pakiknowledge.talos.desktop",
   "build": {
     "beforeDevCommand": "node tools/build-desktop.mjs",
-    "beforeBuildCommand": "node tools/build-desktop.mjs",
+    "beforeBuildCommand": "npm run typecheck:desktop && node tools/build-desktop.mjs",
     "frontendDist": "../app/dist"
   },
   "app": {
-    "windows": [],
+    "windows": [
+      {
+        "label": "main",
+        "title": "TALOS · 作业终端",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 900,
+        "minHeight": 650
+      }
+    ],
     "security": {
-      "csp": "default-src 'self' http://127.0.0.1:* ws://127.0.0.1:*; style-src 'self' 'unsafe-inline' http://127.0.0.1:*; script-src 'self' 'unsafe-inline' http://127.0.0.1:*; connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:*; img-src 'self' data: http://127.0.0.1:*; font-src 'self' http://127.0.0.1:*",
-      "capabilities": ["default"]
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:* ipc: http://ipc.localhost; img-src 'self' data:; font-src 'self'",
+      "capabilities": [
+        "default"
+      ]
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": [
+      "nsis"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
-      "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "externalBin": ["binaries/node"],
+    "externalBin": [
+      "binaries/node"
+    ],
     "resources": {
       "../dist-desktop/talos-desktop-service.mjs": "desktop/talos-desktop-service.mjs",
-      "../dist-desktop/static/": "desktop/static/"
+      "../dist-desktop/static/": "desktop/static/",
+      "../dist-desktop/node-runtime.json": "desktop/node-runtime.json",
+      "../dist-desktop/NODE-LICENSE.txt": "desktop/NODE-LICENSE.txt",
+      "../tools/runtime/WS-LICENSE.txt": "desktop/WS-LICENSE.txt"
     }
   }
 }
