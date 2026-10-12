@@ -7,21 +7,29 @@
 | 字段 | 值 |
 | --- | --- |
 | 任务标识 / 修订 | desktop-operation-feedback / r2-b |
-| 阶段 | **受阻（用户首次发送失败，B3 已定位）** |
+| 阶段 | **待用户验收（B3 修复候选）** |
 | 本轮角色 / 来源 | Cursor 两次交付退回；Codex 按用户既定规则接手 |
 | 目标 / 方案入口 | [R2-B 基本操作结果可信](plan.md#下一小轮r2-b-基本操作结果可信) |
 | 允许范围 | 动作结果关联、打开/继续/停止/审批消费者与聚焦测试 |
 | 禁止范围 | CLI 写入、视觉、协议/状态所有权改变、Tauri、R2-B 外扩 |
-| 验收 / 停止点 | 用户验收失败；本次仅定位 B3，暂停 V1/R3，不改产品代码 |
+| 验收 / 停止点 | Codex B3 修复已完成；用户复验新会话首次发送后再收口，不推进 V1/R3 |
 | 完成证据 | 见「当前实施交付与复核」 |
-| 下一接手 / 就绪性 | Codex 负责本任务 B3 后续修复；本次先排查后停；Cursor 停写，交付 fail 仍 **2 / 2** |
+| 下一接手 / 就绪性 | 用户验候选 `e091aca`；通过后进入 V1 方案/接入；Cursor 停写，交付 fail **2 / 2** |
 
 ## 本轮授权与候选
 
 - 规划提交：`edb3fc8`；产品基线：`bf0bf2d`；执行前 HEAD：`edb3fc8`（干净）。
 - 已退回候选：**`41e7cb2`**（B1：审批 RPC 失败误报连接 error）。
-- 第二次退回候选：**`7e2b885`**（B1 已修；B2 见下方）。Codex 恢复基点 `c7d5576`，接手候选 **`029a863`**。
-- 当前无人写入，产品候选冻结；Cursor 停写，同一任务计数 **2 / 2**。之后若本任务直接回归，仍由 Codex 修，不再安排第三次 Cursor 尝试。
+- 第二次退回候选：**`7e2b885`**（B1 已修；B2 后为 `029a863`）。Codex 本次从 `029a863` 修复 B3，候选为 **`e091aca`**。
+- 当前无人写入，产品候选冻结为 **`e091aca`**；Cursor 停写，同一任务计数 **2 / 2**。后续本任务直接回归仍由 Codex 修。
+
+## Codex B3 修复候选：`e091aca`
+
+- 【源码】`src/adapter/talos-studio.ts` 使用 `randomUUID()` 生成跨实例唯一 turn ID；启动拒绝时只结束本次 turn、清理 waiter/active 映射并发 `turn.finished(error)`，不再发全局 `error`。
+- 【源码】`app/talos.js` 的直接 prompt、slash、queue/steer 提交统一等待 `action_result`；只有受理后才记录成功和清空草稿，若用户已编辑新草稿则保留。
+- 【实测】`test/operation-feedback.test.ts` 15 项通过，覆盖两个 adapter 实例 ID 不重复、turn/start 冲突经 WS 返回原 operationId、连接保持 connected、会话回到 ready、失败不写入全局 errors、审批失败与迟到结果保护。
+- 【实测】`npm run check:all` 退出 0：30 个测试文件、153 项通过；typecheck、demo、handoff 均通过。没有启动真实 CLI、浏览器或付费模型。
+- 【限制】尚未重新执行真实 Windows UI；用户需复验新会话首次发送、失败后连接仍可用、随后继续发送。开屏/V 序列继续暂停到本候选通过。
 
 ## 用户验收失败：B3 新会话首次发送入口冲突
 
@@ -47,13 +55,13 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 产品候选 / 改动清单 | **`7e2b885`** — B1：`talos-studio.replyApproval` 去掉 emit `error` 的 catch，失败仅 Promise 拒绝；`pending-operations` 增加 `OperationWaitContext` 与按 operation 清理/去重 helper；`talos.js` 停止/审批绑定 operationId+sessionId+connectionToken，socket 回调核对实例；保留 `41e7cb2` 的 WS `action_error`/`sendActionWithResult` 基线 |
+| 产品候选 / 改动清单 | **`e091aca`** — 回合 ID 改为 `desktop-turn-${randomUUID()}` 跨 adapter 重启唯一；发送拒绝清理活动回合/等待并发 `turn.finished(error)`，不再发通用连接 error；直接提交、斜杠、排队/插入等待动作结果后再清草稿，用户编辑中的新草稿不被覆盖；补跨实例、WS 与失败恢复回归 |
 | B1 修复证据 | `test/operation-feedback.test.ts`「TalosStudioAdapter.replyApproval…」：真实 adapter+FactStore+RPC 边界；首次拒绝 → connected、pending、无 error 事件；重试 → 一次 settled；过期 → 无第三次 RPC。WS 路径「reply_approval over websocket…」：真实 adapter 经 service，`action_error` 带 `op-approval-ws`，连接仍 connected |
 | 消费者等待上下文证据 | helper 单测：审批双注册仅一次、stale finally 不清新 flight、跨 session/token 不 current。`talos.js` 调用 `tryRegisterApprovalFlight`/`clearApprovalFlightIfCurrent`/`createOperationWaitContext`/`isOperationWaitContextCurrent`/`clearStopFlightIfCurrent`；`connect` 递增 `connectionToken`，旧 socket close/message 忽略 |
 | 停止 / 回合分离 | `cancel accepted does not end the running turn`：`dispatch` 返回 accepted 后 `turn.status` 仍为 `running` |
 | 打开 / 继续 / 断连 / load | 保留 WS `operationId`、load 回滚、`rejectAllPendingOperations`（`41e7cb2`）；`session-directory` 未改 |
-| 检查命令与结果 / 限制 | 【实测】`npm run check:all` **0**（`test:core` **147**）；未启动真实 Talos CLI、未浏览器目视 |
-| Codex 技术复核 | 第二候选退回；B1 已确认；B2 接手候选 `029a863` 技术自验通过，待用户操作验收 |
+| 检查命令与结果 / 限制 | 【实测】`npm run check:all` **0**（`test:core` **153**）；未启动真实 Talos CLI、未浏览器目视；`git diff --check` 通过 |
+| Codex 技术复核 | **B3 已由 Codex 修复并自验通过**；待用户复验新会话首次发送 |
 | 候选退回记录 | 第 1 次 `41e7cb2`（B1）；第 2 次 `7e2b885`（B2）；fail **2 / 2** |
 
 ## 第二候选复核与 Codex 接手
