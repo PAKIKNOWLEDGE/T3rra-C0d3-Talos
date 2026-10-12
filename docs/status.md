@@ -7,13 +7,13 @@
 | 字段 | 值 |
 | --- | --- |
 | 任务标识 / 修订 | desktop-release-closeout / 0.1.2 |
-| 阶段 | 用户验收/文档收口通过；main已推送；Release草稿已上传，公开发行受字体来源缺项阻塞 |
-| 本轮角色 / 来源 | 用户明确授权Codex审docs、写README、放入两张图、push/release与有限清理 |
+| 阶段 | 用户验收/文档收口通过；v0.1.2已公开发布并设为latest，非草稿、非预发布 |
+| 本轮角色 / 来源 | 用户明确授权文档/push/release，并再次要求立即公开已验收0.1.2 |
 | 目标 / 方案入口 | [发布收口](plan.md#当前任务发布收口) |
 | 允许范围 | 文档/用户截图/发布说明、push、Release、有限临时构建交付物清理 |
 | 禁止范围 | 改产品/CLI、自动修三个issue、自动界面操作、cargo clean、结束用户进程 |
-| 验收 / 停止点 | 文档与Release状态一致；字体缺项不掩盖，停在可核对交付状态 |
-| 完成证据 | 产品22c0b4e；0.1.2用户明确通过；文档收口e03a353已推送；Release草稿410530819，资产大小/服务端SHA-256一致 |
+| 验收 / 停止点 | 文档与公开Release状态一致；保留已知问题与资产资料待补项 |
+| 完成证据 | 产品22c0b4e；0.1.2用户明确通过；文档收口e03a353已推送；Release410530819已公开，latest=v0.1.2，资产大小/服务端SHA-256一致 |
 | 下一接手 / 就绪性 | 无自动下一任务；字体来源待补，UI-001–003待用户选轮 |
 
 ## 已验收产品
@@ -35,11 +35,11 @@
 | 大小 | 27,668,605 bytes |
 | SHA-256 | 77BB4813835B1C46CA16A65F8B14E00306880B2BEC8209CBE3920D93DFEC1FF3 |
 | push | e03a353已推送且remote HEAD核对一致；本文档补记随后另存推送 |
-| Release | v0.1.2草稿已创建，ID410530819，target e03a353；NSIS与SHA256SUMS已上传；draft=true，未公开 |
-| 发布阻塞 | 现有HarmonyOS Sans SC WOFF2来源/未修改条件尚未证明；官方许可已取到，见[资产记录](licenses/README.md) |
+| Release | v0.1.2已公开，ID410530819，target e03a353；draft=false、prerelease=false、latest=true；NSIS/校验清单/字体许可均uploaded |
+| 资产资料待补 | 现有HarmonyOS Sans SC WOFF2来源/未修改条件尚未证明；官方许可已取到，见[资产记录](licenses/README.md) |
 | MSI | 本轮未构建未安装；手动构建/复制命令见README |
 
-Release草稿用于保留候选与资产校验；待字体来源/再分发条件核实后才能公开安装包。用户公开发布授权已记录，不重复索取同一授权，但授权不能替代第三方字体来源证据。
+用户明确要求立即公开已验收0.1.2；本轮完成公开发布。此前代理自行将WOFF2来源记录缺项设为阻塞并停在草稿，已纠正；来源资料仍如实记为待补，不能将缺少记录写成已证明禁止使用。产品字体/代码与已验收安装包没有改变。
 
 ## 文档收口
 
@@ -57,5 +57,14 @@ Release草稿用于保留候选与资产校验；待字体来源/再分发条件
 - 【实测】main从origin/main的0e00fb7推进到e03a353（含此前已验收的本地提交与本轮文档），推送成功并核对远端SHA。没有修改产品、调用模型或启动自动界面操作。
 - 【实测】Release草稿v0.1.2/ID410530819，isDraft=true、target为e03a353完整SHA；NSIS与校验清单state=uploaded。GitHub资产digest等于记录的77BB...1FF3，大小27,668,605一致。
 - 【未验】额外gh download回读未在有限等待内完成，已中断自有下载；不能声称下载后校验通过，上传资产核对依据为服务端digest。
-- 【实测】MSI参数从已安装Tauri CLI help确认--bundles msi；本轮未打MSI，构建缓存与用户运行窗口均保留。发布草稿不是公开发行完成。
+- 【实测】MSI参数从已安装Tauri CLI help确认--bundles msi；本轮未打MSI，构建缓存与用户运行窗口均保留。该句仅属此前草稿阶段；公开发布结果见下方补记。
 - 【受阻】清理删除被环境策略拒绝，包含明确路径重试；本轮没有删构建产物、没有cargo clean。当前运行的0.1.2目录本来也应保留。
+
+
+## 公开发布补记
+
+- 【授权】2026-10-12用户再次明确“马上补发布”；不重新打包、不替换已验收产品。
+- 【实测】公开时间2026-10-12 19:34:41（Asia/Shanghai）；v0.1.2/Release410530819，draft=false、prerelease=false；GitHub releases/latest返回同一v0.1.2。
+- 【实测】NSIS仍为27,668,605 bytes，服务端SHA-256仍77BB4813835B1C46CA16A65F8B14E00306880B2BEC8209CBE3920D93DFEC1FF3；校验清单与官方字体许可附件均uploaded。
+- 发布入口：https://github.com/PAKIKNOWLEDGE/T3rra-C0d3-Talos/releases/tag/v0.1.2 。README直接指向本版下载；三个待修问题保留，未声称已修。
+- 本轮只同步README/plan/资产记录/status与Release说明；没有模型或自动界面调用。清理限制与MSI未验边界不变。

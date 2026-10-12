@@ -8,7 +8,7 @@ TALOS 的 Windows 作业终端。通过本机 `talos studio` 连接 Talos CLI，
 
 ## 安装与使用
 
-当前版本 **0.1.2 / Windows x64**，已由用户验收。公开安装包仍待完成字体再分发核对；下载以 [GitHub Releases](https://github.com/PAKIKNOWLEDGE/T3rra-C0d3-Talos/releases) 实际可见资产为准。不要把源码压缩包当作安装程序。
+当前版本 **0.1.2 / Windows x64**，已由用户验收。Windows 安装包从 [v0.1.2 Release](https://github.com/PAKIKNOWLEDGE/T3rra-C0d3-Talos/releases/tag/v0.1.2) 下载。不要把源码压缩包当作安装程序。
 
 1. 安装并配置 [Talos CLI](https://github.com/PAKIKNOWLEDGE/Talos-Code-CLI)，确保 `talos` 在 PATH 中可用、支持 Studio v2，并配置好 provider。
 2. 安装桌面程序，打开 TALOS，选择实际项目文件夹。
@@ -17,7 +17,7 @@ TALOS 的 Windows 作业终端。通过本机 `talos studio` 连接 Talos CLI，
 
 安装包携带 Node 与桌面服务，不包含 CLI，也不会自动升级 CLI。已安装程序无需另开 npm/Vite 服务。首次无目录会显示「选择工作区」，有效目录会被记住。发送指令会按所选 provider 计费。
 
-已知限制：流式思考暂不能展开、Markdown 一级/二级标题可能显示原始井号、部分工具调用记录完成后消失。详见 [待修问题](docs/issues.md)。Windows 本地候选未签名；截图是用户真实操作记录，不代表所有功能均已逐项验收。
+已知限制：流式思考暂不能展开、Markdown 一级/二级标题可能显示原始井号、部分工具调用记录完成后消失。详见 [待修问题](docs/issues.md)。Windows 安装包未签名；截图是用户真实操作记录，不代表所有功能均已逐项验收。
 
 ## 本地开发
 
